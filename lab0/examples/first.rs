@@ -23,14 +23,10 @@ fn main() -> ! {
     // Set up the system clock.
     let rcc = dp.RCC.constrain();
 
-    // Clock configuration is critical for RNG to work properly; otherwise
-    // RNG_SR CECS bit will constantly report an error (if RNG_CLK < HCLK/16)
-    // here we pick a simple clock configuration that ensures the pll48clk,
-    // from which RNG_CLK is derived, is about 48 MHz
     let _ = rcc
         .cfgr
         .use_hse(8.mhz()) //discovery board has 8 MHz crystal for HSE
-        .sysclk(128.mhz())
+        .sysclk(168.mhz())
         .freeze();
 
     //can't collect into an array, so use a heapless (static) vec
