@@ -1,2 +1,11 @@
 [workspace]
 members = ["lab0", "lab1", "lab2"]
+
+[profile.dev]
+debug = true
+lto = true
+
+[profile.release]
+debug = true
+lto = true
+opt-level = "s"
