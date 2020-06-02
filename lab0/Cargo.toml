@@ -15,12 +15,3 @@ heapless = "0.5.5"
 [dependencies.embedded-hal]
 features = ["unproven"]
 version = "0.2.3"
-
-[profile.dev]
-debug = true
-lto = true
-
-[profile.release]
-debug = true
-lto = true
-opt-level = "s"

@@ -17,7 +17,7 @@ use panic_halt as _;
 
 #[entry]
 fn main() -> ! {
-    let mut dp = stm32::Peripherals::take().unwrap();
+    let dp = stm32::Peripherals::take().unwrap();
     let cp = cortex_m::peripheral::Peripherals::take().unwrap();
 
     // Set up the system clock.
