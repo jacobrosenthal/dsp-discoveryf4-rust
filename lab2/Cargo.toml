@@ -11,6 +11,7 @@ cortex-m-rt = "0.6.12"
 stm32f4xx-hal = { version = "0.8.1", features = ["stm32f407", "rt"] }
 panic-halt = "0.2.0"
 libm = "0.2.1"
+itertools = { version = "0.9.0", default-features = false }
 
 [dependencies.embedded-hal]
 features = ["unproven"]

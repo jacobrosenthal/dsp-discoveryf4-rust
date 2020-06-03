@@ -10,6 +10,8 @@
 //!
 //! `cargo flash --example roulette --release --chip STM32F407VGTx --protocol swd`
 
+//todo as could panic right?
+
 #![no_std]
 #![no_main]
 
@@ -59,12 +61,6 @@ fn main() -> ! {
         *val = 1;
     }
 
-    //unit ramp signal
-    let mut unit_ramp = [0i32; N];
-    for (n, val) in unit_ramp.iter_mut().enumerate() {
-        *val = n as i32;
-    }
-
     //exponential signal
     let mut exponential = [0f64; N];
     for (n, val) in exponential.iter_mut().enumerate() {
@@ -75,6 +71,63 @@ fn main() -> ! {
     let mut sinusoidal = [0f64; N];
     for (n, val) in sinusoidal.iter_mut().enumerate() {
         *val = sin(W0 * (n as f64));
+    }
+
+    //shifted unit pulse signal
+    let mut x1 = [0i32; N];
+    for (val, dee) in x1.iter_mut().skip(4).zip(&unit_pulse) {
+        *val = *dee;
+    }
+
+    //elevated sinusoidal signal
+    let mut x2 = [0f64; N];
+    for (val, ess) in x2.iter_mut().zip(&sinusoidal) {
+        *val = ess + 1f64;
+    }
+
+    //negated unit step signal
+    let mut x3 = [0i32; N];
+    for (val, uu) in x3.iter_mut().zip(&unit_step) {
+        *val = -uu;
+    }
+
+    //applying all operations on the sinusoidal signal
+    let mut x4 = [0f64; N];
+    for (val, ess) in x4.iter_mut().skip(2).zip(&sinusoidal) {
+        *val = 3f64 * *ess - 2f64;
+    }
+
+    //subtracting two unit step signals
+    let mut x5 = [0i32; N];
+    for (n, ((val, u1), udelay)) in x5
+        .iter_mut()
+        .zip(&unit_step)
+        .zip(unit_step.iter().skip(4))
+        .enumerate()
+    {
+        if n < 4 {
+            *val = *u1;
+        } else {
+            *val = u1 - udelay;
+        }
+    }
+
+    // //multiplying the exponential signal with the unit step signal
+    let mut x6 = [0f64; N];
+    for ((val, e), u) in x6.iter_mut().zip(&exponential).zip(&unit_step) {
+        *val = e * *u as f64;
+    }
+
+    // //multiplying the exponential signal with the sinusoidal signal
+    let mut x7 = [0f64; N];
+    for ((val, e), s) in x7.iter_mut().zip(&exponential).zip(&sinusoidal) {
+        *val = e * s;
+    }
+
+    //multiplying the exponential signal with the window signal
+    let mut x8 = [0f64; N];
+    for ((val, e), x) in x8.iter_mut().zip(&exponential).zip(&x5) {
+        *val = e * *x as f64;
     }
 
     loop {}
