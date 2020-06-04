@@ -11,6 +11,8 @@ cortex-m-rt = "0.6.12"
 stm32f4xx-hal = { version = "0.8.1", features = ["stm32f407", "rt"] }
 panic-halt = "0.2.0"
 heapless = "0.5.5"
+panic_rtt = "0.3.0"
+jlink_rtt = "0.2.0"
 
 [dependencies.embedded-hal]
 features = ["unproven"]

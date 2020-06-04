@@ -1,9 +1,9 @@
-//! Led Blinky Roulette example using the DWT peripheral for timing.
+//! This project is used to measure the code execution in terms of clock cycles.
 //!
-//! With cargo flash
-//! `cargo install cargo-flash`
+//! With cargo embed
+//! `cargo install cargo-embed`
 //!
-//! `cargo flash --example roulette --release --chip STM32F407VGTx --protocol swd`
+//! `cargo embed --release --example cyclecount`
 
 #![no_std]
 #![no_main]
@@ -13,6 +13,18 @@ use cortex_m_rt::entry;
 use panic_halt as _;
 use stm32f4xx_hal::{dwt::ClockDuration, dwt::DwtExt, prelude::*, stm32};
 
+use jlink_rtt;
+use panic_rtt as _;
+
+macro_rules! dbgprint {
+    ($($arg:tt)*) => {
+        {
+            use core::fmt::Write;
+            let mut out = $crate::jlink_rtt::NonBlockingOutput::new();
+            writeln!(out, $($arg)*).ok();
+        }
+    };
+}
 #[entry]
 fn main() -> ! {
     let dp = stm32::Peripherals::take().unwrap();
@@ -33,6 +45,8 @@ fn main() -> ! {
 
     //set a breakpoint and inspect, replace delay with your code
     let time: ClockDuration = dwt.measure(|| delay.delay_ms(100_u32));
+
+    dbgprint!("ticks: {:?}", time.as_ticks());
 
     loop {}
 }
