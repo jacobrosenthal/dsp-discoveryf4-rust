@@ -20,11 +20,13 @@ pub use cortex_m::{asm::bkpt, iprint, iprintln, peripheral::ITM};
 use cortex_m_rt::entry;
 use panic_halt as _;
 
+use core::f32::consts::{FRAC_PI_4, PI};
 use micromath::F32Ext;
 
-const N: usize = 100;
-const W1: f32 = core::f32::consts::PI / 10f32;
-const W2: f32 = 3f32 / 10f32;
+const N: usize = 512;
+
+static B: &'static [f32] = &[0.002044, 0.004088, 0.002044];
+static A: &'static [f32] = &[1f32, -1.819168, 0.827343];
 
 #[entry]
 fn main() -> ! {
@@ -44,17 +46,36 @@ fn main() -> ! {
 
     iprintln!(&mut itm.stim[0], "Hello, world!");
 
-    let mut sinusoidal1 = [0f32; N];
-    sinusoidal1
-        .iter_mut()
+    let mut x = [0f32; N];
+    x.iter_mut()
         .enumerate()
-        .for_each(|(idx, val)| *val = (W1 * (idx as f32)).cos());
+        .for_each(|(n, val)| *val = (PI * n as f32 / 128f32).sin() + (FRAC_PI_4 * n as f32).sin());
 
-    let mut sinusoidal2 = [0f32; N];
-    sinusoidal2
-        .iter_mut()
-        .enumerate()
-        .for_each(|(idx, val)| *val = (W2 * (idx as f32)).cos());
+    let mut y = [0f32; N];
+    //random access of &mut y were iterating over.. so no iterators unless ... todo
+    for y_idx in 0..N {
+        y[y_idx] = B
+            .iter()
+            .enumerate()
+            .map(|(coeff_idx, coeff)| {
+                if let Some(idx) = y_idx.checked_sub(coeff_idx) {
+                    coeff * x[idx]
+                } else {
+                    0f32
+                }
+            })
+            .sum::<f32>()
+            + A.iter()
+                .enumerate()
+                .map(|(coeff_idx, coeff)| {
+                    if let Some(idx) = y_idx.checked_sub(coeff_idx) {
+                        -(coeff * y[idx])
+                    } else {
+                        0f32
+                    }
+                })
+                .sum::<f32>();
+    }
 
     loop {}
 }

@@ -18,12 +18,13 @@ use stm32f4xx_hal as hal;
 use crate::hal::{prelude::*, stm32};
 pub use cortex_m::{asm::bkpt, iprint, iprintln, peripheral::ITM};
 use cortex_m_rt::entry;
-use libm::{pow, sin};
 use panic_halt as _;
 
+use micromath::F32Ext;
+
 const N: usize = 10;
-const A: f64 = 0.8;
-const W0: f64 = core::f64::consts::PI / 5f64;
+const A: f32 = 0.8;
+const W0: f32 = core::f32::consts::PI / 5f32;
 
 #[entry]
 fn main() -> ! {
@@ -44,38 +45,38 @@ fn main() -> ! {
     iprintln!(&mut itm.stim[0], "Hello, world!");
 
     //unit pulse signal
-    let mut unit_pulse = [0i32; N];
-    for (n, val) in unit_pulse.iter_mut().enumerate() {
-        if n == 0 {
+    let mut unit_pulse = [0; N];
+    unit_pulse.iter_mut().enumerate().for_each(|(idx, val)| {
+        if idx == 0 {
             *val = 1;
         } else {
             *val = 0;
         }
-    }
+    });
 
     //unit step signal
-    let mut unit_step = [0i32; N];
-    for val in unit_step.iter_mut() {
-        *val = 1;
-    }
+    let _unit_step = [1; N];
 
     //unit ramp signal
-    let mut unit_ramp = [0i32; N];
-    for (n, val) in unit_ramp.iter_mut().enumerate() {
-        *val = n as i32;
-    }
+    let mut unit_ramp: [i32; N] = [0; N];
+    unit_ramp
+        .iter_mut()
+        .enumerate()
+        .for_each(|(idx, val)| *val = idx as i32);
 
     //exponential signal
-    let mut exponential = [0f64; N];
-    for (n, val) in exponential.iter_mut().enumerate() {
-        *val = pow(A, n as f64);
-    }
+    let mut exponential = [0f32; N];
+    exponential
+        .iter_mut()
+        .enumerate()
+        .for_each(|(idx, val)| *val = A.powf(idx as f32));
 
     //sinusoidal signal
-    let mut sinusoidal = [0f64; N];
-    for (n, val) in sinusoidal.iter_mut().enumerate() {
-        *val = sin(W0 * (n as f64));
-    }
+    let mut sinusoidal = [0f32; N];
+    sinusoidal
+        .iter_mut()
+        .enumerate()
+        .for_each(|(idx, val)| *val = (W0 * idx as f32).sin());
 
     loop {}
 }
