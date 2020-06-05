@@ -1,5 +1,5 @@
 [workspace]
-members = ["lab0", "lab1", "lab2"]
+members = ["lab0", "lab1", "lab2", "lab4"]
 
 [profile.dev]
 debug = true
