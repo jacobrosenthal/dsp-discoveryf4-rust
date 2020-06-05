@@ -1,0 +1,8 @@
+[probe]
+protocol = "Swd"
+
+[rtt]
+enabled = true
+
+[general]
+chip = "STM32F407VGTx"

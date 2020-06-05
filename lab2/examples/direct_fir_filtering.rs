@@ -1,14 +1,9 @@
-//! Led Blinky Roulette example using the DWT peripheral for timing.
+//! This project is used for explaining FIR filtering operation using convolution sum operation.
 //!
-//! This project is used for creating five different basic digital signals: unit pulse, unit step, unit ramp, exponential and sinusoidal. These signals are represented with d1, u1, r, e1 and s arrays in main.rs file.
+//! Requires cargo embed
+//! `cargo install cargo-embed`
 //!
-//! Open this project in Keil, debug it and run the code as explained in Lab 0 of the lab manual. Then you can export these five arrays using Export.ini file as explained in Section 0.4.3 of the lab manual. This file is already available in the project folder.  
-//!
-//! Requires cargo flash
-//!
-//! `cargo install cargo-flash`
-//!
-//! `cargo flash --example roulette --release --chip STM32F407VGTx --protocol swd`
+//! `cargo embed --release --example direct_fir_filtering`
 
 #![no_std]
 #![no_main]
@@ -16,9 +11,19 @@
 use stm32f4xx_hal as hal;
 
 use crate::hal::{prelude::*, stm32};
-pub use cortex_m::{asm::bkpt, iprint, iprintln, peripheral::ITM};
 use cortex_m_rt::entry;
-use panic_halt as _;
+use jlink_rtt;
+use panic_rtt as _;
+
+macro_rules! dbgprint {
+    ($($arg:tt)*) => {
+        {
+            use core::fmt::Write;
+            let mut out = $crate::jlink_rtt::NonBlockingOutput::new();
+            writeln!(out, $($arg)*).ok();
+        }
+    };
+}
 
 use core::f32::consts::{FRAC_PI_4, PI};
 use micromath::F32Ext;
@@ -39,7 +44,7 @@ static H: &'static [f32] = &[
 #[entry]
 fn main() -> ! {
     let dp = stm32::Peripherals::take().unwrap();
-    let cp = cortex_m::peripheral::Peripherals::take().unwrap();
+    let _cp = cortex_m::peripheral::Peripherals::take().unwrap();
 
     // Set up the system clock.
     let rcc = dp.RCC.constrain();
@@ -50,14 +55,11 @@ fn main() -> ! {
         .sysclk(168.mhz())
         .freeze();
 
-    let mut itm = cp.ITM;
-
-    iprintln!(&mut itm.stim[0], "Hello, world!");
-
     let mut x = [0f32; N];
     x.iter_mut().enumerate().for_each(|(idx, val)| {
         *val = (PI * idx as f32 / 128f32).sin() + (FRAC_PI_4 * idx as f32).sin()
     });
+    dbgprint!("x: {:?}", &x[..]);
 
     let mut y = [0f32; N];
     y.iter_mut().enumerate().for_each(|(y_idx, y_ref)| {
@@ -73,6 +75,7 @@ fn main() -> ! {
             })
             .sum()
     });
+    dbgprint!("y: {:?}", &y[..]);
 
     loop {}
 }

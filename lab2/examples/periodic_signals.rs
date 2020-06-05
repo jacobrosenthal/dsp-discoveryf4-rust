@@ -1,14 +1,10 @@
-//! Led Blinky Roulette example using the DWT peripheral for timing.
+//! This project is used for creating two different digital signals.
+//! One of these signals is a periodic cosine wave and other one is aperiodic cosine wave.
 //!
-//! This project is used for creating five different basic digital signals: unit pulse, unit step, unit ramp, exponential and sinusoidal. These signals are represented with d1, u1, r, e1 and s arrays in main.rs file.
+//! Requires cargo embed
+//! `cargo install cargo-embed`
 //!
-//! Open this project in Keil, debug it and run the code as explained in Lab 0 of the lab manual. Then you can export these five arrays using Export.ini file as explained in Section 0.4.3 of the lab manual. This file is already available in the project folder.  
-//!
-//! Requires cargo flash
-//!
-//! `cargo install cargo-flash`
-//!
-//! `cargo flash --example roulette --release --chip STM32F407VGTx --protocol swd`
+//! `cargo embed --release --example periodic_signals`
 
 #![no_std]
 #![no_main]

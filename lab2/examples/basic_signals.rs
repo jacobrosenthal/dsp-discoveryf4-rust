@@ -1,14 +1,9 @@
-//! Led Blinky Roulette example using the DWT peripheral for timing.
+//! This project is used for creating five different basic digital signals: unit pulse, unit step, unit ramp, exponential and sinusoidal.
 //!
-//! This project is used for creating five different basic digital signals: unit pulse, unit step, unit ramp, exponential and sinusoidal. These signals are represented with d1, u1, r, e1 and s arrays in main.rs file.
+//! Requires cargo embed
+//! `cargo install cargo-embed`
 //!
-//! Open this project in Keil, debug it and run the code as explained in Lab 0 of the lab manual. Then you can export these five arrays using Export.ini file as explained in Section 0.4.3 of the lab manual. This file is already available in the project folder.  
-//!
-//! Requires cargo flash
-//!
-//! `cargo install cargo-flash`
-//!
-//! `cargo flash --example roulette --release --chip STM32F407VGTx --protocol swd`
+//! `cargo embed --release --example basic_signals`
 
 #![no_std]
 #![no_main]
@@ -16,9 +11,20 @@
 use stm32f4xx_hal as hal;
 
 use crate::hal::{prelude::*, stm32};
-pub use cortex_m::{asm::bkpt, iprint, iprintln, peripheral::ITM};
+pub use cortex_m::{asm::bkpt, iprint, iprintln};
 use cortex_m_rt::entry;
-use panic_halt as _;
+use jlink_rtt;
+use panic_rtt as _;
+
+macro_rules! dbgprint {
+    ($($arg:tt)*) => {
+        {
+            use core::fmt::Write;
+            let mut out = $crate::jlink_rtt::NonBlockingOutput::new();
+            writeln!(out, $($arg)*).ok();
+        }
+    };
+}
 
 use micromath::F32Ext;
 
@@ -29,7 +35,7 @@ const W0: f32 = core::f32::consts::PI / 5f32;
 #[entry]
 fn main() -> ! {
     let dp = stm32::Peripherals::take().unwrap();
-    let cp = cortex_m::peripheral::Peripherals::take().unwrap();
+    let _cp = cortex_m::peripheral::Peripherals::take().unwrap();
 
     // Set up the system clock.
     let rcc = dp.RCC.constrain();
@@ -40,10 +46,6 @@ fn main() -> ! {
         .sysclk(168.mhz())
         .freeze();
 
-    let mut itm = cp.ITM;
-
-    iprintln!(&mut itm.stim[0], "Hello, world!");
-
     //unit pulse signal
     let mut unit_pulse = [0; N];
     unit_pulse.iter_mut().enumerate().for_each(|(idx, val)| {
@@ -53,9 +55,11 @@ fn main() -> ! {
             *val = 0;
         }
     });
+    dbgprint!("unit_pulse: {:?}", &unit_pulse[..]);
 
     //unit step signal
-    let _unit_step = [1; N];
+    let unit_step = [1; N];
+    dbgprint!("unit_step: {:?}", &unit_step[..]);
 
     //unit ramp signal
     let mut unit_ramp: [i32; N] = [0; N];
@@ -63,6 +67,7 @@ fn main() -> ! {
         .iter_mut()
         .enumerate()
         .for_each(|(idx, val)| *val = idx as i32);
+    dbgprint!("unit_ramp: {:?}", &unit_ramp[..]);
 
     //exponential signal
     let mut exponential = [0f32; N];
@@ -70,6 +75,7 @@ fn main() -> ! {
         .iter_mut()
         .enumerate()
         .for_each(|(idx, val)| *val = A.powf(idx as f32));
+    dbgprint!("exponential: {:?}", &exponential[..]);
 
     //sinusoidal signal
     let mut sinusoidal = [0f32; N];
@@ -77,6 +83,7 @@ fn main() -> ! {
         .iter_mut()
         .enumerate()
         .for_each(|(idx, val)| *val = (W0 * idx as f32).sin());
+    dbgprint!("sinusoidal: {:?}", &sinusoidal[..]);
 
     loop {}
 }

@@ -1,9 +1,9 @@
-//! Led Blinky Roulette example using the DWT peripheral for timing.
+//! This project is used for acquiring the accelerometer data as a digital signal.
 //!
-//! Requires cargo flash
-//! `cargo install cargo-flash`
+//! With cargo embed
+//! `cargo install cargo-embed`
 //!
-//! `cargo flash --example roulette --release --chip STM32F407VGTx --protocol swd`
+//! `cargo embed --release --example accelerometer_usage_ii`
 
 #![no_std]
 #![no_main]
@@ -13,13 +13,24 @@ use stm32f4xx_hal as hal;
 use crate::hal::{prelude::*, stm32};
 use cortex_m;
 use cortex_m_rt::entry;
-use panic_halt as _;
+use jlink_rtt;
+use panic_rtt as _;
 
 use crate::hal::spi;
 use accelerometer::RawAccelerometer;
 use lis302dl;
 
 const N: usize = 1000;
+
+macro_rules! dbgprint {
+    ($($arg:tt)*) => {
+        {
+            use core::fmt::Write;
+            let mut out = $crate::jlink_rtt::NonBlockingOutput::new();
+            writeln!(out, $($arg)*).ok();
+        }
+    };
+}
 
 #[entry]
 fn main() -> ! {
@@ -67,6 +78,8 @@ fn main() -> ! {
         *buffer_ref = lis302dl.accel_raw().unwrap().x;
         delay.delay_ms(10u8);
     });
+
+    dbgprint!("{:?}", &buffer[..]);
 
     loop {}
 }

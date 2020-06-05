@@ -1,14 +1,9 @@
-//! Led Blinky Roulette example using the DWT peripheral for timing.
+//! This project is used for creating eight different frame-based digital systems.
 //!
-//! This project is used for creating five different basic digital signals: unit pulse, unit step, unit ramp, exponential and sinusoidal. These signals are represented with d1, u1, r, e1 and s arrays in main.rs file.
+//! Requires cargo embed
+//! `cargo install cargo-embed`
 //!
-//! Open this project in Keil, debug it and run the code as explained in Lab 0 of the lab manual. Then you can export these five arrays using Export.ini file as explained in Section 0.4.3 of the lab manual. This file is already available in the project folder.  
-//!
-//! Requires cargo flash
-//!
-//! `cargo install cargo-flash`
-//!
-//! `cargo flash --example roulette --release --chip STM32F407VGTx --protocol swd`
+//! `cargo embed --release --example frame_based_systems`
 
 #![no_std]
 #![no_main]
@@ -16,9 +11,19 @@
 use stm32f4xx_hal as hal;
 
 use crate::hal::{prelude::*, stm32};
-pub use cortex_m::{asm::bkpt, iprint, iprintln, peripheral::ITM};
 use cortex_m_rt::entry;
-use panic_halt as _;
+use jlink_rtt;
+use panic_rtt as _;
+
+macro_rules! dbgprint {
+    ($($arg:tt)*) => {
+        {
+            use core::fmt::Write;
+            let mut out = $crate::jlink_rtt::NonBlockingOutput::new();
+            writeln!(out, $($arg)*).ok();
+        }
+    };
+}
 
 use micromath::F32Ext;
 
@@ -97,7 +102,7 @@ fn digital_system8(input: &[f32], output: &mut [f32]) {
 #[entry]
 fn main() -> ! {
     let dp = stm32::Peripherals::take().unwrap();
-    let cp = cortex_m::peripheral::Peripherals::take().unwrap();
+    let _cp = cortex_m::peripheral::Peripherals::take().unwrap();
 
     // Set up the system clock.
     let rcc = dp.RCC.constrain();
@@ -107,10 +112,6 @@ fn main() -> ! {
         .use_hse(8.mhz()) //discovery board has 8 MHz crystal for HSE
         .sysclk(168.mhz())
         .freeze();
-
-    let mut itm = cp.ITM;
-
-    iprintln!(&mut itm.stim[0], "Hello, world!");
 
     //unit pulse signal
     let mut unit_pulse = [0f32; N];
@@ -135,34 +136,42 @@ fn main() -> ! {
     //y[n] = b x[n]
     let mut y1 = [0f32; N];
     digital_system1(2.2, &unit_step, &mut y1);
+    dbgprint!("digital_system1: {:?}", &y1[..]);
 
     //y[n] = x1[n] + x2[n]
     let mut y2 = [0f32; N];
     digital_system2(&unit_step, &sinusoidal, &mut y2);
+    dbgprint!("digital_system2: {:?}", &y2[..]);
 
     //y[n] = x^2[n]
     let mut y3 = [0f32; N];
     digital_system3(&sinusoidal, &mut y3);
+    dbgprint!("digital_system3: {:?}", &y3[..]);
 
     //y[n] = b0 x[n] + b1 x[n-1]
     let mut y4 = [0f32; N];
     digital_system4(&[2.2, -1.1], &sinusoidal, &mut y4);
+    dbgprint!("digital_system4: {:?}", &y4[..]);
 
     //y[n] = b0 x[n] + b1 x[n-1] + a1 y[n-1]
     let mut y5 = [0f32; N];
     digital_system5(&[2.2, -1.1], 0.7, &sinusoidal, &mut y5);
+    dbgprint!("digital_system5: {:?}", &y5[..]);
 
     //y[n] = b0 x[n+1] + b1 x[n]
     let mut y6 = [0f32; N];
     digital_system6(&[2.2, -1.1], &unit_step, &mut y6);
+    dbgprint!("digital_system6: {:?}", &y6[..]);
 
     //y[n] = b0 x[n] + a1 y[n-1]
     let mut y7 = [0f32; N];
     digital_system7(1.0, 2.0, &unit_pulse, &mut y7);
+    dbgprint!("digital_system7: {:?}", &y7[..]);
 
     //y[n] = n x[n]
     let mut y8 = [0f32; N];
     digital_system8(&sinusoidal, &mut y8);
+    dbgprint!("digital_system8: {:?}", &y8[..]);
 
     loop {}
 }

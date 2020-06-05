@@ -1,6 +1,6 @@
-//! Led Blinky Roulette example using the DWT peripheral for timing.
+//! Basic BSP accelerometer functions and how they are used are given below.
 //!
-//! Requires cargo flash
+//! With cargo flash
 //! `cargo install cargo-flash`
 //!
 //! `cargo flash --example roulette --release --chip STM32F407VGTx --protocol swd`

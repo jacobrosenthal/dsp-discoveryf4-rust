@@ -1,9 +1,9 @@
 //! Led Blinky Roulette example using the DWT peripheral for timing.
 //!
-//! With cargo embed
-//! `cargo install cargo-embed`
+//! With cargo flash
+//! `cargo install cargo-flash`
 //!
-//! `cargo embed --release --example roulette`
+//! `cargo flash --example roulette --release --chip STM32F407VGTx --protocol swd`
 
 #![no_std]
 #![no_main]
