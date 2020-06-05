@@ -12,9 +12,19 @@
 use stm32f4xx_hal as hal;
 
 use crate::hal::{prelude::*, stm32};
-pub use cortex_m::{asm::bkpt, iprint, iprintln, peripheral::ITM};
 use cortex_m_rt::entry;
-use panic_halt as _;
+use jlink_rtt;
+use panic_rtt as _;
+
+macro_rules! dbgprint {
+    ($($arg:tt)*) => {
+        {
+            use core::fmt::Write;
+            let mut out = $crate::jlink_rtt::NonBlockingOutput::new();
+            writeln!(out, $($arg)*).ok();
+        }
+    };
+}
 
 use micromath::F32Ext;
 
@@ -25,7 +35,7 @@ const W2: f32 = 3f32 / 10f32;
 #[entry]
 fn main() -> ! {
     let dp = stm32::Peripherals::take().unwrap();
-    let cp = cortex_m::peripheral::Peripherals::take().unwrap();
+    let _cp = cortex_m::peripheral::Peripherals::take().unwrap();
 
     // Set up the system clock.
     let rcc = dp.RCC.constrain();
@@ -36,21 +46,19 @@ fn main() -> ! {
         .sysclk(168.mhz())
         .freeze();
 
-    let mut itm = cp.ITM;
-
-    iprintln!(&mut itm.stim[0], "Hello, world!");
-
     let mut sinusoidal1 = [0f32; N];
     sinusoidal1
         .iter_mut()
         .enumerate()
         .for_each(|(idx, val)| *val = (W1 * (idx as f32)).cos());
+    dbgprint!("sinusoidal1: {:?}", &sinusoidal1[..]);
 
     let mut sinusoidal2 = [0f32; N];
     sinusoidal2
         .iter_mut()
         .enumerate()
         .for_each(|(idx, val)| *val = (W2 * (idx as f32)).cos());
+    dbgprint!("sinusoidal2: {:?}", &sinusoidal2[..]);
 
     loop {}
 }

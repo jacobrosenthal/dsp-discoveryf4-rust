@@ -8,13 +8,12 @@
 #![no_std]
 #![no_main]
 
-use cortex_m;
 use cortex_m_rt::entry;
-use panic_halt as _;
+use panic_rtt as _;
 use stm32f4xx_hal::{dwt::ClockDuration, dwt::DwtExt, prelude::*, stm32};
 
+#[allow(unused_imports)]
 use jlink_rtt;
-use panic_rtt as _;
 
 macro_rules! dbgprint {
     ($($arg:tt)*) => {
