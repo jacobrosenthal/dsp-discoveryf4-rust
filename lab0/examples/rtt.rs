@@ -11,7 +11,7 @@
 use cortex_m_rt::entry;
 use jlink_rtt;
 use panic_rtt as _;
-use stm32f4xx_hal::prelude::*;
+use stm32f4xx_hal as _;
 
 macro_rules! dbgprint {
     ($($arg:tt)*) => {
