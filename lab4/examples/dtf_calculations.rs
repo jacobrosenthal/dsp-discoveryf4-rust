@@ -1,14 +1,14 @@
-//! Led Blinky Roulette example using the DWT peripheral for timing.
+//! This project is used for explaining the DFT operation using standard math
+//! functions. Here, we have a digital input signal as the sum of two sinusoids
+//! with different frequencies. The complex form of this signal is represented
+//! with s_complex array, the frequency component of this signal is found by the
+//! DFT function. Real and imaginary parts of the obtained DFT are represented
+//! with XR and XI arrays. The magnitude of DFT is kept in the Mag array.
 //!
-//! This project is used for creating five different basic digital signals: unit pulse, unit step, unit ramp, exponential and sinusoidal. These signals are represented with d1, u1, r, e1 and s arrays in main.rs file.
+//! Requires cargo embed
+//! `cargo install cargo-embed`
 //!
-//! Open this project in Keil, debug it and run the code as explained in Lab 0 of the lab manual. Then you can export these five arrays using Export.ini file as explained in Section 0.4.3 of the lab manual. This file is already available in the project folder.  
-//!
-//! Requires cargo flash
-//!
-//! `cargo install cargo-flash`
-//!
-//! `cargo flash --example roulette --release --chip STM32F407VGTx --protocol swd`
+//! `cargo embed --release --example dft_calculations`
 
 #![no_std]
 #![no_main]
@@ -18,7 +18,18 @@ use stm32f4xx_hal as hal;
 use crate::hal::{dwt::ClockDuration, dwt::DwtExt, prelude::*, stm32};
 pub use cortex_m::{asm::bkpt, iprint, iprintln, peripheral::ITM};
 use cortex_m_rt::entry;
-use panic_halt as _;
+use jlink_rtt;
+use panic_rtt as _;
+
+macro_rules! dbgprint {
+    ($($arg:tt)*) => {
+        {
+            use core::fmt::Write;
+            let mut out = $crate::jlink_rtt::NonBlockingOutput::new();
+            writeln!(out, $($arg)*).ok();
+        }
+    };
+}
 
 use core::f32::consts::PI;
 use micromath::F32Ext;
@@ -94,7 +105,6 @@ fn main() -> ! {
     let mut XI = [0f32; N];
     let mut Mag = [0f32; N];
 
-    //set a breakpoint and inspect
     let time: ClockDuration = dwt.measure(|| {
         DFT(&s_complex, &mut XR, &mut XI);
 
@@ -103,6 +113,7 @@ fn main() -> ! {
             .enumerate()
             .for_each(|(n, mag_ref)| *mag_ref = (XR[n].powf(2f32) + XI[n].powf(2f32)).sqrt());
     });
+    dbgprint!("ticks: {:?}", time.as_ticks());
 
     loop {}
 }
