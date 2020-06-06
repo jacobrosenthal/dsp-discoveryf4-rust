@@ -1,7 +1,7 @@
-//! This project is used for creating eight different frame-based digital systems.
+//! This project is used for creating eight different frame-based digital
+//! systems.
 //!
-//! Requires cargo embed
-//! `cargo install cargo-embed`
+//! Requires cargo embed `cargo install cargo-embed`
 //!
 //! `cargo embed --release --example frame_based_systems`
 

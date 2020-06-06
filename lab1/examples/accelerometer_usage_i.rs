@@ -1,9 +1,9 @@
 //! Basic BSP accelerometer functions and how they are used are given below.
 //!
-//! With cargo flash
-//! `cargo install cargo-flash`
+//! With cargo flash `cargo install cargo-flash`
 //!
-//! `cargo flash --example roulette --release --chip STM32F407VGTx --protocol swd`
+//! `cargo flash --example roulette --release --chip STM32F407VGTx --protocol
+//! swd`
 
 #![no_std]
 #![no_main]

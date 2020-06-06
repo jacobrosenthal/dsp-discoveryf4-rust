@@ -1,4 +1,5 @@
-//! This project is used for creating five different basic digital signals: unit pulse, unit step, unit ramp, exponential and sinusoidal.
+//! This project is used for creating five different basic digital signals: unit
+//! pulse, unit step, unit ramp, exponential and sinusoidal.
 //!
 //! Requires cargo embed
 //! `cargo install cargo-embed`

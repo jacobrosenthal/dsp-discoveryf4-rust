@@ -1,4 +1,5 @@
-//! This project is used for explaining FIR filtering operation using convolution sum operation.
+//! This project is used for explaining FIR filtering operation using
+//! convolution sum operation.
 //!
 //! Requires cargo embed
 //! `cargo install cargo-embed`

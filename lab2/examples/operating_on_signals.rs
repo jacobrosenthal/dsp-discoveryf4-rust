@@ -1,4 +1,5 @@
-//! This project is used for creating eight different digital signals by applying different operations on basic digital signals.
+//! This project is used for creating eight different digital signals by
+//! applying different operations on basic digital signals.
 //!
 //! Requires cargo embed
 //! `cargo install cargo-embed`

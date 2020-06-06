@@ -1,7 +1,6 @@
 //! This project is used to measure the code execution in terms of clock cycles.
 //!
-//! With cargo embed
-//! `cargo install cargo-embed`
+//! With cargo embed `cargo install cargo-embed`
 //!
 //! `cargo embed --release --example cycle_count`
 
@@ -22,6 +21,7 @@ macro_rules! dbgprint {
         }
     };
 }
+
 #[entry]
 fn main() -> ! {
     let dp = stm32::Peripherals::take().unwrap();

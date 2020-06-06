@@ -1,4 +1,5 @@
-//! This project is used for explaining IIR filtering operation using constant coefficient difference equation.
+//! This project is used for explaining IIR filtering operation using constant
+//! coefficient difference equation.
 //!
 //! Requires cargo embed
 //! `cargo install cargo-embed`

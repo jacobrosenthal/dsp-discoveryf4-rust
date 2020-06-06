@@ -1,5 +1,6 @@
-//! This project is used for creating two different digital signals.
-//! One of these signals is a periodic cosine wave and other one is aperiodic cosine wave.
+//! This project is used for creating two different digital signals. One of
+//! these signals is a periodic cosine wave and other one is aperiodic cosine
+//! wave.
 //!
 //! Requires cargo embed
 //! `cargo install cargo-embed`

@@ -1,7 +1,7 @@
-//! This project is used for acquiring the accelerometer data as a digital signal.
+//! This project is used for acquiring the accelerometer data as a digital
+//! signal.
 //!
-//! With cargo embed
-//! `cargo install cargo-embed`
+//! With cargo embed `cargo install cargo-embed`
 //!
 //! `cargo embed --release --example accelerometer_usage_ii`
 
