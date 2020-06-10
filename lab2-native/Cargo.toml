@@ -1,0 +1,13 @@
+[package]
+name = "lab2-native"
+version = "0.1.0"
+authors = ["Jacob Rosenthal <jacobrosenthal@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[dependencies]
+libm = "0.2.1"
+micromath = "1.0.0"
+heapless = "0.5.5"
+textplots = "0.5.1"
+num = "0.2.1"
