@@ -15,10 +15,9 @@
 use stm32f4xx_hal as hal;
 
 use crate::hal::{dwt::ClockDuration, dwt::DwtExt, prelude::*, stm32};
-pub use cortex_m::{asm::bkpt, iprint, iprintln, peripheral::ITM};
 use cortex_m_rt::entry;
 use jlink_rtt;
-use microfft::{complex::cfft_16, Complex32};
+use microfft::{complex::cfft_512, Complex32};
 use panic_rtt as _;
 
 macro_rules! dbgprint {
@@ -74,10 +73,6 @@ fn main() -> ! {
         .sysclk(168.mhz())
         .freeze();
 
-    let mut itm = cp.ITM;
-
-    iprintln!(&mut itm.stim[0], "Hello, world!");
-
     // Create a delay abstraction based on DWT cycle counter
     let dwt = cp.DWT.constrain(cp.DCB, clocks);
 
@@ -99,18 +94,18 @@ fn main() -> ! {
         s_complex[2 * n + 1] = s_imag[n];
     });
 
-    let mut DTFSEcoef = s_complex.clone();
-
+    // let mut DTFSEcoef = s_complex.clone();
+    let mut DTFSEcoef = [Complex32::default(); 512];
     // //Coefficient calculation with CFFT function
     // arm_cfft_f32(&arm_cfft_sR_f32_len16, DTFSEcoef, 0, 1);//forward transform(not inverse), enables bit reversal of output(With it set to 0 the bins are all mixed up)
 
-    let result = cfft_16(&mut DTFSEcoef).unwrap();
+    let result = cfft_512(&mut DTFSEcoef);
 
     //set a breakpoint and inspect
-    let time: ClockDuration = dwt.measure(|| {
-        DTFSE(&mut y_real, &DTFSEcoef, K);
-    });
-    dbgprint!("ticks: {:?}", time.as_ticks());
+    // let time: ClockDuration = dwt.measure(|| {
+    //     DTFSE(&mut y_real, &DTFSEcoef, K);
+    // });
+    // dbgprint!("ticks: {:?}", time.as_ticks());
 
     loop {}
 }

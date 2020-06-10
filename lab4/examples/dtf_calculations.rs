@@ -111,7 +111,7 @@ fn main() -> ! {
         //Magnitude calculation
         Mag.iter_mut()
             .enumerate()
-            .for_each(|(n, mag_ref)| *mag_ref = (XR[n].powf(2f32) + XI[n].powf(2f32)).sqrt());
+            .for_each(|(n, mag_ref)| *mag_ref = (XR[n].powf(2f32) + XI[n] * XI[n]).sqrt());
     });
     dbgprint!("ticks: {:?}", time.as_ticks());
 
