@@ -1,7 +1,7 @@
 use textplots::{Chart, Plot, Shape};
 
 const N: usize = 10;
-const W0: f32 = core::f32::consts::PI / 5f32;
+const W0: f32 = core::f32::consts::PI / 5.0;
 
 fn digital_system1(b: f32, input: &[f32], output: &mut [f32]) {
     output
@@ -81,9 +81,9 @@ fn main() {
     let mut unit_pulse = [0f32; N];
     unit_pulse.iter_mut().enumerate().for_each(|(idx, val)| {
         if idx == 0 {
-            *val = 1f32;
+            *val = 1.0;
         } else {
-            *val = 0f32;
+            *val = 0.0;
         }
     });
 
@@ -106,9 +106,9 @@ fn main() {
     let mut y2 = [0f32; N];
     digital_system2(&unit_step, &sinusoidal, &mut y2);
     println!("digital_system2: {:?}", &y2);
-    Chart::new(120, 60, 0f32, N as f32)
+    Chart::new(120, 60, 0.0, N as f32)
         .lineplot(Shape::Continuous(|idx| {
-            let unit = 1f32;
+            let unit = 1.0;
             let sinusoidal = (W0 * idx).sin();
             sinusoidal + unit
         }))
@@ -132,9 +132,9 @@ fn main() {
     Chart::new(120, 60, 0f32, N as f32)
         .lineplot(Shape::Continuous(|idx| {
             let sinusoidal = (W0 * idx).sin();
-            let sinusoidal2 = (W0 * idx - 1f32).sin();
+            let sinusoidal2 = (W0 * idx - 1.0).sin();
 
-            if idx == 0f32 {
+            if idx == 0.0 {
                 2.2 * sinusoidal
             } else {
                 2.2 * sinusoidal + -1.1 * sinusoidal2
@@ -151,7 +151,7 @@ fn main() {
             let sinusoidal = (W0 * idx).sin();
             let sinusoidal2 = (W0 * idx - 1f32).sin();
 
-            if idx == 0f32 {
+            if idx == 0.0 {
                 2.2 * sinusoidal
             } else {
                 2.2 * sinusoidal + -1.1 * sinusoidal2 + 0.7 * sinusoidal2
@@ -173,11 +173,11 @@ fn main() {
     println!("digital_system7: {:?}", &y7);
     Chart::new(120, 60, 0f32, N as f32)
         .lineplot(Shape::Continuous(|idx| {
-            let pulse = if idx == 0f32 { 1f32 } else { 0f32 };
+            let pulse = if idx == 0.0 { 1.0 } else { 0.0 };
 
-            let pulse2 = if (idx - 1f32) == 0f32 { 1f32 } else { 0f32 };
+            let pulse2 = if (idx - 1.0) == 0.0 { 1.0 } else { 0.0 };
 
-            if idx == 0f32 {
+            if idx == 0.0 {
                 1.0 * pulse
             } else {
                 1.0 * pulse + 2.0 * pulse2

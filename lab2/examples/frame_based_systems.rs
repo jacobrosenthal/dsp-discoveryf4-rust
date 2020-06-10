@@ -28,7 +28,7 @@ macro_rules! dbgprint {
 use micromath::F32Ext;
 
 const N: usize = 10;
-const W0: f32 = core::f32::consts::PI / 5f32;
+const W0: f32 = core::f32::consts::PI / 5.0;
 
 fn digital_system1(b: f32, input: &[f32], output: &mut [f32]) {
     output
@@ -118,9 +118,9 @@ fn main() -> ! {
     let mut unit_pulse = [0f32; N];
     unit_pulse.iter_mut().enumerate().for_each(|(idx, val)| {
         if idx == 0 {
-            *val = 1f32;
+            *val = 1.0;
         } else {
-            *val = 0f32;
+            *val = 0.0;
         }
     });
 

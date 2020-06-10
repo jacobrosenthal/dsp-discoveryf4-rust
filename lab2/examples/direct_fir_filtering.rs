@@ -58,10 +58,12 @@ fn main() -> ! {
 
     let mut x = [0f32; N];
     x.iter_mut().enumerate().for_each(|(idx, val)| {
-        *val = (PI * idx as f32 / 128f32).sin() + (FRAC_PI_4 * idx as f32).sin()
+        *val = (PI * idx as f32 / 128.0).sin() + (FRAC_PI_4 * idx as f32).sin()
     });
     dbgprint!("x: {:?}", &x[..]);
 
+    //convolution_sum on x
+    //cant be a map or iterator adapter on x because random access
     let mut y = [0f32; N];
     y.iter_mut().enumerate().for_each(|(y_idx, y_ref)| {
         *y_ref = H
@@ -71,7 +73,7 @@ fn main() -> ! {
                 if let Some(x_idx) = y_idx.checked_sub(coeff_idx) {
                     coeff * x[x_idx]
                 } else {
-                    0f32
+                    0.0
                 }
             })
             .sum()

@@ -36,23 +36,23 @@ use micromath::F32Ext;
 const N: usize = 256;
 const K: usize = 1;
 
-const W1: f32 = core::f32::consts::PI / 128f32;
-const W2: f32 = core::f32::consts::PI / 4f32;
+const W1: f32 = core::f32::consts::PI / 128.0;
+const W2: f32 = core::f32::consts::PI / 4.0;
 
 fn DTFSE(X: &mut [f32], xc: &[f32], Kx: usize) {
-    let mut P = 0f32;
-    let mut A = 0f32;
+    let mut P = 0.0;
+    let mut A = 0.0;
 
     let size = X.len();
 
     X.iter_mut().enumerate().for_each(|(n, x_ref)| {
-        let mut sumR = 0f32;
+        let mut sumR = 0.0;
 
         (0..Kx).for_each(|k| {
             let kk = k as usize;
             A = (xc[2 * kk] * xc[2 * kk] + xc[2 * kk + 1] * xc[2 * kk + 1]).sqrt();
             P = (xc[2 * kk + 1]).atan2(xc[2 * kk]);
-            sumR += A * ((2f32 * PI * k as f32 * n as f32 / size as f32) + P).cos() / size as f32;
+            sumR += A * ((2.0 * PI * k as f32 * n as f32 / size as f32) + P).cos() / size as f32;
         });
 
         *x_ref = sumR;

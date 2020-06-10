@@ -36,8 +36,8 @@ use micromath::F32Ext;
 
 const N: usize = 16;
 
-const W1: f32 = core::f32::consts::PI / 128f32;
-const W2: f32 = core::f32::consts::PI / 4f32;
+const W1: f32 = core::f32::consts::PI / 128.0;
+const W2: f32 = core::f32::consts::PI / 4.0;
 
 fn DFT(x: &[f32], XR: &mut [f32], XI: &mut [f32]) {
     let size = XR.len();
@@ -51,10 +51,10 @@ fn DFT(x: &[f32], XR: &mut [f32], XI: &mut [f32]) {
             let nn = n as f32;
             let k = k as f32;
 
-            sumR += x[2 * n + 0] * (2f32 * PI * k * nn / ss).cos()
-                + x[2 * n + 1] * (2f32 * PI * k * nn / ss).sin();
-            sumI += -x[2 * n + 1] * (2f32 * PI * k * nn / ss).cos()
-                + x[2 * n + 0] * (2f32 * PI * k * nn / ss).sin();
+            sumR += x[2 * n + 0] * (2.0 * PI * k * nn / ss).cos()
+                + x[2 * n + 1] * (2.0 * PI * k * nn / ss).sin();
+            sumI += -x[2 * n + 1] * (2.0 * PI * k * nn / ss).cos()
+                + x[2 * n + 0] * (2.0 * PI * k * nn / ss).sin();
         });
         XR[k] = sumR;
         XI[k] = -sumI;
@@ -98,7 +98,7 @@ fn main() -> ! {
 
     (0..N).for_each(|n| {
         s_complex[2 * n] = s[n];
-        s_complex[2 * n + 1] = 0f32;
+        s_complex[2 * n + 1] = 0.0;
     });
 
     let mut XR = [0f32; N];
@@ -111,7 +111,7 @@ fn main() -> ! {
         //Magnitude calculation
         Mag.iter_mut()
             .enumerate()
-            .for_each(|(n, mag_ref)| *mag_ref = (XR[n].powf(2f32) + XI[n] * XI[n]).sqrt());
+            .for_each(|(n, mag_ref)| *mag_ref = (XR[n].powf(2.0) + XI[n] * XI[n]).sqrt());
     });
     dbgprint!("ticks: {:?}", time.as_ticks());
 

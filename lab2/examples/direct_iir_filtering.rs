@@ -51,7 +51,7 @@ fn main() -> ! {
     let mut x = [0f32; N];
     x.iter_mut()
         .enumerate()
-        .for_each(|(n, val)| *val = (PI * n as f32 / 128f32).sin() + (FRAC_PI_4 * n as f32).sin());
+        .for_each(|(n, val)| *val = (PI * n as f32 / 128.0).sin() + (FRAC_PI_4 * n as f32).sin());
 
     let mut y = [0f32; N];
     //random access of &mut y were iterating over.. so no iterators unless ... todo
@@ -73,7 +73,7 @@ fn main() -> ! {
                     if let Some(idx) = y_idx.checked_sub(coeff_idx) {
                         -(coeff * y[idx])
                     } else {
-                        0f32
+                        0.0
                     }
                 })
                 .sum::<f32>();

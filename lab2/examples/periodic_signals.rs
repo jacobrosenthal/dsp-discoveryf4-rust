@@ -30,8 +30,8 @@ macro_rules! dbgprint {
 use micromath::F32Ext;
 
 const N: usize = 100;
-const W1: f32 = core::f32::consts::PI / 10f32;
-const W2: f32 = 3f32 / 10f32;
+const W1: f32 = core::f32::consts::PI / 10.0;
+const W2: f32 = 3.0 / 10.0;
 
 #[entry]
 fn main() -> ! {

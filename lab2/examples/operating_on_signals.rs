@@ -79,7 +79,7 @@ fn main() -> ! {
     let mut x2 = [0f32; N];
     x2.iter_mut()
         .zip(&sinusoidal)
-        .for_each(|(val, ess)| *val = ess + 1f32);
+        .for_each(|(val, ess)| *val = ess + 1.0);
     dbgprint!("x2: {:?}", &x2[..]);
 
     //negated unit step signal
@@ -94,7 +94,7 @@ fn main() -> ! {
     x4.iter_mut()
         .skip(2)
         .zip(&sinusoidal)
-        .for_each(|(val, ess)| *val = 3f32 * *ess - 2f32);
+        .for_each(|(val, ess)| *val = 3.0 * *ess - 2.0);
     dbgprint!("x4: {:?}", &x4[..]);
 
     //subtracting two unit step signals

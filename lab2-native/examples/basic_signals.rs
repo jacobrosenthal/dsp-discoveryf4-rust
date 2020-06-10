@@ -1,6 +1,6 @@
 const N: usize = 10;
 const A: f32 = 0.8;
-const W0: f32 = core::f32::consts::PI / 5f32;
+const W0: f32 = core::f32::consts::PI / 5.0;
 
 use textplots::{Chart, Plot, Shape};
 
@@ -62,7 +62,7 @@ fn display(input: &[f32]) {
         .enumerate()
         .map(|(idx, y)| (idx as f32, *y))
         .collect::<Vec<(f32, f32)>>();
-    Chart::new(120, 60, 0f32, N as f32)
+    Chart::new(120, 60, 0.0, N as f32)
         .lineplot(Shape::Lines(&display[..]))
         .display();
 }
