@@ -44,11 +44,12 @@ fn digital_system2(input1: &[f32], input2: &[f32], output: &mut [f32]) {
         .for_each(|(out_ref, (inny1, inny2))| *out_ref = inny1 + inny2)
 }
 
+//-0.5881598.powf(2f32) overflowing on micromath 489298620000.0, use multiplication
 fn digital_system3(input: &[f32], output: &mut [f32]) {
     output
         .iter_mut()
         .zip(input)
-        .for_each(|(out_ref, inny)| *out_ref = inny.powf(2f32))
+        .for_each(|(out_ref, inny)| *out_ref = inny * inny)
 }
 
 fn digital_system4(b: &[f32], input: &[f32], output: &mut [f32]) {
@@ -132,46 +133,47 @@ fn main() -> ! {
         .iter_mut()
         .enumerate()
         .for_each(|(idx, val)| *val = (W0 * idx as f32).sin());
+    dbgprint!("sinusoidal: {:?}", &sinusoidal);
 
     //y[n] = b x[n]
     let mut y1 = [0f32; N];
     digital_system1(2.2, &unit_step, &mut y1);
-    dbgprint!("digital_system1: {:?}", &y1[..]);
+    dbgprint!("digital_system1: {:?}", &y1);
 
     //y[n] = x1[n] + x2[n]
     let mut y2 = [0f32; N];
     digital_system2(&unit_step, &sinusoidal, &mut y2);
-    dbgprint!("digital_system2: {:?}", &y2[..]);
+    dbgprint!("digital_system2: {:?}", &y2);
 
     //y[n] = x^2[n]
     let mut y3 = [0f32; N];
     digital_system3(&sinusoidal, &mut y3);
-    dbgprint!("digital_system3: {:?}", &y3[..]);
+    dbgprint!("digital_system3: {:?}", &y3);
 
     //y[n] = b0 x[n] + b1 x[n-1]
     let mut y4 = [0f32; N];
     digital_system4(&[2.2, -1.1], &sinusoidal, &mut y4);
-    dbgprint!("digital_system4: {:?}", &y4[..]);
+    dbgprint!("digital_system4: {:?}", &y4);
 
     //y[n] = b0 x[n] + b1 x[n-1] + a1 y[n-1]
     let mut y5 = [0f32; N];
     digital_system5(&[2.2, -1.1], 0.7, &sinusoidal, &mut y5);
-    dbgprint!("digital_system5: {:?}", &y5[..]);
+    dbgprint!("digital_system5: {:?}", &y5);
 
     //y[n] = b0 x[n+1] + b1 x[n]
     let mut y6 = [0f32; N];
     digital_system6(&[2.2, -1.1], &unit_step, &mut y6);
-    dbgprint!("digital_system6: {:?}", &y6[..]);
+    dbgprint!("digital_system6: {:?}", &y6);
 
     //y[n] = b0 x[n] + a1 y[n-1]
     let mut y7 = [0f32; N];
     digital_system7(1.0, 2.0, &unit_pulse, &mut y7);
-    dbgprint!("digital_system7: {:?}", &y7[..]);
+    dbgprint!("digital_system7: {:?}", &y7);
 
     //y[n] = n x[n]
     let mut y8 = [0f32; N];
     digital_system8(&sinusoidal, &mut y8);
-    dbgprint!("digital_system8: {:?}", &y8[..]);
+    dbgprint!("digital_system8: {:?}", &y8);
 
     loop {}
 }
