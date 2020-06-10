@@ -75,7 +75,7 @@ fn main() -> ! {
         .iter_mut()
         .enumerate()
         .for_each(|(idx, val)| *val = A.powf(idx as f32));
-    dbgprint!("exponential: {:?}", &exponential[..]);
+    dbgprint!("exponential: {:?}", &exponential);
 
     //sinusoidal signal
     let mut sinusoidal = [0f32; N];
@@ -83,7 +83,7 @@ fn main() -> ! {
         .iter_mut()
         .enumerate()
         .for_each(|(idx, val)| *val = (W0 * idx as f32).sin());
-    dbgprint!("sinusoidal: {:?}", &sinusoidal[..]);
+    dbgprint!("sinusoidal: {:?}", &sinusoidal);
 
     loop {}
 }

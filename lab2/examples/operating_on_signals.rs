@@ -48,13 +48,7 @@ fn main() -> ! {
 
     //unit pulse signal
     let mut unit_pulse = [0; N];
-    unit_pulse.iter_mut().enumerate().for_each(|(idx, val)| {
-        if idx == 0 {
-            *val = 1;
-        } else {
-            *val = 0;
-        }
-    });
+    unit_pulse[0] = 1;
 
     //unit step signal
     let unit_step = [1; N];
