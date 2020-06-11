@@ -1,10 +1,10 @@
 //! This project is used for creating five different basic digital signals: unit
-//! pulse, unit step, unit ramp, exponential and sinusoidal.
+//! pulse, unit step, unit ramp, exponential and sinusoidal. 2_1
 //!
 //! Requires cargo embed
 //! `cargo install cargo-embed`
 //!
-//! `cargo embed --release --example heapless_basic_signals`
+//! `cargo embed --release --example 2_1_heapless_basic_signals`
 
 #![no_std]
 #![no_main]

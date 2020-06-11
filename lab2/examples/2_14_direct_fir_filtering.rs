@@ -4,7 +4,7 @@
 //! Requires cargo embed
 //! `cargo install cargo-embed`
 //!
-//! `cargo embed --release --example direct_fir_filtering`
+//! `cargo embed --release --example 2_14_direct_fir_filtering`
 
 #![no_std]
 #![no_main]

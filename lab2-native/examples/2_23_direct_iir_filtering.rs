@@ -1,53 +1,18 @@
 //! This project is used for explaining IIR filtering operation using constant
 //! coefficient difference equation.
 //!
-//! Requires cargo embed
-//! `cargo install cargo-embed`
-//!
-//! `cargo embed --release --example direct_iir_filtering`
+//! `cargo run --release --example 2_23_direct_iir_filtering`
 
-#![no_std]
-#![no_main]
-
-use stm32f4xx_hal as hal;
-
-use crate::hal::{prelude::*, stm32};
-use cortex_m_rt::entry;
-use jlink_rtt;
-use panic_rtt as _;
-
-macro_rules! dbgprint {
-    ($($arg:tt)*) => {
-        {
-            use core::fmt::Write;
-            let mut out = $crate::jlink_rtt::NonBlockingOutput::new();
-            writeln!(out, $($arg)*).ok();
-        }
-    };
-}
+use textplots::{Chart, Plot, Shape};
 
 use core::f32::consts::{FRAC_PI_4, PI};
-use micromath::F32Ext;
 
 const N: usize = 512;
 
 static B: &'static [f32] = &[0.002044, 0.004088, 0.002044];
 static A: &'static [f32] = &[1f32, -1.819168, 0.827343];
 
-#[entry]
-fn main() -> ! {
-    let dp = stm32::Peripherals::take().unwrap();
-    let _cp = cortex_m::peripheral::Peripherals::take().unwrap();
-
-    // Set up the system clock.
-    let rcc = dp.RCC.constrain();
-
-    let _clocks = rcc
-        .cfgr
-        .use_hse(8.mhz()) //discovery board has 8 MHz crystal for HSE
-        .sysclk(168.mhz())
-        .freeze();
-
+fn main() {
     let mut x = [0f32; N];
     x.iter_mut()
         .enumerate()
@@ -78,7 +43,25 @@ fn main() -> ! {
                 })
                 .sum::<f32>();
     }
-    dbgprint!("y: {:?}", &y[..]);
+    println!("y: {:?}", &y[..]);
+    display(&y[..]);
+}
 
-    loop {}
+// Note: Not ideal to Use lines over continuous, but only way to work on
+// structures. Points does work, but small N doesnt lead to graphs that
+// look like much. the seperate data structure to be combined later. If
+// you have high enough resolution points can be good but n=10 isnt it
+// Note: For input near origin, like unit pulse and step, points aren't
+// discernable.
+// Note: The as conversion could fail
+// Note: Large N could blow stack I believe
+fn display(input: &[f32]) {
+    let display = input
+        .iter()
+        .enumerate()
+        .map(|(idx, y)| (idx as f32, *y))
+        .collect::<Vec<(f32, f32)>>();
+    Chart::new(120, 60, 0f32, N as f32)
+        .lineplot(Shape::Lines(&display[..]))
+        .display();
 }
