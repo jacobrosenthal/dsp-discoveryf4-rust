@@ -160,7 +160,7 @@ fn main() -> ! {
     dbgprint!("digital_system5: {:?}", &y5);
 
     //y[n] = b0 x[n+1] + b1 x[n]
-    //digital_system6 in c file has oob array access, should be if (n+1 < size) so y6[9] undefined
+    //digital_system6 in c version has oob array access, should be if (n+1 < size) so y6[9] undefined
     let mut y6 = [0f32; N];
     digital_system6(&[2.2, -1.1], &unit_step, &mut y6);
     dbgprint!("digital_system6: {:?}", &y6);

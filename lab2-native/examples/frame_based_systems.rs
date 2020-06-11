@@ -97,102 +97,68 @@ fn main() {
     //y[n] = b x[n]
     let mut y1 = [0f32; N];
     digital_system1(2.2, &unit_step, &mut y1);
-    println!("digital_system1 {:?}", y1);
-    Chart::new(120, 60, 0f32, N as f32)
-        .lineplot(Shape::Continuous(|_| 2.2))
-        .display();
+    println!("digital_system1: {:?}", &y1);
+    display(&y1[..]);
 
     //y[n] = x1[n] + x2[n]
     let mut y2 = [0f32; N];
     digital_system2(&unit_step, &sinusoidal, &mut y2);
     println!("digital_system2: {:?}", &y2);
-    Chart::new(120, 60, 0.0, N as f32)
-        .lineplot(Shape::Continuous(|idx| {
-            let unit = 1.0;
-            let sinusoidal = (W0 * idx).sin();
-            sinusoidal + unit
-        }))
-        .display();
+    display(&y2[..]);
 
     //y[n] = x^2[n]
     let mut y3 = [0f32; N];
     digital_system3(&sinusoidal, &mut y3);
     println!("digital_system3: {:?}", &y3);
-    Chart::new(120, 60, 0f32, N as f32)
-        .lineplot(Shape::Continuous(|idx| {
-            let sinusoidal = (W0 * idx).sin();
-            sinusoidal * sinusoidal
-        }))
-        .display();
+    display(&y3[..]);
 
     //y[n] = b0 x[n] + b1 x[n-1]
     let mut y4 = [0f32; N];
     digital_system4(&[2.2, -1.1], &sinusoidal, &mut y4);
     println!("digital_system4: {:?}", &y4);
-    Chart::new(120, 60, 0f32, N as f32)
-        .lineplot(Shape::Continuous(|idx| {
-            let sinusoidal = (W0 * idx).sin();
-            let sinusoidal2 = (W0 * idx - 1.0).sin();
-
-            if idx == 0.0 {
-                2.2 * sinusoidal
-            } else {
-                2.2 * sinusoidal + -1.1 * sinusoidal2
-            }
-        }))
-        .display();
+    display(&y4[..]);
 
     //y[n] = b0 x[n] + b1 x[n-1] + a1 y[n-1]
     let mut y5 = [0f32; N];
     digital_system5(&[2.2, -1.1], 0.7, &sinusoidal, &mut y5);
     println!("digital_system5: {:?}", &y5);
-    Chart::new(120, 60, 0f32, N as f32)
-        .lineplot(Shape::Continuous(|idx| {
-            let sinusoidal = (W0 * idx).sin();
-            let sinusoidal2 = (W0 * idx - 1f32).sin();
-
-            if idx == 0.0 {
-                2.2 * sinusoidal
-            } else {
-                2.2 * sinusoidal + -1.1 * sinusoidal2 + 0.7 * sinusoidal2
-            }
-        }))
-        .display();
+    display(&y5[..]);
 
     //y[n] = b0 x[n+1] + b1 x[n]
+    //digital_system6 in c version has oob array access, should be if (n+1 < size) so y6[9] undefined
     let mut y6 = [0f32; N];
     digital_system6(&[2.2, -1.1], &unit_step, &mut y6);
     println!("digital_system6: {:?}", &y6);
-    Chart::new(120, 60, 0f32, N as f32)
-        .lineplot(Shape::Continuous(|_| 2.2 + -1.1))
-        .display();
+    display(&y6[..]);
 
     //y[n] = b0 x[n] + a1 y[n-1]
     let mut y7 = [0f32; N];
     digital_system7(1.0, 2.0, &unit_pulse, &mut y7);
     println!("digital_system7: {:?}", &y7);
-    Chart::new(120, 60, 0f32, N as f32)
-        .lineplot(Shape::Continuous(|idx| {
-            let pulse = if idx == 0.0 { 1.0 } else { 0.0 };
-
-            let pulse2 = if (idx - 1.0) == 0.0 { 1.0 } else { 0.0 };
-
-            if idx == 0.0 {
-                1.0 * pulse
-            } else {
-                1.0 * pulse + 2.0 * pulse2
-            }
-        }))
-        .display();
+    display(&y7[..]);
 
     //y[n] = n x[n]
     let mut y8 = [0f32; N];
     digital_system8(&sinusoidal, &mut y8);
     println!("digital_system8: {:?}", &y8);
+    display(&y8[..]);
+}
+
+// Note: Not ideal to Use lines over continuous, but only way to work on
+// structures. Points does work, but small N doesnt lead to graphs that
+// look like much. the seperate data structure to be combined later. If
+// you have high enough resolution points can be good but n=10 isnt it
+// Note: For input near origin, like unit pulse and step, points aren't
+// discernable.
+// Note: The as conversion could fail
+// Note: Large N could blow stack I believe
+fn display(input: &[f32]) {
+    let display = input
+        .iter()
+        .enumerate()
+        .map(|(idx, y)| (idx as f32, *y))
+        .collect::<Vec<(f32, f32)>>();
     Chart::new(120, 60, 0f32, N as f32)
-        .lineplot(Shape::Continuous(|idx| {
-            let sinusoidal = (W0 * idx).sin();
-            idx * sinusoidal
-        }))
+        .lineplot(Shape::Lines(&display[..]))
         .display();
 }

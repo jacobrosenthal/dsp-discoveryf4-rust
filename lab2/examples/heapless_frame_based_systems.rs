@@ -96,7 +96,7 @@ fn main() -> ! {
     dbgprint!("digital_system5: {:?}", &digital_system5);
 
     //y[n] = b0 x[n+1] + b1 x[n]
-    //digital_system6 in c file has oob array access, should be if (n+1 < size) so y6[9] undefined
+    //digital_system6 in c version has oob array access, should be if (n+1 < size) so y6[9] undefined
     let unit_pulse = utils::unit_step(0..N).collect::<heapless::Vec<f32, U10>>();
     let digital_system6 = unit_pulse
         .windows(2)
