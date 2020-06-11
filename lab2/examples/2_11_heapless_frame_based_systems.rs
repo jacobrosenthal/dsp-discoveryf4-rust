@@ -48,21 +48,21 @@ fn main() -> ! {
     let digital_system1 = utils::unit_step(0..N)
         .map(|unit| 2.2 * unit)
         .collect::<heapless::Vec<f32, U10>>();
-    dbgprint!("digital_system1: {:?}", &digital_system1);
+    dbgprint!("digital_system1: {:?}", &digital_system1[..]);
 
     //y[n] = x1[n] + x2[n]
     let digital_system2 = utils::unit_step(0..N)
         .zip(utils::sinusoidal(0..N))
         .map(|(unit, s)| unit + s)
         .collect::<heapless::Vec<f32, U10>>();
-    dbgprint!("digital_system2: {:?}", &digital_system2);
+    dbgprint!("digital_system2: {:?}", &digital_system2[..]);
 
     //y[n] = x^2[n]
     //-0.5881598.powf(2f32) overflowing on micromath 489298620000.0, use multiplication
     let digital_system3 = utils::sinusoidal(0..N)
         .map(|s| s * s)
         .collect::<heapless::Vec<f32, U10>>();
-    dbgprint!("digital_system3: {:?}", &digital_system3);
+    dbgprint!("digital_system3: {:?}", &digital_system3[..]);
 
     //y[n] = b0 x[n] + b1 x[n-1]
     //random backwards access.. so no iterators unless ... todo
@@ -78,7 +78,7 @@ fn main() -> ! {
                 *out = 2.2 * sinusoidal[idx] + -1.1 * sinusoidal[idx - 1]
             }
         });
-    dbgprint!("digital_system4: {:?}", &digital_system4);
+    dbgprint!("digital_system4: {:?}", &digital_system4[..]);
 
     //y[n] = b0 x[n] + b1 x[n-1] + a1 y[n-1]
     //random backwards access.. so no iterators unless ... todo
@@ -93,7 +93,7 @@ fn main() -> ! {
                 2.2 * sinusoidal[idx] + -1.1 * sinusoidal[idx - 1] + 0.7 * digital_system5[idx - 1];
         }
     }
-    dbgprint!("digital_system5: {:?}", &digital_system5);
+    dbgprint!("digital_system5: {:?}", &digital_system5[..]);
 
     //y[n] = b0 x[n+1] + b1 x[n]
     //digital_system6 in c version has oob array access, should be if (n+1 < size) so y6[9] undefined
@@ -102,7 +102,7 @@ fn main() -> ! {
         .windows(2)
         .map(|unit_window| 2.2 * unit_window[1] + -1.1 * unit_window[0])
         .collect::<heapless::Vec<f32, U10>>();
-    dbgprint!("digital_system6: {:?}", &digital_system6);
+    dbgprint!("digital_system6: {:?}", &digital_system6[..]);
 
     //y[n] = b0 x[n] + a1 y[n-1]
     //random backwards access.. so no iterators unless ... todo
@@ -115,15 +115,14 @@ fn main() -> ! {
             digital_system7[idx] = 1.0 * unit_pulse[idx] + 2.0 * digital_system7[idx - 1]
         }
     }
-
-    dbgprint!("digital_system7: {:?}", &digital_system7);
+    dbgprint!("digital_system7: {:?}", &digital_system7[..]);
 
     //y[n] = n x[n]
     let digital_system8 = utils::sinusoidal(0..N)
         .enumerate()
         .map(|(idx, s)| idx as f32 * s)
         .collect::<heapless::Vec<f32, U10>>();
-    dbgprint!("digital_system8: {:?}", &digital_system8);
+    dbgprint!("digital_system8: {:?}", &digital_system8[..]);
 
     loop {}
 }
