@@ -1,7 +1,7 @@
 //! This project is used for creating eight different digital signals by
 //! applying different operations on basic digital signals.
 //!
-//! `cargo run --release --example 2_4_operating_on_signals`
+//! `cargo run --example 2_4_operating_on_signals`
 
 const N: usize = 10;
 const A: f32 = 0.8;

@@ -4,7 +4,7 @@
 //! Requires cargo embed
 //! `cargo install cargo-embed`
 //!
-//! `cargo embed --release --example 2_23_direct_iir_filtering`
+//! `cargo embed --example 2_23_direct_iir_filtering`
 
 #![no_std]
 #![no_main]
@@ -60,18 +60,18 @@ fn main() -> ! {
             .iter()
             .enumerate()
             .map(|(coeff_idx, coeff)| {
-                if let Some(idx) = y_idx.checked_sub(coeff_idx) {
-                    coeff * x[idx]
+                if coeff_idx < (y_idx + 1) {
+                    coeff * x[y_idx - coeff_idx]
                 } else {
-                    0f32
+                    0.0
                 }
             })
             .sum::<f32>()
             + A.iter()
                 .enumerate()
                 .map(|(coeff_idx, coeff)| {
-                    if let Some(idx) = y_idx.checked_sub(coeff_idx) {
-                        -(coeff * y[idx])
+                    if coeff_idx < (y_idx + 1) {
+                        -(coeff * y[y_idx - coeff_idx])
                     } else {
                         0.0
                     }

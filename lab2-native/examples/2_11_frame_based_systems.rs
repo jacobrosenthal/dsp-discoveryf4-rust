@@ -1,7 +1,7 @@
 //! This project is used for creating eight different frame-based digital
 //! systems.
 //!
-//! `cargo run --release --example 2_11_frame_based_systems`
+//! `cargo run --example 2_11_frame_based_systems`
 
 use textplots::{Chart, Plot, Shape};
 

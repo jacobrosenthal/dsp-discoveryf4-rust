@@ -3,7 +3,7 @@
 //!
 //! Requires cargo embed `cargo install cargo-embed`
 //!
-//! `cargo embed --release --example 2_11_frame_based_systems`
+//! `cargo embed --example 2_11_frame_based_systems`
 
 #![no_std]
 #![no_main]

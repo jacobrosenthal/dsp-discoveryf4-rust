@@ -8,7 +8,7 @@
 //! Requires cargo embed
 //! `cargo install cargo-embed`
 //!
-//! `cargo embed --release --example 4_1_dft_calculations`
+//! `cargo embed --example 4_1_dft_calculations`
 
 #![no_std]
 #![no_main]

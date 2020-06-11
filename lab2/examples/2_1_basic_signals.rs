@@ -4,7 +4,7 @@
 //! Requires cargo embed
 //! `cargo install cargo-embed`
 //!
-//! `cargo embed --release --example 2_1_basic_signals`
+//! `cargo embed --example 2_1_basic_signals`
 
 #![no_std]
 #![no_main]

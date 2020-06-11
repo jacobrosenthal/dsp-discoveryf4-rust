@@ -4,7 +4,7 @@
 //! Requires cargo embed
 //! `cargo install cargo-embed`
 //!
-//! `cargo embed --release --example 2_14_direct_fir_filtering`
+//! `cargo embed --example 2_14_direct_fir_filtering`
 
 #![no_std]
 #![no_main]
@@ -70,8 +70,8 @@ fn main() -> ! {
             .iter()
             .enumerate()
             .map(|(coeff_idx, coeff)| {
-                if let Some(x_idx) = y_idx.checked_sub(coeff_idx) {
-                    coeff * x[x_idx]
+                if coeff_idx < (y_idx + 1) {
+                    coeff * x[y_idx - coeff_idx]
                 } else {
                     0.0
                 }

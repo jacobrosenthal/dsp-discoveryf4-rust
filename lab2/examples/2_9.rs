@@ -4,7 +4,7 @@
 //! Requires cargo embed
 //! `cargo install cargo-embed`
 //!
-//! `cargo embed --release --example 2_9`
+//! `cargo embed --example 2_9`
 
 #![no_std]
 #![no_main]

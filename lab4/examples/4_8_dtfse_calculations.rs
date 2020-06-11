@@ -7,7 +7,7 @@
 //!
 //! Requires cargo embed `cargo install cargo-embed`
 //!
-//! `cargo embed --release --example 4_8_dtfse_calculations`
+//! `cargo embed --example 4_8_dtfse_calculations`
 
 #![no_std]
 #![no_main]

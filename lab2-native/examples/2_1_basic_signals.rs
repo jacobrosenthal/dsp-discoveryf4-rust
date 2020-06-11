@@ -1,7 +1,7 @@
 //! This project is used for creating five different basic digital signals: unit
 //! pulse, unit step, unit ramp, exponential and sinusoidal.
 //!
-//! `cargo run --release --example 2_1_basic_signals`
+//! `cargo run --example 2_1_basic_signals`
 
 const N: usize = 10;
 const A: f32 = 0.8;
