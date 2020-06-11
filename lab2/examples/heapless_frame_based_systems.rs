@@ -96,10 +96,11 @@ fn main() -> ! {
     dbgprint!("digital_system5: {:?}", &digital_system5);
 
     //y[n] = b0 x[n+1] + b1 x[n]
+    //digital_system6 in c file has oob array access, should be if (n+1 < size) so y6[9] undefined
     let unit_pulse = utils::unit_step(0..N).collect::<heapless::Vec<f32, U10>>();
     let digital_system6 = unit_pulse
         .windows(2)
-        .map(|unit_window| 2.2 * unit_window[1] + 1.1 * unit_window[0])
+        .map(|unit_window| 2.2 * unit_window[1] + -1.1 * unit_window[0])
         .collect::<heapless::Vec<f32, U10>>();
     dbgprint!("digital_system6: {:?}", &digital_system6);
 
@@ -107,16 +108,14 @@ fn main() -> ! {
     //random backwards access.. so no iterators unless ... todo
     let mut digital_system7 = [0f32; N];
     let unit_pulse = utils::unit_pulse(0..N).collect::<heapless::Vec<f32, U10>>();
-    digital_system7
-        .iter_mut()
-        .enumerate()
-        .for_each(|(idx, out)| {
-            if idx == 0 {
-                *out = 1.0 * unit_pulse[idx]
-            } else {
-                *out = 1.0 * unit_pulse[idx] + 2.0 * unit_pulse[idx - 1]
-            }
-        });
+    for idx in 0..digital_system5.len() {
+        if idx == 0 {
+            digital_system7[idx] = 1.0 * unit_pulse[idx]
+        } else {
+            digital_system7[idx] = 1.0 * unit_pulse[idx] + 2.0 * digital_system7[idx - 1]
+        }
+    }
+
     dbgprint!("digital_system7: {:?}", &digital_system7);
 
     //y[n] = n x[n]
