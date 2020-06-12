@@ -22,7 +22,6 @@ fn digital_system2(input1: &[f32], input2: &[f32], output: &mut [f32]) {
         .for_each(|(out_ref, (inny1, inny2))| *out_ref = inny1 + inny2)
 }
 
-//-0.5881598.powf(2f32) overflowing on micromath 489298620000.0, use multiplication
 fn digital_system3(input: &[f32], output: &mut [f32]) {
     output
         .iter_mut()

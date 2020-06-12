@@ -58,7 +58,6 @@ fn main() -> ! {
     dbgprint!("digital_system2: {:?}", &digital_system2[..]);
 
     //y[n] = x^2[n]
-    //-0.5881598.powf(2f32) overflowing on micromath 489298620000.0, use multiplication
     let digital_system3 = utils::sinusoidal(0..N)
         .map(|s| s * s)
         .collect::<heapless::Vec<f32, U10>>();
