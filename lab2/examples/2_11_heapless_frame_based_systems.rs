@@ -1,6 +1,13 @@
 //! This project is used for creating eight different frame-based digital
 //! systems.
 //!
+//! When the function doesnt require random access, you can get away with just
+//! using iterators as seen below. However when random access of both the input
+//! and or output are required the only safe, and fastest, way is the far more
+//! verbose Generic Iterator implemntation on top of a custom struct. Then you
+//! can save whatever random variable you need in the struct and safely look it
+//! back up.
+//!
 //! Requires cargo embed `cargo install cargo-embed`
 //!
 //! `cargo embed --example 2_11_heapless_frame_based_systems`

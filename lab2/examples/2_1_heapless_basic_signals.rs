@@ -1,8 +1,14 @@
 //! This project is used for creating five different basic digital signals: unit
 //! pulse, unit step, unit ramp, exponential and sinusoidal. 2_1
 //!
-//! Requires cargo embed
-//! `cargo install cargo-embed`
+//! Heapless vec is a vector with a fixed capacity of U elements allocated on
+//! the stack. This solution will become necessary as we continue to avoid
+//! allocating. However its not ideal as we carray around extra type parameters
+//! for the length of the vec. Further these are double defined because were
+//! also dealing with a traditional const N length as well... This gets better
+//! with const generics arrive someday.
+//!
+//! Requires cargo embed `cargo install cargo-embed`
 //!
 //! `cargo embed --example 2_1_heapless_basic_signals`
 

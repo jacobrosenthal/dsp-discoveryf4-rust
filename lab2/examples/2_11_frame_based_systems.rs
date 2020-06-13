@@ -1,6 +1,15 @@
 //! This project is used for creating eight different frame-based digital
 //! systems.
 //!
+//! When the function doesnt require random access, you can get away with just
+//! using iterators as seen below. However when random access of both the input
+//! and or output are required the you end up back with for loops and unsafe
+//! array access. If you implement like this its very important to run as debug,
+//! not release, while testing because there are array bounds checks that will
+//! panic and find bugs for you. Those are turned off for speed when you run in
+//! release mode.  Humorously, y6 in the original c implementation has one of
+//! these bugs which was caught by this method.
+//!
 //! Requires cargo embed `cargo install cargo-embed`
 //!
 //! `cargo embed --example 2_11_frame_based_systems`
@@ -52,7 +61,8 @@ fn digital_system3(input: &[f32], output: &mut [f32]) {
 }
 
 fn digital_system4(b: &[f32], input: &[f32], output: &mut [f32]) {
-    //random backwards access.. so no iterators unless ... todo
+    //random backwards access.. so no iterators possible. See heapless example
+    //for more rusty solution
     for idx in 0..output.len() {
         if idx == 0 {
             output[idx] = b[0] * input[idx];
@@ -63,7 +73,8 @@ fn digital_system4(b: &[f32], input: &[f32], output: &mut [f32]) {
 }
 
 fn digital_system5(b: &[f32], a: f32, input: &[f32], output: &mut [f32]) {
-    //random backwards access.. so no iterators unless ... todo
+    //random backwards access.. so no iterators possible. See heapless example
+    //for more rusty solution
     for idx in 0..output.len() {
         if idx == 0 {
             output[idx] = b[0] * input[idx];
@@ -81,7 +92,8 @@ fn digital_system6(b: &[f32], input: &[f32], output: &mut [f32]) {
 }
 
 fn digital_system7(b: f32, a: f32, input: &[f32], output: &mut [f32]) {
-    //random backwards access.. so no iterators unless ... todo
+    //random backwards access.. so no iterators possible. See heapless example
+    //for more rusty solution
     for idx in 0..output.len() {
         if idx == 0 {
             output[idx] = b * input[idx];
@@ -158,8 +170,8 @@ fn main() -> ! {
     digital_system5(&[2.2, -1.1], 0.7, &sinusoidal, &mut y5);
     dbgprint!("digital_system5: {:?}", &y5);
 
-    //y[n] = b0 x[n+1] + b1 x[n]
-    //digital_system6 in c version has oob array access, should be if (n+1 < size) so y6[9] undefined
+    //y[n] = b0 x[n+1] + b1 x[n] digital_system6 in c version has oob array
+    //access, should be if (n+1 < size) so y6[9] undefined in lab manual
     let mut y6 = [0f32; N];
     digital_system6(&[2.2, -1.1], &unit_step, &mut y6);
     dbgprint!("digital_system6: {:?}", &y6);
