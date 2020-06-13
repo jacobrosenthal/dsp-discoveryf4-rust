@@ -13,6 +13,7 @@ panic-halt = "0.2.0"
 micromath = "1.0.1"
 microfft = "0.3.0"
 jlink_rtt = "0.2.0"
+panic_rtt = "0.3.0"
 
 [dependencies.embedded-hal]
 features = ["unproven"]

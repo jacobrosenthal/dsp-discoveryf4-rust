@@ -1,6 +1,10 @@
 //! This project is used for creating five different basic digital signals: unit
 //! pulse, unit step, unit ramp, exponential and sinusoidal.
 //!
+//! Runs entirely locally without hardware. Rounding might be different than on
+//! device. Except for when printing you must be vigilent to not become reliant
+//! on any std tools that can't otherwise port over no no_std without alloc.
+//!
 //! `cargo run --example 2_1_basic_signals`
 
 const N: usize = 10;

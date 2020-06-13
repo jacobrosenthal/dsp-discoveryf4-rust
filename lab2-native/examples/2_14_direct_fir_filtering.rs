@@ -1,6 +1,10 @@
 //! This project is used for explaining FIR filtering operation using
 //! convolution sum operation.
 //!
+//! Runs entirely locally without hardware. Rounding might be different than on
+//! device. Except for when printing you must be vigilent to not become reliant
+//! on any std tools that can't otherwise port over no no_std without alloc.
+//!
 //! `cargo run --example 2_14_direct_fir_filtering`
 
 use textplots::{Chart, Plot, Shape};
