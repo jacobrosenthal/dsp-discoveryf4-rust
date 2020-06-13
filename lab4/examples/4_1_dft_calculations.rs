@@ -40,25 +40,27 @@ const W1: f32 = core::f32::consts::PI / 128.0;
 const W2: f32 = core::f32::consts::PI / 4.0;
 
 fn DFT(x: &[f32], XR: &mut [f32], XI: &mut [f32]) {
+    debug_assert!(XR.len() == XI.len());
+    debug_assert!(x.len() == 2 * XI.len());
+
     let size = XR.len();
-    (0..size).for_each(|k| {
-        let mut sumR = 0.0;
-        let mut sumI = 0.0;
 
-        let ss = size as f32;
+    XR.iter_mut()
+        .zip(XI.iter_mut())
+        .enumerate()
+        .for_each(|(idx, (xr_ref, xi_ref))| {
+            let mut sumR = 0.0;
+            let mut sumI = 0.0;
 
-        (0..size).for_each(|n| {
-            let nn = n as f32;
-            let k = k as f32;
+            (0..size).for_each(|n| {
+                let something = 2.0 * PI * idx as f32 * n as f32 / size as f32;
 
-            sumR += x[2 * n + 0] * (2.0 * PI * k * nn / ss).cos()
-                + x[2 * n + 1] * (2.0 * PI * k * nn / ss).sin();
-            sumI += -x[2 * n + 1] * (2.0 * PI * k * nn / ss).cos()
-                + x[2 * n + 0] * (2.0 * PI * k * nn / ss).sin();
+                sumR += x[2 * n + 0] * something.cos() + x[2 * n + 1] * something.sin();
+                sumI += -x[2 * n + 1] * something.cos() + x[2 * n + 0] * something.sin();
+            });
+            *xr_ref = sumR;
+            *xi_ref = -sumI;
         });
-        XR[k] = sumR;
-        XI[k] = -sumI;
-    });
 }
 
 #[entry]
@@ -110,8 +112,9 @@ fn main() -> ! {
 
         //Magnitude calculation
         Mag.iter_mut()
-            .enumerate()
-            .for_each(|(n, mag_ref)| *mag_ref = (XR[n] * XR[n] + XI[n] * XI[n]).sqrt());
+            .zip(XR.iter())
+            .zip(XI.iter())
+            .for_each(|((mag_ref, xr), xi)| *mag_ref = (xr * xr + xi * xi).sqrt());
     });
     dbgprint!("ticks: {:?}", time.as_ticks());
 
