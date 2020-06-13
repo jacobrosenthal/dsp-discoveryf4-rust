@@ -11,7 +11,6 @@
 use stm32f4xx_hal as hal;
 
 use crate::hal::{prelude::*, stm32};
-use cortex_m;
 use cortex_m_rt::entry;
 use jlink_rtt;
 use panic_rtt as _;
