@@ -18,56 +18,50 @@ fn main() {
             *val = 0.0;
         }
     });
-    println!("unit_pulse: {:?}", &unit_pulse[..]);
-    display(&unit_pulse[..]);
+    display("unit_pulse", &unit_pulse[..]);
 
     let mut unit_step = [0.0; N];
     unit_step.iter_mut().for_each(|val| {
         *val = 1.0;
     });
-    println!("unit_step: {:?}", &unit_step[..]);
-    display(&unit_step[..]);
+    display("unit_step", &unit_step[..]);
 
     let mut unit_ramp = [0.0; N];
     unit_ramp
         .iter_mut()
         .enumerate()
         .for_each(|(idx, val)| *val = idx as f32);
-    println!("unit_ramp: {:?}", &unit_ramp[..]);
-    display(&unit_ramp[..]);
+    display("unit_ramp", &unit_ramp[..]);
 
     let mut exponential = [0.0; N];
     exponential
         .iter_mut()
         .enumerate()
         .for_each(|(idx, val)| *val = A.powf(idx as f32));
-    println!("exponential: {:?}", &exponential[..]);
-    display(&exponential[..]);
+    display("exponential", &exponential[..]);
 
     let mut sinusoidal = [0.0; N];
     sinusoidal
         .iter_mut()
         .enumerate()
         .for_each(|(idx, val)| *val = (W0 * idx as f32).sin());
-    println!("sinusoidal: {:?}", &sinusoidal[..]);
-    display(&sinusoidal[..]);
+    display("sinusoidal", &sinusoidal[..]);
 }
 
-// Note: Not ideal to Use lines over continuous, but only way to work on
-// structures. Points does work, but small N doesnt lead to graphs that
-// look like much. the seperate data structure to be combined later. If
-// you have high enough resolution points can be good but n=10 isnt it
-// Note: For input near origin, like unit pulse and step, points aren't
-// discernable.
-// Note: The as conversion could fail
-// Note: Large N could blow stack I believe
-fn display(input: &[f32]) {
+// Points isn't a great representation as you can lose the line in the graph,
+// however while Lines occasionally looks good it also can be terrible.
+// Continuous requires to be in a fn pointer closure which cant capture any
+// external data so not useful without lots of code duplication. Note: The as
+// conversion could fail and passing large N slices could blow stack I believe
+// because were passing as a slice
+fn display(name: &str, input: &[f32]) {
+    println!("{:?}: {:?}", name, &input[..]);
     let display = input
         .iter()
         .enumerate()
         .map(|(idx, y)| (idx as f32, *y))
         .collect::<Vec<(f32, f32)>>();
     Chart::new(120, 60, 0.0, N as f32)
-        .lineplot(Shape::Lines(&display[..]))
+        .lineplot(Shape::Points(&display[..]))
         .display();
 }

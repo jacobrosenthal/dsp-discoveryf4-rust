@@ -37,24 +37,21 @@ fn main() {
         .skip(4)
         .zip(&unit_pulse)
         .for_each(|(val, dee)| *val = *dee);
-    println!("x1: {:?}", &x1[..]);
-    display(&x1[..]);
+    display("x1", &x1[..]);
 
     //elevated sinusoidal signal
     let mut x2 = [0f32; N];
     x2.iter_mut()
         .zip(&sinusoidal)
         .for_each(|(val, ess)| *val = ess + 1.0);
-    println!("x2: {:?}", &x2[..]);
-    display(&x2[..]);
+    display("x2", &x2[..]);
 
     //negated unit step signal
     let mut x3 = [0f32; N];
     x3.iter_mut()
         .zip(&unit_step)
         .for_each(|(val, uu)| *val = -uu);
-    println!("x3: {:?}", &x3[..]);
-    display(&x3[..]);
+    display("x3", &x3[..]);
 
     //applying all operations on the sinusoidal signal
     let mut x4 = [0f32; N];
@@ -62,8 +59,7 @@ fn main() {
         .skip(2)
         .zip(&sinusoidal)
         .for_each(|(val, ess)| *val = 3.0 * *ess - 2.0);
-    println!("x4: {:?}", &x4[..]);
-    display(&x4[..]);
+    display("x4", &x4[..]);
 
     //subtracting two unit step signals
     let mut x5 = [0f32; N];
@@ -78,8 +74,7 @@ fn main() {
                 *val = *u1 - udelay;
             }
         });
-    println!("x5: {:?}", &x5[..]);
-    display(&x5[..]);
+    display("x5", &x5[..]);
 
     // //multiplying the exponential signal with the unit step signal
     let mut x6 = [0f32; N];
@@ -87,8 +82,7 @@ fn main() {
         .zip(&exponential)
         .zip(&unit_step)
         .for_each(|((val, e), u)| *val = e * *u as f32);
-    println!("x6: {:?}", &x6[..]);
-    display(&x6[..]);
+    display("x6", &x6[..]);
 
     // //multiplying the exponential signal with the sinusoidal signal
     let mut x7 = [0f32; N];
@@ -96,8 +90,7 @@ fn main() {
         .zip(&exponential)
         .zip(&sinusoidal)
         .for_each(|((val, e), s)| *val = e * s);
-    println!("x7: {:?}", &x7[..]);
-    display(&x7[..]);
+    display("x7", &x7[..]);
 
     //multiplying the exponential signal with the window signal
     let mut x8 = [0f32; N];
@@ -105,25 +98,23 @@ fn main() {
         .zip(&exponential)
         .zip(&x5)
         .for_each(|((val, e), x)| *val = e * *x as f32);
-    println!("x8: {:?}", &x8[..]);
-    display(&x8[..]);
+    display("x8", &x8[..]);
 }
 
-// Note: Not ideal to Use lines over continuous, but only way to work on
-// structures. Points does work, but small N doesnt lead to graphs that
-// look like much. the seperate data structure to be combined later. If
-// you have high enough resolution points can be good but n=10 isnt it
-// Note: For input near origin, like unit pulse and step, points aren't
-// discernable.
-// Note: The as conversion could fail
-// Note: Large N could blow stack I believe
-fn display(input: &[f32]) {
+// Points isn't a great representation as you can lose the line in the graph,
+// however while Lines occasionally looks good it also can be terrible.
+// Continuous requires to be in a fn pointer closure which cant capture any
+// external data so not useful without lots of code duplication. Note: The as
+// conversion could fail and passing large N slices could blow stack I believe
+// because were passing as a slice
+fn display(name: &str, input: &[f32]) {
+    println!("{:?}: {:?}", name, &input[..]);
     let display = input
         .iter()
         .enumerate()
         .map(|(idx, y)| (idx as f32, *y))
         .collect::<Vec<(f32, f32)>>();
     Chart::new(120, 60, 0.0, N as f32)
-        .lineplot(Shape::Lines(&display[..]))
+        .lineplot(Shape::Points(&display[..]))
         .display();
 }

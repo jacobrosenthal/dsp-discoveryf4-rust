@@ -1,12 +1,11 @@
 //! This project is used for explaining FIR filtering operation using
 //! convolution sum operation.
 //!
-//! ``
+//! `cargo run --example 2_14_direct_fir_filtering`
 
 use textplots::{Chart, Plot, Shape};
 
 use core::f32::consts::{FRAC_PI_4, PI};
-use micromath::F32Ext;
 
 const N: usize = 512;
 
@@ -26,8 +25,7 @@ fn main() {
     x.iter_mut().enumerate().for_each(|(idx, val)| {
         *val = (PI * idx as f32 / 128.0).sin() + (FRAC_PI_4 * idx as f32).sin()
     });
-    println!("x: {:?}", &x[..]);
-    display(&x[..]);
+    display("x", &x[..]);
 
     //convolution_sum on x
     //cant be a map or iterator adapter on x because random access
@@ -45,25 +43,23 @@ fn main() {
             })
             .sum()
     });
-    println!("y: {:?}", &y[..]);
-    display(&y[..]);
+    display("y", &y[..]);
 }
 
-// Note: Not ideal to Use lines over continuous, but only way to work on
-// structures. Points does work, but small N doesnt lead to graphs that
-// look like much. the seperate data structure to be combined later. If
-// you have high enough resolution points can be good but n=10 isnt it
-// Note: For input near origin, like unit pulse and step, points aren't
-// discernable.
-// Note: The as conversion could fail
-// Note: Large N could blow stack I believe
-fn display(input: &[f32]) {
+// Points isn't a great representation as you can lose the line in the graph,
+// however while Lines occasionally looks good it also can be terrible.
+// Continuous requires to be in a fn pointer closure which cant capture any
+// external data so not useful without lots of code duplication. Note: The as
+// conversion could fail and passing large N slices could blow stack I believe
+// because were passing as a slice
+fn display(name: &str, input: &[f32]) {
+    println!("{:?}: {:?}", name, &input[..]);
     let display = input
         .iter()
         .enumerate()
         .map(|(idx, y)| (idx as f32, *y))
         .collect::<Vec<(f32, f32)>>();
     Chart::new(120, 60, 0f32, N as f32)
-        .lineplot(Shape::Lines(&display[..]))
+        .lineplot(Shape::Points(&display[..]))
         .display();
 }

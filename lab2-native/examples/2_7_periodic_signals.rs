@@ -15,33 +15,30 @@ fn main() {
         .iter_mut()
         .enumerate()
         .for_each(|(idx, val)| *val = (W1 * (idx as f32)).cos());
-    println!("sinusoidal1: {:?}", &sinusoidal1[..]);
-    display(&sinusoidal1[..]);
+    display("sinusoidal1", &sinusoidal1[..]);
 
     let mut sinusoidal2 = [0f32; N];
     sinusoidal2
         .iter_mut()
         .enumerate()
         .for_each(|(idx, val)| *val = (W2 * (idx as f32)).cos());
-    println!("sinusoidal2: {:?}", &sinusoidal2[..]);
-    display(&sinusoidal2[..]);
+    display("sinusoidal2", &sinusoidal2[..]);
 }
 
-// Note: Not ideal to Use lines over continuous, but only way to work on
-// structures. Points does work, but small N doesnt lead to graphs that
-// look like much. the seperate data structure to be combined later. If
-// you have high enough resolution points can be good but n=10 isnt it
-// Note: For input near origin, like unit pulse and step, points aren't
-// discernable.
-// Note: The as conversion could fail
-// Note: Large N could blow stack I believe
-fn display(input: &[f32]) {
+// Points isn't a great representation as you can lose the line in the graph,
+// however while Lines occasionally looks good it also can be terrible.
+// Continuous requires to be in a fn pointer closure which cant capture any
+// external data so not useful without lots of code duplication. Note: The as
+// conversion could fail and passing large N slices could blow stack I believe
+// because were passing as a slice
+fn display(name: &str, input: &[f32]) {
+    println!("{:?}: {:?}", name, &input[..]);
     let display = input
         .iter()
         .enumerate()
         .map(|(idx, y)| (idx as f32, *y))
         .collect::<Vec<(f32, f32)>>();
     Chart::new(120, 60, 0.0, N as f32)
-        .lineplot(Shape::Lines(&display[..]))
+        .lineplot(Shape::Points(&display[..]))
         .display();
 }
