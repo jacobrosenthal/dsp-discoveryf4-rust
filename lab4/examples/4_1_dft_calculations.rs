@@ -16,7 +16,6 @@
 use stm32f4xx_hal as hal;
 
 use crate::hal::{dwt::ClockDuration, dwt::DwtExt, prelude::*, stm32};
-pub use cortex_m::{asm::bkpt, iprint, iprintln, peripheral::ITM};
 use cortex_m_rt::entry;
 use jlink_rtt;
 use panic_rtt as _;
@@ -32,37 +31,13 @@ macro_rules! dbgprint {
 }
 
 use core::f32::consts::PI;
+use heapless::consts::U256;
 use itertools::Itertools;
 use micromath::F32Ext;
 
 const N: usize = 256;
-
 const W1: f32 = core::f32::consts::PI / 128.0;
 const W2: f32 = core::f32::consts::PI / 4.0;
-
-fn DFT(x: &[f32], XR: &mut [f32], XI: &mut [f32]) {
-    debug_assert!(XR.len() == XI.len());
-    debug_assert!(x.len() == 2 * XI.len());
-
-    let size = XR.len();
-
-    XR.iter_mut()
-        .zip(XI.iter_mut())
-        .enumerate()
-        .for_each(|(idx, (xr_ref, xi_ref))| {
-            let mut sumR = 0.0;
-            let mut sumI = 0.0;
-
-            x.iter().tuples().enumerate().for_each(|(n, (x0, x1))| {
-                let something = 2.0 * PI * idx as f32 * n as f32 / size as f32;
-
-                sumR += x0 * something.cos() + x1 * something.sin();
-                sumI += -x1 * something.cos() + x0 * something.sin();
-            });
-            *xr_ref = sumR;
-            *xi_ref = -sumI;
-        });
-}
 
 #[entry]
 fn main() -> ! {
@@ -78,48 +53,89 @@ fn main() -> ! {
         .sysclk(168.mhz())
         .freeze();
 
-    let mut itm = cp.ITM;
-
-    iprintln!(&mut itm.stim[0], "Hello, world!");
-
     // Create a delay abstraction based on DWT cycle counter
     let dwt = cp.DWT.constrain(cp.DCB, clocks);
 
     //Sinusoidal signals
-    let mut s1 = [0f32; N];
-    let mut s2 = [0f32; N];
-    let mut s = [0f32; N];
-
-    (0..N).for_each(|n| {
-        s1[n] = (W1 * n as f32).sin();
-        s2[n] = (W2 * n as f32).sin();
-        s[n] = s1[n] + s2[n];
-    });
+    let s1 = (0..N)
+        .map(|val| (W1 * val as f32).sin())
+        .collect::<heapless::Vec<f32, U256>>();
+    let s2 = (0..N)
+        .map(|val| (W2 * val as f32).sin())
+        .collect::<heapless::Vec<f32, U256>>();
+    let s = s1
+        .iter()
+        .zip(s2.iter())
+        .map(|(ess1, ess2)| ess1 + ess2)
+        .collect::<heapless::Vec<f32, U256>>();
 
     //Complex sum of sinusoidal signals
+    //todo not sure how to get an iter of a tuple of (s,0) so I can just collect here...
     let mut s_complex = [0f32; 2 * N];
-
-    (0..N).for_each(|n| {
-        s_complex[2 * n] = s[n];
-        s_complex[2 * n + 1] = 0.0;
-    });
-
-    let mut XR = [0f32; N];
-    let mut XI = [0f32; N];
-    let mut Mag = [0f32; N];
+    s.iter()
+        .zip(s_complex.iter_mut().tuples())
+        .for_each(|(s, (s0, s1))| {
+            *s0 = *s;
+            *s1 = 0.0;
+        });
 
     let time: ClockDuration = dwt.measure(|| {
-        DFT(&s_complex, &mut XR, &mut XI);
-
+        //todo dont like passing as a slice...
+        let dft = DFT::new(&s_complex[..]);
         //Magnitude calculation
-        Mag.iter_mut()
-            .zip(XR.iter())
-            .zip(XI.iter())
-            .for_each(|((mag_ref, xr), xi)| *mag_ref = (xr * xr + xi * xi).sqrt());
+        let mag = dft.mag_iter().collect::<heapless::Vec<f32, U256>>();
     });
     dbgprint!("dft ticks: {:?}", time.as_ticks());
-    dbgprint!("XR: {:?}", &XR[..]);
-    dbgprint!("XI: {:?}", &XI[..]);
 
     loop {}
+}
+
+struct DFT {
+    XR: heapless::Vec<f32, U256>,
+    XI: heapless::Vec<f32, U256>,
+}
+
+impl<'a> DFT {
+    // todo dont like taking this as a slice.. but not sure on lifetimes as i
+    // needs x to be copy or clone or something because its going to create an
+    // iter from it many times..
+    fn new(x: &[f32]) -> Self {
+        //todo, building each seperately optimizes far worse I think
+        Self {
+            XR: (0..N)
+                .map(|idx| {
+                    x.iter()
+                        .tuples()
+                        .enumerate()
+                        .map(|(n, (x0, x1))| {
+                            let something = 2.0 * PI * idx as f32 * n as f32 / N as f32;
+
+                            x0 * something.cos() + x1 * something.sin()
+                        })
+                        .sum::<f32>()
+                })
+                .collect::<heapless::Vec<f32, U256>>(),
+
+            XI: (0..256)
+                .map(|idx| {
+                    -x.iter()
+                        .tuples()
+                        .enumerate()
+                        .map(|(n, (x0, x1))| {
+                            let something = 2.0 * PI * idx as f32 * n as f32 / N as f32;
+
+                            -x1 * something.cos() + x0 * something.sin()
+                        })
+                        .sum::<f32>()
+                })
+                .collect::<heapless::Vec<f32, U256>>(),
+        }
+    }
+
+    fn mag_iter(&'a self) -> impl Iterator<Item = f32> + 'a {
+        self.XR
+            .iter()
+            .zip(self.XI.iter())
+            .map(|(xr, xi)| (xr * xr + xi * xi).sqrt())
+    }
 }
