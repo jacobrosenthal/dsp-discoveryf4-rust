@@ -33,16 +33,13 @@ macro_rules! dbgprint {
 use core::f32::consts::PI;
 use micromath::F32Ext;
 
-const N: usize = 256;
+const N: usize = 16;
 const K: usize = 1;
 
 const W1: f32 = core::f32::consts::PI / 128.0;
 const W2: f32 = core::f32::consts::PI / 4.0;
 
 fn DTFSE(X: &mut [f32], xc: &[f32], Kx: usize) {
-    let mut P = 0.0;
-    let mut A = 0.0;
-
     let size = X.len();
 
     X.iter_mut().enumerate().for_each(|(n, x_ref)| {
@@ -50,8 +47,8 @@ fn DTFSE(X: &mut [f32], xc: &[f32], Kx: usize) {
 
         (0..Kx).for_each(|k| {
             let kk = k as usize;
-            A = (xc[2 * kk] * xc[2 * kk] + xc[2 * kk + 1] * xc[2 * kk + 1]).sqrt();
-            P = (xc[2 * kk + 1]).atan2(xc[2 * kk]);
+            let A = (xc[2 * kk] * xc[2 * kk] + xc[2 * kk + 1] * xc[2 * kk + 1]).sqrt();
+            let P = (xc[2 * kk + 1]).atan2(xc[2 * kk]);
             sumR += A * ((2.0 * PI * k as f32 * n as f32 / size as f32) + P).cos() / size as f32;
         });
 
@@ -94,18 +91,18 @@ fn main() -> ! {
         s_complex[2 * n + 1] = s_imag[n];
     });
 
+    // Coefficient calculation with CFFT function
     // let mut DTFSEcoef = s_complex.clone();
-    let mut DTFSEcoef = [Complex32::default(); 512];
-    // //Coefficient calculation with CFFT function
-    // arm_cfft_f32(&arm_cfft_sR_f32_len16, DTFSEcoef, 0, 1);//forward transform(not inverse), enables bit reversal of output(With it set to 0 the bins are all mixed up)
+    // let mut DTFSEcoef = [Complex32::default(); 512];
+    // forward transform(not inverse), enables bit reversal of output(With it set to 0 the bins are all mixed up)
+    // arm_cfft_f32(&arm_cfft_sR_f32_len16, DTFSEcoef, 0, 1);
+    // let result = cfft_512(&mut DTFSEcoef);
 
-    let result = cfft_512(&mut DTFSEcoef);
-
-    //set a breakpoint and inspect
-    // let time: ClockDuration = dwt.measure(|| {
-    //     DTFSE(&mut y_real, &DTFSEcoef, K);
-    // });
-    // dbgprint!("ticks: {:?}", time.as_ticks());
+    let time: ClockDuration = dwt.measure(|| {
+        DTFSE(&mut y_real, &s_complex[..], K);
+        dbgprint!("y_real: {:?}", &y_real[..]);
+    });
+    dbgprint!("ticks: {:?}", time.as_ticks());
 
     loop {}
 }
