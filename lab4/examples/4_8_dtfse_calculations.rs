@@ -31,6 +31,8 @@ macro_rules! dbgprint {
 }
 
 use core::f32::consts::PI;
+use heapless::consts::U16;
+use itertools::Itertools;
 use micromath::F32Ext;
 
 const N: usize = 16;
@@ -39,21 +41,17 @@ const K: usize = 1;
 const W1: f32 = core::f32::consts::PI / 128.0;
 const W2: f32 = core::f32::consts::PI / 4.0;
 
-fn DTFSE(X: &mut [f32], xc: &[f32], Kx: usize) {
-    let size = X.len();
-
-    X.iter_mut().enumerate().for_each(|(n, x_ref)| {
-        let mut sumR = 0.0;
-
-        (0..Kx).for_each(|k| {
-            let kk = k as usize;
-            let A = (xc[2 * kk] * xc[2 * kk] + xc[2 * kk + 1] * xc[2 * kk + 1]).sqrt();
-            let P = (xc[2 * kk + 1]).atan2(xc[2 * kk]);
-            sumR += A * ((2.0 * PI * k as f32 * n as f32 / size as f32) + P).cos() / size as f32;
-        });
-
-        *x_ref = sumR;
-    });
+fn DTFSE<'a>(size: usize, coeff: &'a [f32], ksize: usize) -> impl Iterator<Item = f32> + 'a {
+    (0..size).map(move |n| {
+        (0..ksize)
+            .zip(coeff.iter().tuples())
+            .map(|(k, (coeff0, coeff1))| {
+                let A = (coeff0 * coeff0 + coeff1 * coeff1).sqrt();
+                let P = (coeff1).atan2(*coeff0);
+                A * ((2.0 * PI * k as f32 * n as f32 / size as f32) + P).cos() / size as f32
+            })
+            .sum::<f32>()
+    })
 }
 
 #[entry]
@@ -73,23 +71,20 @@ fn main() -> ! {
     // Create a delay abstraction based on DWT cycle counter
     let dwt = cp.DWT.constrain(cp.DCB, clocks);
 
-    let mut s_real = [0f32; N];
-    let mut s_imag = [0f32; N];
-    let mut y_real = [0f32; N];
+    let s_imag = [0f32; N];
+
+    let s_real = (0..N)
+        .map(|idx| if idx < N / 2 { 1.0 } else { 0.0 })
+        .collect::<heapless::Vec<f32, U16>>();
+
     let mut s_complex = [0f32; 2 * N];
-
-    //square signal
-    (0..N).for_each(|n| {
-        if n < N / 2 {
-            s_real[n] = 1.0;
-        } else {
-            s_real[n] = 0.0;
-        }
-
-        s_imag[n] = 0.0;
-        s_complex[2 * n + 0] = s_real[n];
-        s_complex[2 * n + 1] = s_imag[n];
-    });
+    s_real
+        .iter()
+        .zip(s_imag.iter().zip(s_complex.iter_mut().tuples()))
+        .for_each(|(s_real, (s_imag, (s0, s1)))| {
+            *s0 = *s_real;
+            *s1 = *s_imag;
+        });
 
     // Coefficient calculation with CFFT function
     // let mut DTFSEcoef = s_complex.clone();
@@ -99,7 +94,7 @@ fn main() -> ! {
     // let result = cfft_512(&mut DTFSEcoef);
 
     let time: ClockDuration = dwt.measure(|| {
-        DTFSE(&mut y_real, &s_complex[..], K);
+        let y_real = DTFSE(N, &s_complex, K).collect::<heapless::Vec<f32, U16>>();
         dbgprint!("y_real: {:?}", &y_real[..]);
     });
     dbgprint!("ticks: {:?}", time.as_ticks());
