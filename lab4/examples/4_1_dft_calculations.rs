@@ -25,16 +25,17 @@ macro_rules! dbgprint {
     ($($arg:tt)*) => {
         {
             use core::fmt::Write;
-            let mut out = $crate::jlink_rtt::NonBlockingOutput::new();
+            let mut out = $crate::jlink_rtt::Output::new();
             writeln!(out, $($arg)*).ok();
         }
     };
 }
 
 use core::f32::consts::PI;
+use itertools::Itertools;
 use micromath::F32Ext;
 
-const N: usize = 16;
+const N: usize = 256;
 
 const W1: f32 = core::f32::consts::PI / 128.0;
 const W2: f32 = core::f32::consts::PI / 4.0;
@@ -52,11 +53,11 @@ fn DFT(x: &[f32], XR: &mut [f32], XI: &mut [f32]) {
             let mut sumR = 0.0;
             let mut sumI = 0.0;
 
-            (0..size).for_each(|n| {
+            x.iter().tuples().enumerate().for_each(|(n, (x0, x1))| {
                 let something = 2.0 * PI * idx as f32 * n as f32 / size as f32;
 
-                sumR += x[2 * n + 0] * something.cos() + x[2 * n + 1] * something.sin();
-                sumI += -x[2 * n + 1] * something.cos() + x[2 * n + 0] * something.sin();
+                sumR += x0 * something.cos() + x1 * something.sin();
+                sumI += -x1 * something.cos() + x0 * something.sin();
             });
             *xr_ref = sumR;
             *xi_ref = -sumI;
@@ -116,7 +117,9 @@ fn main() -> ! {
             .zip(XI.iter())
             .for_each(|((mag_ref, xr), xi)| *mag_ref = (xr * xr + xi * xi).sqrt());
     });
-    dbgprint!("ticks: {:?}", time.as_ticks());
+    dbgprint!("dft ticks: {:?}", time.as_ticks());
+    dbgprint!("XR: {:?}", &XR[..]);
+    dbgprint!("XI: {:?}", &XI[..]);
 
     loop {}
 }
