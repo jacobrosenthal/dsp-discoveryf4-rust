@@ -70,7 +70,8 @@ fn main() -> ! {
         .collect::<heapless::Vec<f32, U256>>();
 
     //Complex sum of sinusoidal signals
-    //todo not sure how to get an iter of a tuple of (s,0) so I can just collect here...
+    //todo not sure how to get an iter of a tuple of (s,0) so I can just map or
+    //collect here...
     let mut s_complex = [0f32; 2 * N];
     s.iter()
         .zip(s_complex.iter_mut().tuples())
@@ -80,10 +81,9 @@ fn main() -> ! {
         });
 
     let time: ClockDuration = dwt.measure(|| {
-        //todo dont like passing as a slice...
-        let dft = DFT::new(&s_complex[..]);
+        let dft = DFT::new(s_complex.iter().cloned());
         //Magnitude calculation
-        let mag = dft.mag_iter().collect::<heapless::Vec<f32, U256>>();
+        let _mag = dft.mag_iter().collect::<heapless::Vec<f32, U256>>();
     });
     dbgprint!("dft ticks: {:?}", time.as_ticks());
 
@@ -96,18 +96,15 @@ struct DFT {
 }
 
 impl<'a> DFT {
-    // todo dont like taking this as a slice.. but not sure on lifetimes as i
-    // needs x to be copy or clone or something because its going to create an
-    // iter from it many times..
-    fn new(x: &[f32]) -> Self {
+    fn new<I: Iterator<Item = f32> + Clone>(x: I) -> Self {
         //todo, building each seperately optimizes far worse I think
         Self {
             XR: (0..N)
                 .map(|idx| {
-                    x.iter()
+                    x.clone()
                         .tuples()
                         .enumerate()
-                        .map(|(n, (x0, x1))| {
+                        .map(move |(n, (x0, x1))| {
                             let something = 2.0 * PI * idx as f32 * n as f32 / N as f32;
 
                             x0 * something.cos() + x1 * something.sin()
@@ -118,10 +115,10 @@ impl<'a> DFT {
 
             XI: (0..256)
                 .map(|idx| {
-                    -x.iter()
+                    -x.clone()
                         .tuples()
                         .enumerate()
-                        .map(|(n, (x0, x1))| {
+                        .map(move |(n, (x0, x1))| {
                             let something = 2.0 * PI * idx as f32 * n as f32 / N as f32;
 
                             -x1 * something.cos() + x0 * something.sin()
