@@ -17,7 +17,7 @@ use stm32f4xx_hal as hal;
 use crate::hal::{dwt::ClockDuration, dwt::DwtExt, prelude::*, stm32};
 use cortex_m_rt::entry;
 use jlink_rtt;
-use microfft::{complex::cfft_512, Complex32};
+// use microfft::{complex::cfft_512, Complex32};
 use panic_rtt as _;
 
 macro_rules! dbgprint {
@@ -34,21 +34,23 @@ use core::f32::consts::PI;
 use heapless::consts::U16;
 use itertools::Itertools;
 use micromath::F32Ext;
+use typenum::Unsigned;
 
 const N: usize = 16;
 const K: usize = 1;
 
-const W1: f32 = core::f32::consts::PI / 128.0;
-const W2: f32 = core::f32::consts::PI / 4.0;
-
-fn DTFSE<'a>(size: usize, coeff: &'a [f32], ksize: usize) -> impl Iterator<Item = f32> + 'a {
+fn dtfse<N: Unsigned, I: Iterator<Item = f32> + Clone>(
+    coeff: I,
+    ksize: usize,
+) -> impl Iterator<Item = f32> {
+    let size = N::to_usize();
     (0..size).map(move |n| {
         (0..ksize)
-            .zip(coeff.iter().tuples())
+            .zip(coeff.clone().tuples())
             .map(|(k, (coeff0, coeff1))| {
-                let A = (coeff0 * coeff0 + coeff1 * coeff1).sqrt();
-                let P = (coeff1).atan2(*coeff0);
-                A * ((2.0 * PI * k as f32 * n as f32 / size as f32) + P).cos() / size as f32
+                let a = (coeff0 * coeff0 + coeff1 * coeff1).sqrt();
+                let p = (coeff1).atan2(coeff0);
+                a * ((2.0 * PI * k as f32 * n as f32 / size as f32) + p).cos() / size as f32
             })
             .sum::<f32>()
     })
@@ -94,7 +96,8 @@ fn main() -> ! {
     // let result = cfft_512(&mut DTFSEcoef);
 
     let time: ClockDuration = dwt.measure(|| {
-        let y_real = DTFSE(N, &s_complex, K).collect::<heapless::Vec<f32, U16>>();
+        let y_real =
+            dtfse::<U16, _>(s_complex.iter().cloned(), K).collect::<heapless::Vec<f32, U16>>();
         dbgprint!("y_real: {:?}", &y_real[..]);
     });
     dbgprint!("ticks: {:?}", time.as_ticks());

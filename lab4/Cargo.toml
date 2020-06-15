@@ -16,6 +16,7 @@ jlink_rtt = "0.2.0"
 panic_rtt = "0.3.0"
 itertools = { version = "0.9.0", default-features = false }
 heapless = "0.5.5"
+typenum = "1.12.0"
 
 [dependencies.embedded-hal]
 features = ["unproven"]
