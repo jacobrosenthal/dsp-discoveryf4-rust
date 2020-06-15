@@ -24,12 +24,13 @@ static H: &'static [f32] = &[
     0.001448,
 ];
 
-// todo. this should take an iterator not a slice but I cant work out lifetimes
-// around x being moved into the map closure
-pub fn convolution_sum<'a>(x: &'a [f32]) -> impl Iterator<Item = f32> + 'a {
-    (0..x.len()).map(move |idx| {
-        x.iter()
-            .take(idx + 1)
+pub fn convolution_sum<I>(x: I) -> impl Iterator<Item = f32>
+where
+    I: Iterator<Item = f32> + std::iter::ExactSizeIterator + std::iter::DoubleEndedIterator + Clone,
+{
+    (0..x.len()).map(move |y_idx| {
+        x.clone()
+            .take(y_idx + 1)
             .rev()
             .zip(H.iter())
             .map(|(exx, h)| h * exx)
@@ -39,11 +40,9 @@ pub fn convolution_sum<'a>(x: &'a [f32]) -> impl Iterator<Item = f32> + 'a {
 
 fn main() {
     let x = (0..U512::to_usize())
-        .map(|idx| (PI * idx as f32 / 128.0).sin() + (FRAC_PI_4 * idx as f32).sin())
-        .collect::<heapless::Vec<f32, U512>>();
-    display("x", &x[..]);
+        .map(|idx| (PI * idx as f32 / 128.0).sin() + (FRAC_PI_4 * idx as f32).sin());
 
-    let y = convolution_sum(&x[..]).collect::<heapless::Vec<f32, U512>>();
+    let y = convolution_sum(x).collect::<heapless::Vec<f32, U512>>();
     display("y", &y[..]);
 }
 
