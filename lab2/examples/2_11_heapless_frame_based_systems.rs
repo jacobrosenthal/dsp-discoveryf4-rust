@@ -27,8 +27,6 @@ mod utils;
 use heapless::consts::U10;
 use itertools::Itertools;
 
-const N: usize = 10;
-
 macro_rules! dbgprint {
     ($($arg:tt)*) => {
         {
@@ -54,46 +52,46 @@ fn main() -> ! {
         .freeze();
 
     //y[n] = b x[n]
-    let y1 = utils::unit_step(0..N)
+    let y1 = utils::unit_step::<U10>()
         .map(|u| 2.2 * u)
         .collect::<heapless::Vec<f32, U10>>();
     dbgprint!("digital_system1: {:?}", &y1);
 
     //y[n] = x1[n] + x2[n]
-    let y2 = utils::sinusoidal(0..N)
-        .zip(utils::unit_step(0..N))
+    let y2 = utils::sinusoidal::<U10>()
+        .zip(utils::unit_step::<U10>())
         .map(|(inny1, inny2)| inny1 + inny2)
         .collect::<heapless::Vec<f32, U10>>();
     dbgprint!("digital_system2: {:?}", &y2);
 
     //y[n] = x^2[n]
-    let y3 = utils::sinusoidal(0..N)
+    let y3 = utils::sinusoidal::<U10>()
         .map(|inny| inny * inny)
         .collect::<heapless::Vec<f32, U10>>();
     dbgprint!("digital_system3: {:?}", &y3);
 
     //y[n] = b0 x[n] + b1 x[n-1]
-    let y4 = DigitalSystem4::new(utils::sinusoidal(0..N)).collect::<heapless::Vec<f32, U10>>();
+    let y4 = DigitalSystem4::new(utils::sinusoidal::<U10>()).collect::<heapless::Vec<f32, U10>>();
     dbgprint!("digital_system4: {:?}", &y4);
 
     //y[n] = b0 x[n] + b1 x[n-1] + a1 y[n-1]
-    let y5 = DigitalSystem5::new(utils::sinusoidal(0..N)).collect::<heapless::Vec<f32, U10>>();
+    let y5 = DigitalSystem5::new(utils::sinusoidal::<U10>()).collect::<heapless::Vec<f32, U10>>();
     dbgprint!("digital_system5: {:?}", &y5);
 
     //y[n] = b0 x[n+1] + b1 x[n]
     // digital_system6 in c version has oob array access, should be if (n+1 < size) so y6[9] undefined
-    let y6 = utils::unit_step(0..N)
+    let y6 = utils::unit_step::<U10>()
         .tuple_windows()
         .map(|(u0, u1)| 2.2 * u1 + -1.1 * u0)
         .collect::<heapless::Vec<f32, U10>>();
     dbgprint!("digital_system6: {:?}", &y6);
 
     //y[n] = b0 x[n] + a1 y[n-1]
-    let y7 = DigitalSystem7::new(utils::unit_pulse(0..N)).collect::<heapless::Vec<f32, U10>>();
+    let y7 = DigitalSystem7::new(utils::unit_pulse::<U10>()).collect::<heapless::Vec<f32, U10>>();
     dbgprint!("digital_system7: {:?}", &y7);
 
     //y[n] = n x[n]
-    let y8 = utils::sinusoidal(0..N)
+    let y8 = utils::sinusoidal::<U10>()
         .enumerate()
         .map(|(idx, inny)| idx as f32 * inny)
         .collect::<heapless::Vec<f32, U10>>();
