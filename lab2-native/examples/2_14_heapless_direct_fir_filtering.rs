@@ -5,13 +5,13 @@
 //! device. Except for when printing you must be vigilent to not become reliant
 //! on any std tools that can't otherwise port over no no_std without alloc.
 //!
-//! `cargo run --example 2_14_direct_fir_filtering`
+//! `cargo run --example 2_14_heapless_direct_fir_filtering`
 
 use textplots::{Chart, Plot, Shape};
 
 use core::f32::consts::{FRAC_PI_4, PI};
-
-const N: usize = 512;
+use heapless::consts::U512;
+use typenum::Unsigned;
 
 static H: &'static [f32] = &[
     0.002044, 0.007806, 0.014554, 0.020018, 0.024374, 0.027780, 0.030370, 0.032264, 0.033568,
@@ -24,25 +24,26 @@ static H: &'static [f32] = &[
     0.001448,
 ];
 
-fn main() {
-    let mut x = [0f32; N];
-    x.iter_mut().enumerate().for_each(|(idx, val)| {
-        *val = (PI * idx as f32 / 128.0).sin() + (FRAC_PI_4 * idx as f32).sin()
-    });
-    display("x", &x[..]);
-
-    //convolution_sum on x
-    //cant be a map or iterator adapter on x because random access
-    let mut y = [0f32; N];
-    y.iter_mut().enumerate().for_each(|(y_idx, y_ref)| {
-        *y_ref = x
-            .iter()
-            .take(y_idx + 1)
+// todo. this should take an iterator not a slice but I cant work out lifetimes
+// around x being moved into the map closure
+pub fn convolution_sum<'a>(x: &'a [f32]) -> impl Iterator<Item = f32> + 'a {
+    (0..x.len()).map(move |idx| {
+        x.iter()
+            .take(idx + 1)
             .rev()
             .zip(H.iter())
             .map(|(exx, h)| h * exx)
             .sum()
-    });
+    })
+}
+
+fn main() {
+    let x = (0..U512::to_usize())
+        .map(|idx| (PI * idx as f32 / 128.0).sin() + (FRAC_PI_4 * idx as f32).sin())
+        .collect::<heapless::Vec<f32, U512>>();
+    display("x", &x[..]);
+
+    let y = convolution_sum(&x[..]).collect::<heapless::Vec<f32, U512>>();
     display("y", &y[..]);
 }
 
@@ -59,7 +60,7 @@ fn display(name: &str, input: &[f32]) {
         .enumerate()
         .map(|(idx, y)| (idx as f32, *y))
         .collect::<Vec<(f32, f32)>>();
-    Chart::new(120, 60, 0f32, N as f32)
+    Chart::new(120, 60, 0f32, U512::to_usize() as f32)
         .lineplot(Shape::Points(&display[..]))
         .display();
 }

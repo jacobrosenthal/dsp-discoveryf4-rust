@@ -66,16 +66,12 @@ fn main() -> ! {
     //cant be a map or iterator adapter on x because random access
     let mut y = [0f32; N];
     y.iter_mut().enumerate().for_each(|(y_idx, y_ref)| {
-        *y_ref = H
+        *y_ref = x
             .iter()
-            .enumerate()
-            .map(|(coeff_idx, coeff)| {
-                if coeff_idx < (y_idx + 1) {
-                    coeff * x[y_idx - coeff_idx]
-                } else {
-                    0.0
-                }
-            })
+            .take(y_idx + 1)
+            .rev()
+            .zip(H.iter())
+            .map(|(exx, h)| h * exx)
             .sum()
     });
     dbgprint!("y: {:?}", &y[..]);
