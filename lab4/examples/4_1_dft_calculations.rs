@@ -60,12 +60,10 @@ fn main() -> ! {
     let s1 = (0..N).map(|val| (W1 * val as f32).sin());
     let s2 = (0..N).map(|val| (W2 * val as f32).sin());
     let s = s1.zip(s2).map(|(ess1, ess2)| ess1 + ess2);
-    let s_complex = s
-        .interleave_shortest(core::iter::repeat(0f32))
-        .collect::<heapless::Vec<f32, U512>>();
+    let s_complex = s.interleave_shortest(core::iter::repeat(0f32));
 
     let time: ClockDuration = dwt.measure(|| {
-        let dft = DFT::new(s_complex.iter().cloned());
+        let dft = DFT::new(s_complex);
         //Magnitude calculation
         let _mag = dft.mag_iter().collect::<heapless::Vec<f32, U256>>();
     });
