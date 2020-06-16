@@ -34,6 +34,7 @@ use core::f32::consts::PI;
 use heapless::consts::{U256, U512};
 use itertools::Itertools;
 use micromath::F32Ext;
+use typenum::Unsigned;
 
 const N: usize = 256;
 const W1: f32 = core::f32::consts::PI / 128.0;
@@ -79,36 +80,27 @@ struct DFT {
 
 impl<'a> DFT {
     fn new<I: Iterator<Item = f32> + Clone>(x: I) -> Self {
-        //todo, building each seperately optimizes far worse I think
-        Self {
-            XR: (0..N)
-                .map(|idx| {
-                    x.clone()
-                        .tuples()
-                        .enumerate()
-                        .map(move |(n, (x0, x1))| {
-                            let something = 2.0 * PI * idx as f32 * n as f32 / N as f32;
+        let mut dft = Self {
+            XR: heapless::Vec::<f32, U256>::new(),
+            XI: heapless::Vec::<f32, U256>::new(),
+        };
 
-                            x0 * something.cos() + x1 * something.sin()
-                        })
-                        .sum::<f32>()
-                })
-                .collect::<heapless::Vec<f32, U256>>(),
+        (0..(U256::to_usize())).for_each(|idx| {
+            let mut sumR = 0.0;
+            let mut sumI = 0.0;
 
-            XI: (0..256)
-                .map(|idx| {
-                    -x.clone()
-                        .tuples()
-                        .enumerate()
-                        .map(move |(n, (x0, x1))| {
-                            let something = 2.0 * PI * idx as f32 * n as f32 / N as f32;
+            x.clone().tuples().enumerate().for_each(|(n, (x0, x1))| {
+                let something = 2.0 * PI * idx as f32 * n as f32 / N as f32;
+                sumR += x0 * something.cos() + x1 * something.sin();
+                sumI += -x1 * something.cos() + x0 * something.sin();
+            });
 
-                            -x1 * something.cos() + x0 * something.sin()
-                        })
-                        .sum::<f32>()
-                })
-                .collect::<heapless::Vec<f32, U256>>(),
-        }
+            // todo dont love this, but really shouldnt fail
+            let _ = dft.XR.push(sumR);
+            let _ = dft.XI.push(-sumI);
+        });
+
+        dft
     }
 
     fn mag_iter(&'a self) -> impl Iterator<Item = f32> + 'a {
