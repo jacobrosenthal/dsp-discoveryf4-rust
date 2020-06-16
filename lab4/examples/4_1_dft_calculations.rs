@@ -31,7 +31,7 @@ macro_rules! dbgprint {
 }
 
 use core::f32::consts::PI;
-use heapless::consts::U256;
+use heapless::consts::{U256, U512};
 use itertools::Itertools;
 use micromath::F32Ext;
 
@@ -56,29 +56,13 @@ fn main() -> ! {
     // Create a delay abstraction based on DWT cycle counter
     let dwt = cp.DWT.constrain(cp.DCB, clocks);
 
-    //Sinusoidal signals
-    let s1 = (0..N)
-        .map(|val| (W1 * val as f32).sin())
-        .collect::<heapless::Vec<f32, U256>>();
-    let s2 = (0..N)
-        .map(|val| (W2 * val as f32).sin())
-        .collect::<heapless::Vec<f32, U256>>();
-    let s = s1
-        .iter()
-        .zip(s2.iter())
-        .map(|(ess1, ess2)| ess1 + ess2)
-        .collect::<heapless::Vec<f32, U256>>();
-
     //Complex sum of sinusoidal signals
-    //todo not sure how to get an iter of a tuple of (s,0) so I can just map or
-    //collect here...
-    let mut s_complex = [0f32; 2 * N];
-    s.iter()
-        .zip(s_complex.iter_mut().tuples())
-        .for_each(|(s, (s0, s1))| {
-            *s0 = *s;
-            *s1 = 0.0;
-        });
+    let s1 = (0..N).map(|val| (W1 * val as f32).sin());
+    let s2 = (0..N).map(|val| (W2 * val as f32).sin());
+    let s = s1.zip(s2).map(|(ess1, ess2)| ess1 + ess2);
+    let s_complex = s
+        .interleave_shortest(core::iter::repeat(0f32))
+        .collect::<heapless::Vec<f32, U512>>();
 
     let time: ClockDuration = dwt.measure(|| {
         let dft = DFT::new(s_complex.iter().cloned());

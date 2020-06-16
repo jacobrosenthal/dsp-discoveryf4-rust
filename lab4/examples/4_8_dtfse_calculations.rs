@@ -31,7 +31,7 @@ macro_rules! dbgprint {
 }
 
 use core::f32::consts::PI;
-use heapless::consts::U16;
+use heapless::consts::{U16, U32};
 use itertools::Itertools;
 use micromath::F32Ext;
 use typenum::Unsigned;
@@ -73,20 +73,11 @@ fn main() -> ! {
     // Create a delay abstraction based on DWT cycle counter
     let dwt = cp.DWT.constrain(cp.DCB, clocks);
 
-    let s_imag = [0f32; N];
-
-    let s_real = (0..N)
-        .map(|idx| if idx < N / 2 { 1.0 } else { 0.0 })
-        .collect::<heapless::Vec<f32, U16>>();
-
-    let mut s_complex = [0f32; 2 * N];
-    s_real
-        .iter()
-        .zip(s_imag.iter().zip(s_complex.iter_mut().tuples()))
-        .for_each(|(s_real, (s_imag, (s0, s1)))| {
-            *s0 = *s_real;
-            *s1 = *s_imag;
-        });
+    //Complex sum of sinusoidal signals
+    let s_real = (0..N).map(|idx| if idx < N / 2 { 1.0 } else { 0.0 });
+    let s_complex = s_real
+        .interleave_shortest(core::iter::repeat(0f32))
+        .collect::<heapless::Vec<f32, U32>>();
 
     // Coefficient calculation with CFFT function
     // let mut DTFSEcoef = s_complex.clone();
