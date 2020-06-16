@@ -31,7 +31,7 @@ macro_rules! dbgprint {
 }
 
 use core::f32::consts::PI;
-use heapless::consts::{U16, U32};
+use heapless::consts::U16;
 use itertools::Itertools;
 use micromath::F32Ext;
 use typenum::Unsigned;
@@ -75,9 +75,7 @@ fn main() -> ! {
 
     //Complex sum of sinusoidal signals
     let s_real = (0..N).map(|idx| if idx < N / 2 { 1.0 } else { 0.0 });
-    let s_complex = s_real
-        .interleave_shortest(core::iter::repeat(0f32))
-        .collect::<heapless::Vec<f32, U32>>();
+    let s_complex = s_real.interleave_shortest(core::iter::repeat(0f32));
 
     // Coefficient calculation with CFFT function
     // let mut DTFSEcoef = s_complex.clone();
@@ -87,8 +85,7 @@ fn main() -> ! {
     // let result = cfft_512(&mut DTFSEcoef);
 
     let time: ClockDuration = dwt.measure(|| {
-        let y_real =
-            dtfse::<U16, _>(s_complex.iter().cloned(), K).collect::<heapless::Vec<f32, U16>>();
+        let y_real = dtfse::<U16, _>(s_complex, K).collect::<heapless::Vec<f32, U16>>();
         dbgprint!("y_real: {:?}", &y_real[..]);
     });
     dbgprint!("ticks: {:?}", time.as_ticks());
