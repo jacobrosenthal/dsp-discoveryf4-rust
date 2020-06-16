@@ -1,7 +1,1 @@
-{
-    "rust-analyzer.checkOnSave.allTargets": false,
-    "rust-analyzer.updates.askBeforeDownload": false,
-    "rust-analyzer.checkOnSave.extraArgs": [
-        "--examples"
-    ]
-}
+{}

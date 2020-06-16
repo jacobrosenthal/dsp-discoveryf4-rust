@@ -6,13 +6,13 @@
             "request": "launch",
             "name": "Launch",
             "args": [],
-            "program": "${workspaceRoot}/target/debug/testiters",
+            "program": "${workspaceRoot}/target/debug/examples/2_1_basic_signals",
             "cwd": "${workspaceFolder}",
             "stopOnEntry": false,
             "sourceLanguages": [
                 "rust"
             ],
-            "preLaunchTask": "cargo build",
+            "preLaunchTask": "cargo build --examples",
         },
     ]
 }

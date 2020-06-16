@@ -27,10 +27,11 @@ macro_rules! dbgprint {
 }
 
 use core::f32::consts::{FRAC_PI_4, PI};
+use heapless::consts::U512;
 use micromath::F32Ext;
+use typenum::Unsigned;
 
 const N: usize = 512;
-
 static B: &'static [f32] = &[0.002044, 0.004088, 0.002044];
 static A: &'static [f32] = &[1f32, -1.819168, 0.827343];
 
@@ -48,13 +49,12 @@ fn main() -> ! {
         .sysclk(168.mhz())
         .freeze();
 
-    let mut x = [0f32; N];
-    x.iter_mut()
-        .enumerate()
-        .for_each(|(n, val)| *val = (PI * n as f32 / 128.0).sin() + (FRAC_PI_4 * n as f32).sin());
+    let x = (0..U512::to_usize())
+        .map(|idx| (PI * idx as f32 / 128.0).sin() + (FRAC_PI_4 * idx as f32).sin())
+        .collect::<heapless::Vec<f32, U512>>();
 
-    let mut y = [0f32; N];
     //random access of &mut y were iterating over.. so no iterators unless ... todo
+    let mut y = [0f32; N];
     for y_idx in 0..N {
         y[y_idx] = B
             .iter()

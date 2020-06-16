@@ -7,42 +7,38 @@
 //!
 //! `cargo run --example 2_7_periodic_signals`
 
-const N: usize = 100;
+use textplots::{Chart, Plot, Shape};
+
+use heapless::consts::U100;
+use itertools::Itertools;
+use typenum::Unsigned;
+
 const W1: f32 = core::f32::consts::PI / 10.0;
 const W2: f32 = 3.0 / 10.0;
 
-use textplots::{Chart, Plot, Shape};
-
 fn main() {
-    let mut sinusoidal1 = [0f32; N];
-    sinusoidal1
-        .iter_mut()
-        .enumerate()
-        .for_each(|(idx, val)| *val = (W1 * (idx as f32)).cos());
-    display("sinusoidal1", &sinusoidal1[..]);
+    let sinusoidal1 = (0..(U100::to_usize())).map(|idx| (W1 * (idx as f32)).cos());
+    display::<U100, _>("sinusoidal1", sinusoidal1.clone());
 
-    let mut sinusoidal2 = [0f32; N];
-    sinusoidal2
-        .iter_mut()
-        .enumerate()
-        .for_each(|(idx, val)| *val = (W2 * (idx as f32)).cos());
-    display("sinusoidal2", &sinusoidal2[..]);
+    let sinusoidal2 = (0..(U100::to_usize())).map(|idx| (W2 * (idx as f32)).cos());
+    display::<U100, _>("sinusoidal2", sinusoidal2.clone());
 }
 
 // Points isn't a great representation as you can lose the line in the graph,
 // however while Lines occasionally looks good it also can be terrible.
 // Continuous requires to be in a fn pointer closure which cant capture any
-// external data so not useful without lots of code duplication. Note: The as
-// conversion could fail and passing large N slices could blow stack I believe
-// because were passing as a slice
-fn display(name: &str, input: &[f32]) {
-    println!("{:?}: {:?}", name, &input[..]);
+// external data so not useful without lots of code duplication.
+fn display<N, I>(name: &str, input: I)
+where
+    N: Unsigned,
+    I: Iterator<Item = f32> + core::clone::Clone + std::fmt::Debug,
+{
+    println!("{:?}: {:?}", name, input.clone().format(", "));
     let display = input
-        .iter()
         .enumerate()
-        .map(|(idx, y)| (idx as f32, *y))
+        .map(|(idx, y)| (idx as f32, y))
         .collect::<Vec<(f32, f32)>>();
-    Chart::new(120, 60, 0.0, N as f32)
+    Chart::new(120, 60, 0.0, N::to_usize() as f32)
         .lineplot(Shape::Points(&display[..]))
         .display();
 }

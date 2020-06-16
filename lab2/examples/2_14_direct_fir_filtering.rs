@@ -27,9 +27,9 @@ macro_rules! dbgprint {
 }
 
 use core::f32::consts::{FRAC_PI_4, PI};
+use heapless::consts::U512;
 use micromath::F32Ext;
-
-const N: usize = 512;
+use typenum::Unsigned;
 
 static H: &'static [f32] = &[
     0.002044, 0.007806, 0.014554, 0.020018, 0.024374, 0.027780, 0.030370, 0.032264, 0.033568,
@@ -56,25 +56,29 @@ fn main() -> ! {
         .sysclk(168.mhz())
         .freeze();
 
-    let mut x = [0f32; N];
-    x.iter_mut().enumerate().for_each(|(idx, val)| {
-        *val = (PI * idx as f32 / 128.0).sin() + (FRAC_PI_4 * idx as f32).sin()
-    });
-    dbgprint!("x: {:?}", &x[..]);
+    let x = (0..U512::to_usize())
+        .map(|idx| (PI * idx as f32 / 128.0).sin() + (FRAC_PI_4 * idx as f32).sin());
 
-    //convolution_sum on x
-    //cant be a map or iterator adapter on x because random access
-    let mut y = [0f32; N];
-    y.iter_mut().enumerate().for_each(|(y_idx, y_ref)| {
-        *y_ref = x
-            .iter()
+    // Collecting to have a clean iterator for our naive display fn
+    let y = convolution_sum(x).collect::<heapless::Vec<f32, U512>>();
+    dbgprint!("y: {:?}", &y[..]);
+
+    loop {}
+}
+
+pub fn convolution_sum<I>(x: I) -> impl Iterator<Item = f32> + Clone
+where
+    I: Iterator<Item = f32>
+        + core::iter::ExactSizeIterator
+        + core::iter::DoubleEndedIterator
+        + Clone,
+{
+    (0..x.len()).map(move |y_idx| {
+        x.clone()
             .take(y_idx + 1)
             .rev()
             .zip(H.iter())
             .map(|(exx, h)| h * exx)
             .sum()
-    });
-    dbgprint!("y: {:?}", &y[..]);
-
-    loop {}
+    })
 }
