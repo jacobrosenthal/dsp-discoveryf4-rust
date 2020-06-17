@@ -1,6 +1,14 @@
 //! This project is used for creating eight different frame-based digital
 //! systems.
 //!
+//! This rust implementation isnt particularly frame based, nor is it sample
+//! based. Both are very unrusty as they rely on array access with either bounds
+//! checking performance costs or no bounds checking when in release mode and
+//! then common UB with invald array access. Instead this is largely an iterator
+//! based approach. These can be easily developed inline,  except where
+//! impossible to implement because of needing random access, theyre implemented
+//! as an impl Iterator on a custom struct.
+//!
 //! Runs entirely locally without hardware. Rounding might be different than on
 //! device. Except for when printing you must be vigilent to not become reliant
 //! on any std tools that can't otherwise port over no no_std without alloc.
