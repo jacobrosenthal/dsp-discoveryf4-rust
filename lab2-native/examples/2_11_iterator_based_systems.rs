@@ -33,30 +33,36 @@ fn main() {
     //sinusoidal signal
     let sinusoidal = (0..(U10::to_usize())).map(|val| (W0 * val as f32).sin());
 
-    //y[n] = b x[n]
+    // multiplier
+    // y[n] = b*x[n]
     let y1 = unit_step.clone().map(|u| 2.2 * u);
     display::<U10, _>("digital_system1", y1.clone());
 
-    //y[n] = x1[n] + x2[n]
+    // adder accumulator
+    // y[n] = x1[n] + x2[n]
     let y2 = sinusoidal
         .clone()
         .zip(unit_step.clone())
         .map(|(inny1, inny2)| inny1 + inny2);
     display::<U10, _>("digital_system2", y2.clone());
 
-    //y[n] = x^2[n]
+    // squaring device
+    // y[n] = x^2[n]
     let y3 = sinusoidal.clone().map(|inny| inny * inny);
     display::<U10, _>("digital_system3", y3.clone());
 
-    //y[n] = b0 x[n] + b1 x[n-1]
+    // multiplier and accumulator
+    // y[n] = b0*x[n] + b1*x[n-1]
     let y4 = DigitalSystem4::new(sinusoidal.clone());
     display::<U10, _>("digital_system4", y4.clone());
 
-    //y[n] = b0 x[n] + b1 x[n-1] + a1 y[n-1]
+    // multiplier and accumulator with feedback
+    // y[n] = b0*x[n] + b1*x[n-1] + a*y[n-1]
     let y5 = DigitalSystem5::new(sinusoidal.clone());
     display::<U10, _>("digital_system5", y5.clone());
 
-    //y[n] = b0 x[n+1] + b1 x[n]
+    // multiplier and accumulator with future input
+    // y[n] = b0*x[n+1] + b1*x[n]
     // digital_system6 in c version has oob array access, should be if (n+1 < size) so y6[9] undefined
     let y6 = unit_step
         .clone()
@@ -64,11 +70,13 @@ fn main() {
         .map(|(u0, u1)| 2.2 * u1 + -1.1 * u0);
     display::<U10, _>("digital_system6", y6.clone());
 
-    //y[n] = b0 x[n] + a1 y[n-1]
+    // multiplier and accumulator with unbounded output
+    // y[n] = b0*x[n] + b1*y[n-1]
     let y7 = DigitalSystem7::new(unit_pulse.clone());
     display::<U10, _>("digital_system7", y7.clone());
 
-    //y[n] = n x[n]
+    // multiplier with a time based coefficient
+    // y[n]=n*x[n]
     let y8 = sinusoidal
         .clone()
         .enumerate()
