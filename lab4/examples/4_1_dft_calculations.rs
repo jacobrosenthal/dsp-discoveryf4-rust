@@ -5,8 +5,7 @@
 //! DFT function. Real and imaginary parts of the obtained DFT are represented
 //! with XR and XI arrays. The magnitude of DFT is kept in the Mag array.
 //!
-//! Requires cargo embed
-//! `cargo install cargo-embed`
+//! Requires cargo embed `cargo install cargo-embed`
 //!
 //! `cargo embed --example 4_1_dft_calculations`
 
@@ -18,6 +17,7 @@ use stm32f4xx_hal as hal;
 use crate::hal::{dwt::ClockDuration, dwt::DwtExt, prelude::*, stm32};
 use cortex_m_rt::entry;
 use jlink_rtt;
+use micromath::F32Ext;
 use panic_rtt as _;
 
 macro_rules! dbgprint {
@@ -31,11 +31,9 @@ macro_rules! dbgprint {
 }
 
 use core::f32::consts::PI;
-use heapless::consts::{U256, U512};
-use itertools::Itertools;
-use micromath::F32Ext;
+use heapless::consts::U256;
+use typenum::Unsigned;
 
-const N: usize = 256;
 const W1: f32 = core::f32::consts::PI / 128.0;
 const W2: f32 = core::f32::consts::PI / 4.0;
 
@@ -57,64 +55,50 @@ fn main() -> ! {
     let dwt = cp.DWT.constrain(cp.DCB, clocks);
 
     //Complex sum of sinusoidal signals
-    let s1 = (0..N).map(|val| (W1 * val as f32).sin());
-    let s2 = (0..N).map(|val| (W2 * val as f32).sin());
+    let s1 = (0..U256::to_usize()).map(|val| (W1 * val as f32).sin());
+    let s2 = (0..U256::to_usize()).map(|val| (W2 * val as f32).sin());
     let s = s1.zip(s2).map(|(ess1, ess2)| ess1 + ess2);
-    let s_complex = s.interleave_shortest(core::iter::repeat(0f32));
+
+    //map it to real, leave im blank well fill in with dft
+    let dtfsecoef = s.clone().map(|f| Complex32 { re: f, im: 0.0 });
 
     let time: ClockDuration = dwt.measure(|| {
-        let dft = DFT::new(s_complex);
+        let dft = dft::<U256, _>(dtfsecoef.clone());
+
         //Magnitude calculation
-        let _mag = dft.mag_iter().collect::<heapless::Vec<f32, U256>>();
+        let _mag = dft
+            .map(|complex| (complex.re * complex.re + complex.im * complex.im).sqrt())
+            .collect::<heapless::Vec<f32, U256>>();
     });
     dbgprint!("dft ticks: {:?}", time.as_ticks());
 
     loop {}
 }
 
-struct DFT {
-    XR: heapless::Vec<f32, U256>,
-    XI: heapless::Vec<f32, U256>,
+struct Complex32 {
+    re: f32,
+    im: f32,
 }
 
-impl<'a> DFT {
-    fn new<I: Iterator<Item = f32> + Clone>(x: I) -> Self {
-        //todo, building each seperately optimizes far worse I think
-        Self {
-            XR: (0..N)
-                .map(|idx| {
-                    x.clone()
-                        .tuples()
-                        .enumerate()
-                        .map(move |(n, (x0, x1))| {
-                            let something = 2.0 * PI * idx as f32 * n as f32 / N as f32;
-
-                            x0 * something.cos() + x1 * something.sin()
-                        })
-                        .sum::<f32>()
-                })
-                .collect::<heapless::Vec<f32, U256>>(),
-
-            XI: (0..256)
-                .map(|idx| {
-                    -x.clone()
-                        .tuples()
-                        .enumerate()
-                        .map(move |(n, (x0, x1))| {
-                            let something = 2.0 * PI * idx as f32 * n as f32 / N as f32;
-
-                            -x1 * something.cos() + x0 * something.sin()
-                        })
-                        .sum::<f32>()
-                })
-                .collect::<heapless::Vec<f32, U256>>(),
+fn dft<N: Unsigned, I: Iterator<Item = Complex32> + Clone>(
+    input: I,
+) -> impl Iterator<Item = Complex32> {
+    let size = N::to_usize() as f32;
+    (0..N::to_usize()).map(move |k| {
+        let k = k as f32;
+        let mut sum_re = 0.0;
+        let mut sum_im = 0.0;
+        for (n, complex) in input.clone().enumerate() {
+            let n = n as f32;
+            sum_re += complex.re * (2.0 * PI * k * n / size).cos()
+                + complex.im * (2.0 * PI * k * n / size).sin();
+            sum_im += -complex.im * (2.0 * PI * k * n / size).cos()
+                + complex.re * (2.0 * PI * k * n / size).sin();
         }
-    }
 
-    fn mag_iter(&'a self) -> impl Iterator<Item = f32> + 'a {
-        self.XR
-            .iter()
-            .zip(self.XI.iter())
-            .map(|(xr, xi)| (xr * xr + xi * xi).sqrt())
-    }
+        Complex32 {
+            re: sum_re,
+            im: -sum_im,
+        }
+    })
 }
