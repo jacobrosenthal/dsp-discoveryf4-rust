@@ -17,7 +17,7 @@ use stm32f4xx_hal as hal;
 use crate::hal::{dwt::ClockDuration, dwt::DwtExt, prelude::*, stm32};
 use cortex_m_rt::entry;
 use jlink_rtt;
-// use microfft::{complex::cfft_512, Complex32};
+use micromath::F32Ext;
 use panic_rtt as _;
 
 macro_rules! dbgprint {
@@ -32,29 +32,8 @@ macro_rules! dbgprint {
 
 use core::f32::consts::PI;
 use heapless::consts::U16;
-use itertools::Itertools;
-use micromath::F32Ext;
+use microfft::{complex::cfft_16, Complex32};
 use typenum::Unsigned;
-
-const N: usize = 16;
-const K: usize = 1;
-
-fn dtfse<N: Unsigned, I: Iterator<Item = f32> + Clone>(
-    coeff: I,
-    ksize: usize,
-) -> impl Iterator<Item = f32> {
-    let size = N::to_usize();
-    (0..size).map(move |n| {
-        (0..ksize)
-            .zip(coeff.clone().tuples())
-            .map(|(k, (coeff0, coeff1))| {
-                let a = (coeff0 * coeff0 + coeff1 * coeff1).sqrt();
-                let p = (coeff1).atan2(coeff0);
-                a * ((2.0 * PI * k as f32 * n as f32 / size as f32) + p).cos() / size as f32
-            })
-            .sum::<f32>()
-    })
-}
 
 #[entry]
 fn main() -> ! {
@@ -73,22 +52,44 @@ fn main() -> ! {
     // Create a delay abstraction based on DWT cycle counter
     let dwt = cp.DWT.constrain(cp.DCB, clocks);
 
-    //Complex sum of sinusoidal signals
-    let s_real = (0..N).map(|idx| if idx < N / 2 { 1.0 } else { 0.0 });
-    let s_complex = s_real.interleave_shortest(core::iter::repeat(0f32));
+    //square signal
+    let square = (0..U16::to_usize()).map(|idx| if idx < U16::to_usize() / 2 { 1.0 } else { 0.0 });
+
+    //map it to real, leave im blank well fill in with cfft
+    let mut dtfsecoef = square
+        .clone()
+        .map(|f| Complex32 { re: f, im: 0.0 })
+        .collect::<heapless::Vec<Complex32, U16>>();
 
     // Coefficient calculation with CFFT function
-    // let mut DTFSEcoef = s_complex.clone();
-    // let mut DTFSEcoef = [Complex32::default(); 512];
-    // forward transform(not inverse), enables bit reversal of output(With it set to 0 the bins are all mixed up)
-    // arm_cfft_f32(&arm_cfft_sR_f32_len16, DTFSEcoef, 0, 1);
-    // let result = cfft_512(&mut DTFSEcoef);
+    // arm_cfft_f32 uses a forward transform with enables bit reversal of output
+    // well use microfft uses an in place Radix-2 FFT, for some reasons returns itself we dont need
+    let _ = cfft_16(&mut dtfsecoef[..]);
 
     let time: ClockDuration = dwt.measure(|| {
-        let y_real = dtfse::<U16, _>(s_complex, K).collect::<heapless::Vec<f32, U16>>();
-        dbgprint!("y_real: {:?}", &y_real[..]);
+        let _y_real =
+            dtfse::<U16, _>(dtfsecoef.iter().cloned(), 15).collect::<heapless::Vec<f32, U16>>();
     });
     dbgprint!("ticks: {:?}", time.as_ticks());
 
     loop {}
+}
+
+fn dtfse<N: Unsigned, I: Iterator<Item = Complex32> + Clone>(
+    coeff: I,
+    k_var: usize,
+) -> impl Iterator<Item = f32> {
+    let size = N::to_usize() as f32;
+    (0..N::to_usize()).map(move |n| {
+        coeff
+            .clone()
+            .take(k_var + 1)
+            .enumerate()
+            .map(|(k, complex)| {
+                let a = (complex.re * complex.re + complex.im * complex.im).sqrt();
+                let p = complex.im.atan2(complex.re);
+                a * ((2.0 * PI * k as f32 * n as f32 / size) + p).cos() / size
+            })
+            .sum::<f32>()
+    })
 }
