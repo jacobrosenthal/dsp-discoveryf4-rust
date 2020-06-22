@@ -1,0 +1,18 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Launch",
+            "args": [],
+            "program": "${workspaceRoot}/target/debug/examples/2_1_basic_signals",
+            "cwd": "${workspaceFolder}",
+            "stopOnEntry": false,
+            "sourceLanguages": [
+                "rust"
+            ],
+            "preLaunchTask": "cargo build --examples",
+        },
+    ]
+}
