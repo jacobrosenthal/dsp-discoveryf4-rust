@@ -32,8 +32,14 @@ use micromath::F32Ext;
 use typenum::Unsigned;
 
 const N: usize = 512;
+
+// high pass filter coefficients
 static B: &'static [f32] = &[0.002044, 0.004088, 0.002044];
-static A: &'static [f32] = &[1f32, -1.819168, 0.827343];
+static A: &'static [f32] = &[1.0, -1.819168, 0.827343];
+
+// low pass filter coefficients for 2_24
+// static B: &'static [f32] = &[0.705514, -1.411028, 0.705514];
+// static A: &'static [f32] = &[1.0, -1.359795, 0.462261];
 
 #[entry]
 fn main() -> ! {
