@@ -21,6 +21,15 @@
 			],
 			"group": "build",
 			"label": "rust: cargo build"
-		}
+		},
+		{
+			"type": "cargo",
+			"command": "clean",
+			"problemMatcher": [
+				"$rustc"
+			],
+			"group": "build",
+			"label": "rust: cargo clean"
+		},
 	]
 }
