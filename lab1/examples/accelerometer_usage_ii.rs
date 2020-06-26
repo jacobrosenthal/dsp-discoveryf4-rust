@@ -3,7 +3,7 @@
 //!
 //! With cargo embed `cargo install cargo-embed`
 //!
-//! `cargo embed --release --example accelerometer_usage_ii`
+//! `cargo embed --example accelerometer_usage_ii`
 
 #![no_std]
 #![no_main]
@@ -15,12 +15,6 @@ use cortex_m_rt::entry;
 use jlink_rtt;
 use panic_rtt as _;
 
-use crate::hal::spi;
-use accelerometer::RawAccelerometer;
-use lis302dl;
-
-const N: usize = 1000;
-
 macro_rules! dbgprint {
     ($($arg:tt)*) => {
         {
@@ -30,6 +24,12 @@ macro_rules! dbgprint {
         }
     };
 }
+
+use crate::hal::spi;
+use accelerometer::RawAccelerometer;
+use lis302dl;
+
+const N: usize = 1000;
 
 #[entry]
 fn main() -> ! {
