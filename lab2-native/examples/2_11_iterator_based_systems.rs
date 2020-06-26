@@ -13,7 +13,7 @@
 //! device. Except for when printing you must be vigilent to not become reliant
 //! on any std tools that can't otherwise port over no no_std without alloc.
 //!
-//! `cargo run --example 2_11_frame_based_systems`
+//! `cargo run --example 2_11_iterator_based_systems`
 
 use textplots::{Chart, Plot, Shape};
 

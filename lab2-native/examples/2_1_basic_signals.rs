@@ -5,9 +5,6 @@
 //! device. Except for when printing you must be vigilent to not become reliant
 //! on any std tools that can't otherwise port over no no_std without alloc.
 //!
-//! Demonstrates the use of using iter_mut() which will largely not be used
-//! unless theres no other options. See 2_1_heapless_basic_signals
-//!
 //! `cargo run --example 2_1_basic_signals`
 
 use textplots::{Chart, Plot, Shape};

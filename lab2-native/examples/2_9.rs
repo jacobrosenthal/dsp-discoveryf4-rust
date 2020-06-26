@@ -1,3 +1,11 @@
+//! This project is used for creating a digital sawtooth signal.
+//!
+//! Runs entirely locally without hardware. Rounding might be different than on
+//! device. Except for when printing you must be vigilent to not become reliant
+//! on any std tools that can't otherwise port over no no_std without alloc.
+//!
+//! `cargo run --example 2_9`
+
 use textplots::{Chart, Plot, Shape};
 
 use heapless::consts::U100;

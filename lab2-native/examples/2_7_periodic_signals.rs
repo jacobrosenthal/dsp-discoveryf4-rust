@@ -1,5 +1,6 @@
-//! This project is used for creating eight different digital signals by
-//! applying different operations on basic digital signals.
+//! This project is used for creating two different digital signals. One of
+//! these signals is a periodic cosine wave and other one is aperiodic cosine
+//! wave.
 //!
 //! Runs entirely locally without hardware. Rounding might be different than on
 //! device. Except for when printing you must be vigilent to not become reliant
@@ -10,7 +11,7 @@
 use textplots::{Chart, Plot, Shape};
 
 use heapless::consts::U100;
-use itertools::Itertools;
+// use itertools::Itertools;
 use typenum::Unsigned;
 
 const W1: f32 = core::f32::consts::PI / 10.0;
@@ -28,12 +29,12 @@ fn main() {
 // however while Lines occasionally looks good it also can be terrible.
 // Continuous requires to be in a fn pointer closure which cant capture any
 // external data so not useful without lots of code duplication.
-fn display<N, I>(name: &str, input: I)
+fn display<N, I>(_name: &str, input: I)
 where
     N: Unsigned,
     I: Iterator<Item = f32> + core::clone::Clone + std::fmt::Debug,
 {
-    println!("{:?}: {:?}", name, input.clone().format(", "));
+    // println!("{:?}: {:?}", name, input.clone().format(", "));
     let display = input
         .enumerate()
         .map(|(idx, y)| (idx as f32, y))

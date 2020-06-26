@@ -1,7 +1,7 @@
-//! This project is used for creating eight different frame-based digital
+//! This project is used for creating eight different sample-based digital
 //! systems.
 //!
-//! This frame based example is less compile time checked but allows random
+//! This sample based example is less compile time checked but allows random
 //! access which is impossible in iterator approaches and easier than
 //! implementing an iterator from scratch. Note the bounds checking is elided
 //! for speed in release mode so make sure while developing you're running in
@@ -13,7 +13,7 @@
 //! device. Except for when printing you must be vigilent to not become reliant
 //! on any std tools that can't otherwise port over no no_std without alloc.
 //!
-//! `cargo run --example 2_11_frame_based_systems`
+//! `cargo run --example 2_10_sample_based_systems`
 
 use textplots::{Chart, Plot, Shape};
 
