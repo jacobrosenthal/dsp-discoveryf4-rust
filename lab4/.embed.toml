@@ -1,8 +1,5 @@
-[probe]
-protocol = "Swd"
-
-[rtt]
+[default.rtt]
 enabled = true
 
-[general]
+[default.general]
 chip = "STM32F407VGTx"
