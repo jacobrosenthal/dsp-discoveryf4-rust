@@ -7,7 +7,7 @@
             "servertype": "openocd",
             "cwd": "${workspaceRoot}",
             /* dont forget to select whichever example you are debugging*/
-            "executable": "./target/thumbv7em-none-eabihf/debug/examples/basicsignals",
+            "executable": "./target/thumbv7em-none-eabihf/debug/examples/4_1_dft_calculations",
             "preLaunchTask": "rust: cargo build examples",
             "name": "Debug (OpenOCD)",
             "device": "STM32F407VGT6",

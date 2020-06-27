@@ -7,7 +7,7 @@
 //!
 //! Requires cargo embed `cargo install cargo-embed`
 //!
-//! `cargo embed --example 4_10_stft_calculations`
+//! `cargo embed --example 4_11_stft_accelerometer`
 
 #![no_std]
 #![no_main]
@@ -20,18 +20,18 @@ use jlink_rtt;
 use micromath::F32Ext;
 use panic_rtt as _;
 
-use accelerometer::RawAccelerometer;
-use lis302dl;
-
 macro_rules! dbgprint {
     ($($arg:tt)*) => {
         {
             use core::fmt::Write;
-            let mut out = $crate::jlink_rtt::Output::new();
+            let mut out = $crate::jlink_rtt::NonBlockingOutput::new();
             writeln!(out, $($arg)*).ok();
         }
     };
 }
+
+use accelerometer::RawAccelerometer;
+use lis302dl;
 
 use core::f32::consts::PI;
 use heapless::consts::{U1024, U64};
