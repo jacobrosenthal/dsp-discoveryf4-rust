@@ -8,11 +8,7 @@
 //! device. Except for when printing you must be vigilent to not become reliant
 //! on any std tools that can't otherwise port over no no_std without alloc.
 //!
-//! `cargo run --example 4_8_dtfse_calculations`
-//!
-//! Then on linux with an image viewer you might want to watch and reload the
-//! file as you rebuild it
-//! `feh one.jpg --reload 1`
+//! `cargo run --example 4_10_stft_calculations`
 
 use textplots::{Chart, Plot, Shape};
 
@@ -23,7 +19,6 @@ use microfft::{complex::cfft_16, Complex32};
 use plotly::HeatMap;
 use typenum::Unsigned;
 
-// type WINDOW = heapless::consts::U64;
 type WINDOW = heapless::consts::U16;
 
 const W1: f32 = 0.0;
@@ -47,40 +42,121 @@ fn main() {
         inc: WINDOW::to_usize() / 2,
     };
 
-    let mut xst: heapless::Vec<heapless::Vec<_, WINDOW>, U512> = heapless::Vec::new();
+    let xst = overlapping_chirp_windows
+        .map(|chirp_win| {
+            let mut dtfsecoef = hamming
+                .clone()
+                .zip(chirp_win.iter().rev())
+                .map(|(v, x)| Complex32 { re: v * x, im: 0.0 })
+                .collect::<heapless::Vec<Complex32, WINDOW>>();
 
-    for chirp_win in overlapping_chirp_windows {
-        let mut dtfsecoef = hamming
-            .clone()
-            .zip(chirp_win.iter().rev())
-            .map(|(v, x)| Complex32 { re: v * x, im: 0.0 })
-            .collect::<heapless::Vec<Complex32, WINDOW>>();
+            //todo pick the right size based on WINDOW
+            let _ = cfft_16(&mut dtfsecoef[..]);
 
-        //todo pick the right size based on WINDOW
-        let _ = cfft_16(&mut dtfsecoef[..]);
+            // Magnitude calculation
+            let mag = dtfsecoef
+                .iter()
+                .map(|complex| (complex.re * complex.re + complex.im * complex.im).sqrt())
+                .collect::<heapless::Vec<f32, WINDOW>>();
 
-        // Magnitude calculation
-        let mag = dtfsecoef
-            .iter()
-            .map(|complex| (complex.re * complex.re + complex.im * complex.im).sqrt())
-            .collect::<heapless::Vec<f32, WINDOW>>();
+            mag
+        })
+        .collect::<heapless::Vec<heapless::Vec<_, WINDOW>, U512>>();
 
-        xst.push(mag).ok();
-    }
-
-    // let z = test_data();
-    // println!("z:{:?}", z.len());
+    // //the answer key data for M=16
+    // let z: Vec<Vec<f32>> = Windows {
+    //     v: &ZZ[..],
+    //     size: WINDOW::to_usize(),
+    //     inc: WINDOW::to_usize(),
+    // }
+    // .map(|slice| slice.to_vec())
+    // .collect();
+    // println!("z:{:?}", z);
 
     // why are we 127 instead of 126? maybe they off by one errored? definately rounding differences too
-    let z: std::vec::Vec<Vec<f32>> = xst.iter().map(|v| v.to_vec()).collect();
-    // dbg!(z.clone());
+    let mut z: std::vec::Vec<Vec<f32>> = xst.iter().map(|v| v.to_vec()).collect();
+    z.pop();
 
+    plot(z);
+}
+
+fn plot(z: Vec<Vec<f32>>) {
     let z = clean(z);
-
     let trace = HeatMap::new_z(z);
     let mut plot = plotly::Plot::new();
+
     plot.add_trace(trace);
     plot.show();
+}
+
+//i will never understand..
+fn clean(zzzz: Vec<Vec<f32>>) -> Vec<Vec<f32>> {
+    //any better way to transpose a vec of vecs?
+    let mut z = vec![
+        vec![],
+        vec![],
+        vec![],
+        vec![],
+        vec![],
+        vec![],
+        vec![],
+        vec![],
+    ];
+
+    //throws away 8-15????
+    for v in zzzz {
+        z[0].push(0.0); //XST1(1,:)=0;
+        z[1].push(v[1]);
+        z[2].push(v[2]);
+        z[3].push(v[3]);
+        z[4].push(v[4]);
+        z[5].push(v[5]);
+        z[6].push(v[6]);
+        z[7].push(0.0); //XST1(end,:)=0;
+    }
+
+    // XST1=flipud(XST);
+    z.reverse();
+
+    for v in &mut z {
+        // XST1(:,1)=0;
+        (*v)[0] = 0.0;
+        // XST1(:,end)=0;
+        let end = (*v).len() - 1;
+        (*v)[end] = 0.0;
+    }
+
+    // f=surf(fliplr(XST2));
+    for v in &mut z {
+        (*v).reverse()
+    }
+
+    // // XST2=XST1(2:end,2:end);
+    // for v in &mut z {
+    //     v.pop();
+    // }
+    // z.drain(0..1);
+
+    z
+}
+
+// Points isn't a great representation as you can lose the line in the graph,
+// however while Lines occasionally looks good it also can be terrible.
+// Continuous requires to be in a fn pointer closure which cant capture any
+// external data so not useful without lots of code duplication.
+fn display<N, I>(name: &str, input: I)
+where
+    N: Unsigned,
+    I: Iterator<Item = f32> + core::clone::Clone + std::fmt::Debug,
+{
+    println!("{:?}: {:?}", name, input.clone().format(", "));
+    let display = input
+        .enumerate()
+        .map(|(idx, y)| (idx as f32, y))
+        .collect::<Vec<(f32, f32)>>();
+    Chart::new(120, 60, 0.0, N::to_usize() as f32)
+        .lineplot(Shape::Points(&display[..]))
+        .display();
 }
 
 /// copied from std::slice::Window but expose the increment amount instead of using 1
@@ -103,51 +179,6 @@ impl<'a, T> Iterator for Windows<'a, T> {
             ret
         }
     }
-}
-
-impl<'a, T> DoubleEndedIterator for Windows<'a, T> {
-    #[inline]
-    fn next_back(&mut self) -> Option<&'a [T]> {
-        if self.size > self.v.len() {
-            None
-        } else {
-            let ret = Some(&self.v[self.v.len() - self.size..]);
-            self.v = &self.v[..self.v.len() - self.inc];
-            ret
-        }
-    }
-
-    #[inline]
-    fn nth_back(&mut self, n: usize) -> Option<Self::Item> {
-        let (end, overflow) = self.v.len().overflowing_sub(n);
-        if end < self.size || overflow {
-            self.v = &[];
-            None
-        } else {
-            let ret = &self.v[end - self.size..end];
-            self.v = &self.v[..end - self.inc];
-            Some(ret)
-        }
-    }
-}
-
-// Points isn't a great representation as you can lose the line in the graph,
-// however while Lines occasionally looks good it also can be terrible.
-// Continuous requires to be in a fn pointer closure which cant capture any
-// external data so not useful without lots of code duplication.
-fn display<N, I>(name: &str, input: I)
-where
-    N: Unsigned,
-    I: Iterator<Item = f32> + core::clone::Clone + std::fmt::Debug,
-{
-    println!("{:?}: {:?}", name, input.clone().format(", "));
-    let display = input
-        .enumerate()
-        .map(|(idx, y)| (idx as f32, y))
-        .collect::<Vec<(f32, f32)>>();
-    Chart::new(120, 60, 0.0, N::to_usize() as f32)
-        .lineplot(Shape::Points(&display[..]))
-        .display();
 }
 
 #[allow(unused)]
@@ -321,62 +352,3 @@ static ZZ: &'static [f32] = &[
     6.1716, 2.8338, 0.0970, 0.0246, 0.0296, 0.0292, 0.0278, 0.0271, 0.0255, 0.0261, 0.0267, 0.0280,
     0.0296, 0.0288, 0.0918, 1.4521, 2.9923, 1.4521, 0.0918, 0.0288, 0.0296, 0.0280, 0.0267, 0.0261,
 ];
-
-#[allow(unused)]
-fn test_data() -> Vec<Vec<f32>> {
-    //ZZ is         2016           1
-    //2016 = 126x16
-    let zzzz = Windows {
-        v: &ZZ[..],
-        size: 16,
-        inc: 16,
-    };
-
-    zzzz.map(|slice| slice.to_vec()).collect()
-}
-
-// beats the fuck out of me
-// XST1=flipud(XST);
-// XST1(1,:)=0;XST1(end,:)=0;XST1(:,1)=0;XST1(:,end)=0;
-// figure(1);
-// XST2=XST1(2:end,2:end);
-// f=surf(fliplr(XST2));
-fn clean(zzzz: Vec<Vec<f32>>) -> Vec<Vec<f32>> {
-    let mut z = vec![
-        vec![],
-        vec![],
-        vec![],
-        vec![],
-        vec![],
-        vec![],
-        vec![],
-        vec![],
-    ];
-
-    for v in zzzz {
-        z[0].push(0.0);
-        z[1].push(v[1]);
-        z[2].push(v[2]);
-        z[3].push(v[3]);
-        z[4].push(v[4]);
-        z[5].push(v[5]);
-        z[6].push(v[6]);
-        z[7].push(0.0);
-        //throws away 8-15????
-    }
-
-    z.reverse();
-
-    for v in &mut z {
-        (*v).reverse()
-    }
-
-    for v in &mut z {
-        (*v)[0] = 0.0;
-        v.pop();
-    }
-
-    z.drain(0..1);
-
-    z
-}
