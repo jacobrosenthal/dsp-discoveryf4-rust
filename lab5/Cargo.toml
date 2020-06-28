@@ -1,0 +1,41 @@
+[package]
+name = "lab5"
+version = "0.1.0"
+authors = ["Jacob Rosenthal <jacobrosenthal@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[dependencies]
+cortex-m = "0.6.2"
+cortex-m-rt = "0.6.12"
+micromath = "1.0.1"
+jlink_rtt = "0.2.0"
+panic_rtt = "0.3.0"
+heapless = "0.5.5"
+typenum = "1.12.0"
+
+[dependencies.stm32f4xx-hal]
+features = ["stm32f407", "rt"]
+version = "0.8.1"
+path = "../../stm32f4xx-hal"
+
+[dependencies.embedded-hal]
+version = "0.2.3"
+
+[profile.dev]
+codegen-units = 1
+debug = 1
+debug-assertions = true # !
+incremental = false
+lto = "fat"
+opt-level = 'z' # !
+overflow-checks = true
+
+[profile.release]
+codegen-units = 1
+debug = 1
+debug-assertions = false
+incremental = false
+lto = "fat"
+opt-level = 3
+overflow-checks = false

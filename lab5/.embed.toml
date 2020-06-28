@@ -1,0 +1,5 @@
+[default.rtt]
+enabled = true
+
+[default.general]
+chip = "STM32F407VGTx"
