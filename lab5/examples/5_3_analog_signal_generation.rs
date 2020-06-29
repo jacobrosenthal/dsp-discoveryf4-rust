@@ -20,6 +20,7 @@ use crate::hal::{
     interrupt,
     prelude::*,
     stm32,
+    timer::Timer,
 };
 use core::cell::RefCell;
 use core::f32::consts::PI;
@@ -29,6 +30,7 @@ use cortex_m::interrupt::{free, Mutex};
 use cortex_m_rt::entry;
 use heapless::consts::U160;
 use micromath::F32Ext;
+use nb;
 use panic_rtt as _;
 use typenum::Unsigned;
 
@@ -43,7 +45,7 @@ fn main() -> ! {
     // Set up the system clock.
     let rcc = dp.RCC.constrain();
 
-    let _clocks = rcc
+    let clocks = rcc
         .cfgr
         .use_hse(8.mhz()) //discovery board has 8 MHz crystal for HSE
         .sysclk(168.mhz())
@@ -74,6 +76,7 @@ fn main() -> ! {
         .map(|idx| if idx < U160::to_usize() / 2 { 4095 } else { 0 })
         .collect::<heapless::Vec<u16, U160>>();
 
+    //period 160
     let sin_lookup = (0..U160::to_usize())
         .map(|idx| {
             let sindummy = (2.0 * PI * idx as f32 / U160::to_u16() as f32).sin();
@@ -81,21 +84,31 @@ fn main() -> ! {
         })
         .collect::<heapless::Vec<u16, U160>>();
 
+    //frequency dac 16khz, freq/period = 16000/160 = 100hz
+    let mut timer = Timer::tim1(dp.TIM1, 16.khz(), clocks);
+    //im not sure if you can create and start twice?
+    nb::block!(timer.wait()).unwrap();
+
     loop {
+        //little wiggly because not an interrupt..
         let sin = FLAG.load(Ordering::Relaxed);
         if sin {
             for idx in 0..U160::to_usize() {
                 dac.set_value(sin_lookup[idx]);
+                timer.start(16.khz());
+                nb::block!(timer.wait()).unwrap();
             }
         } else {
             for idx in 0..U160::to_usize() {
                 dac.set_value(sq_lookup[idx]);
+                timer.start(16.khz());
+                nb::block!(timer.wait()).unwrap();
             }
         }
     }
 }
 
-//todo is relaxed ok for both?
+//todo what orderings?
 //todo no cap, need debouncing
 #[interrupt]
 fn EXTI0() {
