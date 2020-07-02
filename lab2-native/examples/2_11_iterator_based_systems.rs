@@ -24,13 +24,13 @@ use typenum::Unsigned;
 const W0: f32 = core::f32::consts::PI / 5.0;
 
 fn main() {
-    //unit pulse signal
+    // d[n]
     let unit_pulse = (0..(U10::to_usize())).map(|val| if val == 0 { 1.0 } else { 0.0 });
 
-    //unit step signal
+    // u[n]
     let unit_step = (0..(U10::to_usize())).map(|_| 1.0);
 
-    //sinusoidal signal
+    // s[n]
     let sinusoidal = (0..(U10::to_usize())).map(|val| (W0 * val as f32).sin());
 
     // multiplier
@@ -53,7 +53,12 @@ fn main() {
 
     // multiplier and accumulator
     // y[n] = b0*x[n] + b1*x[n-1]
-    let y4 = DigitalSystem4::new(sinusoidal.clone());
+    let delay_sin = Delay::new(sinusoidal.clone(), 1);
+    let y4 = sinusoidal
+        .clone()
+        .map(|s| 2.2 * s)
+        .zip(delay_sin.map(|ds| ds * -1.1))
+        .map(|(a, b)| a + b);
     display::<U10, _>("digital_system4", y4.clone());
 
     // multiplier and accumulator with feedback
@@ -85,44 +90,40 @@ fn main() {
 }
 
 #[derive(Clone, Debug)]
-struct DigitalSystem4<I>
+struct Delay<I>
 where
     I: Iterator<Item = f32>,
 {
-    last: Option<f32>,
+    delay: u32,
+    idx: u32,
     iter: I,
 }
 
-impl<I> DigitalSystem4<I>
+impl<I> Delay<I>
 where
     I: Iterator<Item = f32>,
 {
-    fn new(iter: I) -> Self {
+    fn new(iter: I, delay: u32) -> Self {
         Self {
-            last: None,
+            delay,
+            idx: 0,
             iter: iter,
         }
     }
 }
 
-impl<I> Iterator for DigitalSystem4<I>
+impl<I> Iterator for Delay<I>
 where
     I: Iterator<Item = f32>,
 {
     type Item = f32;
 
     fn next(&mut self) -> Option<f32> {
-        if let Some(val) = self.iter.next() {
-            let abc = if let Some(last) = self.last {
-                2.2 * val + -1.1 * last
-            } else {
-                2.2 * val
-            };
-
-            self.last = Some(val);
-            Some(abc)
+        if self.idx < self.delay {
+            self.idx += 1;
+            Some(0.0)
         } else {
-            None
+            self.iter.next()
         }
     }
 }
