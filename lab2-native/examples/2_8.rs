@@ -68,6 +68,6 @@ where
         .map(|(idx, y)| (idx as f32, y))
         .collect::<Vec<(f32, f32)>>();
     Chart::new(120, 60, 0.0, N::to_usize() as f32)
-        .lineplot(Shape::Points(&display[..]))
+        .lineplot(Shape::Steps(&display[..]))
         .display();
 }
