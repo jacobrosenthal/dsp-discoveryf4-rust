@@ -52,10 +52,10 @@ fn main() -> ! {
     // Create a delay abstraction based on DWT cycle counter
     let dwt = cp.DWT.constrain(cp.DCB, clocks);
 
-    //square signal
-    let square = (0..U16::to_usize()).map(|idx| if idx < U16::to_usize() / 2 { 1.0 } else { 0.0 });
+    // square signal
+    let square = (0..U16::to_usize()).map(|n| if n < U16::to_usize() / 2 { 1.0 } else { 0.0 });
 
-    //map it to real, leave im blank well fill in with cfft
+    // map it to real, leave im blank well fill in with cfft
     let mut dtfsecoef = square
         .clone()
         .map(|f| Complex32 { re: f, im: 0.0 })

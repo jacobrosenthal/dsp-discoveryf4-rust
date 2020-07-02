@@ -53,12 +53,12 @@ fn main() -> ! {
     // Create a delay abstraction based on DWT cycle counter
     let dwt = cp.DWT.constrain(cp.DCB, clocks);
 
-    //Complex sum of sinusoidal signals
+    // Complex sum of sinusoidal signals
     let s1 = (0..U512::to_usize()).map(|val| (W1 * val as f32).sin());
     let s2 = (0..U512::to_usize()).map(|val| (W2 * val as f32).sin());
     let s = s1.zip(s2).map(|(ess1, ess2)| ess1 + ess2);
 
-    //map it to real, leave im blank well fill in with cfft
+    // map it to real, leave im blank well fill in with cfft
     let mut dtfsecoef = s
         .clone()
         .map(|f| Complex32 { re: f, im: 0.0 })
@@ -84,7 +84,7 @@ fn main() -> ! {
 
         // Finding the complex result in time domain
         // arm_cfft_f32(&arm_cfft_sR_f32_len512, y_complex, 1, 1);
-        //Uh oh, 1,1 ... 
+        // Uh oh, 1,1 ... 
         let _ = cfft_512(&mut y_complex[..]);
 
     });

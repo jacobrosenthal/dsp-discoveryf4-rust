@@ -78,7 +78,7 @@ fn main() -> ! {
 
     let mut delay = hal::delay::Delay::new(cp.SYST, clocks);
 
-    //dont love the idea of delaying in an iterator ...
+    // dont love the idea of delaying in an iterator ...
     let mut dtfsecoef = (0..U512::to_usize())
         .map(|_| {
             let dat = lis302dl.accel_raw().unwrap();
@@ -93,7 +93,7 @@ fn main() -> ! {
 
     let _ = cfft_512(&mut dtfsecoef[..]);
 
-    //Magnitude calculation
+    // Magnitude calculation
     let mag = dtfsecoef
         .iter()
         .map(|complex| (complex.re * complex.re + complex.im * complex.im).sqrt())

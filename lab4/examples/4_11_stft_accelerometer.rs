@@ -81,7 +81,7 @@ fn main() -> ! {
 
     dbgprint!("reading accel");
 
-    //dont love the idea of delaying in an iterator ...
+    // dont love the idea of delaying in an iterator ...
     let accel = (0..U1024::to_usize())
         .map(|_| {
             let dat = lis302dl.accel_raw().unwrap();
