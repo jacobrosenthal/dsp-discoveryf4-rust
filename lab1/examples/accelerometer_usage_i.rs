@@ -15,7 +15,7 @@ use panic_halt as _;
 
 use crate::hal::spi;
 use accelerometer::RawAccelerometer;
-use lis302dl;
+
 
 #[entry]
 fn main() -> ! {
