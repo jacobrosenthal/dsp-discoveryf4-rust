@@ -53,10 +53,7 @@ fn digital_system8(idx: f32, input: f32) -> f32 {
 }
 
 fn main() {
-    //unit step signal
-    let unit_step = [1f32; N];
-
-    // unit pulse
+    // d[n]
     let mut unit_pulse = [0f32; N];
     unit_pulse.iter_mut().enumerate().for_each(|(idx, val)| {
         if idx == 0 {
@@ -65,6 +62,9 @@ fn main() {
             *val = 0.0;
         }
     });
+
+    // u[n]
+    let unit_step = [1f32; N];
 
     //sinusoidal signal
     let mut sinusoidal = [0f32; N];

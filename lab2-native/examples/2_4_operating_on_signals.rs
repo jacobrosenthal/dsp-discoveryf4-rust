@@ -17,35 +17,35 @@ const A: f32 = 0.8;
 const W0: f32 = core::f32::consts::PI / 5f32;
 
 fn main() {
-    //unit pulse signal
+    // d[n]
     let unit_pulse = (0..(U10::to_usize())).map(|val| if val == 0 { 1.0 } else { 0.0 });
 
-    //unit step signal
+    // u[n]
     let unit_step = core::iter::repeat(1.0).take(U10::to_usize());
 
-    //exponential signal
+    // e[n]
     let exponential = (0..(U10::to_usize())).map(|val| A.powf(val as f32));
 
-    //sinusoidal signal
+    // s[n]
     let sinusoidal = (0..(U10::to_usize())).map(|val| (W0 * val as f32).sin());
 
-    //shifted unit pulse signal
+    // shifted unit pulse signal u[n+3]
     let x1 = core::iter::repeat(0.0)
         .take(3)
         .chain(unit_pulse.clone())
         .take(U10::to_usize());
     display::<U10, _>("x1", x1.clone());
 
-    //elevated sinusoidal signal
+    // elevated sinusoidal s[n]+1.0
     let x2 = sinusoidal.clone().map(|ess| ess + 1.0);
     display::<U10, _>("x2", x2.clone());
 
-    //negated unit step signal
+    // negated unit step -u[n]
     let x3 = unit_step.clone().map(|us| -us);
     display::<U10, _>("x3", x3.clone());
 
-    //applying all operations on the sinusoidal signal
-    //I disagree with the book on this, x4[0] and x4[1] would be -2 shifted
+    // applying all operations on the sinusoidal signal
+    // I disagree with the book on this, x4[0] and x4[1] would be -2 shifted
     let x4 = core::iter::repeat(0.0)
         .take(2)
         .chain(sinusoidal.clone())
@@ -53,7 +53,7 @@ fn main() {
         .map(|ess| 3.0 * ess - 2.0);
     display::<U10, _>("x4", x4.clone());
 
-    //subtracting two unit step signals
+    // subtracting two unit step signals
     let x5 = core::iter::repeat(0.0)
         .take(4)
         .chain(unit_step.clone())
@@ -62,21 +62,21 @@ fn main() {
         .map(|(us_delay, us)| us - us_delay);
     display::<U10, _>("x5", x5.clone());
 
-    //multiplying the exponential signal with the unit step signal
+    // multiplying the exponential signal with the unit step signal
     let x6 = exponential
         .clone()
         .zip(unit_step.clone())
         .map(|(ex, us)| ex * us);
     display::<U10, _>("x6", x6.clone());
 
-    //multiplying the exponential signal with the sinusoidal signal
+    // multiplying the exponential signal with the sinusoidal signal
     let x7 = exponential
         .clone()
         .zip(sinusoidal.clone())
         .map(|(ex, ss)| ex * ss);
     display::<U10, _>("x7", x7.clone());
 
-    //multiplying the exponential signal with the window signal
+    // multiplying the exponential signal with the window signal
     let x8 = exponential.clone().zip(x5.clone()).map(|(ex, x5)| ex * x5);
     display::<U10, _>("x8", x8.clone());
 }

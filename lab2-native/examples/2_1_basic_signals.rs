@@ -17,18 +17,23 @@ const A: f32 = 0.8;
 const W0: f32 = core::f32::consts::PI / 5.0;
 
 fn main() {
+    // d[n]
     let unit_pulse = (0..(U10::to_usize())).map(|idx| if idx == 0 { 1.0 } else { 0.0 });
     display::<U10, _>("unit_pulse", unit_pulse.clone());
 
+    // u[n]
     let unit_step = core::iter::repeat(1.0).take(U10::to_usize());
     display::<U10, _>("unit_step", unit_step.clone());
 
+    // r[n]
     let unit_ramp = (0..(U10::to_usize())).map(|idx| idx as f32);
     display::<U10, _>("unit_ramp", unit_ramp.clone());
 
+    // e[n]
     let exponential = (0..(U10::to_usize())).map(|idx| A.powf(idx as f32));
     display::<U10, _>("exponential", exponential.clone());
 
+    // s[n]
     let sinusoidal = (0..(U10::to_usize())).map(|idx| (W0 * idx as f32).sin());
     display::<U10, _>("sinusoidal", sinusoidal.clone());
 }
