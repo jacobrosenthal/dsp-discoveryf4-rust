@@ -50,7 +50,7 @@ fn main() {
                 .map(|(v, x)| Complex32 { re: v * x, im: 0.0 })
                 .collect::<heapless::Vec<Complex32, WINDOW>>();
 
-            //todo pick the right size based on WINDOW
+            // todo pick the right size based on WINDOW
             let _ = cfft_16(&mut dtfsecoef[..]);
 
             // Magnitude calculation
@@ -63,7 +63,7 @@ fn main() {
         })
         .collect::<heapless::Vec<heapless::Vec<_, WINDOW>, U512>>();
 
-    // //the answer key data for M=16
+    // // the answer key data for M=16
     // let z: Vec<Vec<f32>> = Windows {
     //     v: &ZZ[..],
     //     size: WINDOW::to_usize(),
@@ -89,7 +89,7 @@ fn plot(z: Vec<Vec<f32>>) {
     plot.show();
 }
 
-//i will never understand..
+// i will never understand..
 fn clean(zzzz: Vec<Vec<f32>>) -> Vec<Vec<f32>> {
     //any better way to transpose a vec of vecs?
     let mut z = vec![
@@ -103,16 +103,16 @@ fn clean(zzzz: Vec<Vec<f32>>) -> Vec<Vec<f32>> {
         vec![],
     ];
 
-    //throws away 8-15????
+    // throws away 8-15????
     for v in zzzz {
-        z[0].push(0.0); //XST1(1,:)=0;
+        z[0].push(0.0); // XST1(1,:)=0;
         z[1].push(v[1]);
         z[2].push(v[2]);
         z[3].push(v[3]);
         z[4].push(v[4]);
         z[5].push(v[5]);
         z[6].push(v[6]);
-        z[7].push(0.0); //XST1(end,:)=0;
+        z[7].push(0.0); // XST1(end,:)=0;
     }
 
     // XST1=flipud(XST);
@@ -152,7 +152,7 @@ where
     println!("{:?}: {:?}", name, input.clone().format(", "));
     let display = input
         .enumerate()
-        .map(|(idx, y)| (idx as f32, y))
+        .map(|(n, y)| (n as f32, y))
         .collect::<Vec<(f32, f32)>>();
     Chart::new(120, 60, 0.0, N::to_usize() as f32)
         .lineplot(Shape::Points(&display[..]))
