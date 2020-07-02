@@ -28,12 +28,12 @@ fn main() {
 // however while Lines occasionally looks good it also can be terrible.
 // Continuous requires to be in a fn pointer closure which cant capture any
 // external data so not useful without lots of code duplication.
-fn display<N, I>(_name: &str, input: I)
+fn display<N, I>(name: &str, input: I)
 where
     N: Unsigned,
     I: Iterator<Item = f32> + core::clone::Clone + std::fmt::Debug,
 {
-    // println!("{:?}: {:?}", name, input.clone().format(", "));
+    println!("{}", name);
     let display = input
         .enumerate()
         .map(|(n, y)| (n as f32, y))
