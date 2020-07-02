@@ -29,9 +29,9 @@ fn main() {
     let s = s1.zip(s2).map(|(ess1, ess2)| ess1 + ess2);
 
     // map it to real, leave im blank well fill in with dft
-    let dtfsecoef = s.clone().map(|f| Complex32 { re: f, im: 0.0 });
+    let dtfsecoef = s.map(|f| Complex32 { re: f, im: 0.0 });
 
-    let dft = dft::<N, _>(dtfsecoef.clone()).collect::<heapless::Vec<Complex32, N>>();
+    let dft = dft::<N, _>(dtfsecoef).collect::<heapless::Vec<Complex32, N>>();
 
     let re = dft
         .iter()

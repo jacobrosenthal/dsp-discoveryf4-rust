@@ -27,7 +27,7 @@ fn main() {
 
     //map it to real, leave im blank well fill in with cfft
     let mut dtfsecoef = square
-        .clone()
+        
         .map(|f| Complex32 { re: f, im: 0.0 })
         .collect::<heapless::Vec<Complex32, N>>();
 
