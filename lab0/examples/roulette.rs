@@ -11,7 +11,7 @@
 use stm32f4xx_hal as hal;
 
 use crate::hal::{dwt::DwtExt, prelude::*, stm32};
-use cortex_m;
+
 use cortex_m_rt::entry;
 use panic_halt as _;
 

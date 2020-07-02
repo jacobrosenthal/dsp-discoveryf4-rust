@@ -13,8 +13,8 @@ use heapless::{consts::*, Vec};
 use panic_halt as _;
 use stm32f4xx_hal::{prelude::*, stm32};
 
-static A: &'static [i32] = &[1, 2, 3, 4, 5];
-static B: &'static [i32] = &[1, 2, 3, 4, 5];
+static A: &[i32] = &[1, 2, 3, 4, 5];
+static B: &[i32] = &[1, 2, 3, 4, 5];
 
 #[entry]
 fn main() -> ! {
