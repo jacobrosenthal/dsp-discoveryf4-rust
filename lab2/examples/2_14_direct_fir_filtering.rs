@@ -27,9 +27,10 @@ macro_rules! dbgprint {
 }
 
 use core::f32::consts::{FRAC_PI_4, PI};
-use heapless::consts::U512;
 use micromath::F32Ext;
 use typenum::Unsigned;
+
+type N = heapless::consts::U512;
 
 // low pass filter coefficients
 static H: &'static [f32] = &[
@@ -68,10 +69,10 @@ fn main() -> ! {
         .freeze();
 
     let x =
-        (0..U512::to_usize()).map(|n| (PI * n as f32 / 128.0).sin() + (FRAC_PI_4 * n as f32).sin());
+        (0..N::to_usize()).map(|n| (PI * n as f32 / 128.0).sin() + (FRAC_PI_4 * n as f32).sin());
 
     // Collecting to have a clean iterator for our naive display fn
-    let y = convolution_sum(x).collect::<heapless::Vec<f32, U512>>();
+    let y = convolution_sum(x).collect::<heapless::Vec<f32, N>>();
     dbgprint!("y: {:?}", &y[..]);
 
     loop {}

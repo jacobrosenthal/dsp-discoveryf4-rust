@@ -11,10 +11,11 @@
 
 use textplots::{Chart, Plot, Shape};
 
-use heapless::consts::U64;
 use itertools::Itertools;
 use microfft::{complex::cfft_64, Complex32};
 use typenum::Unsigned;
+
+type N = heapless::consts::U64;
 
 fn main() {
     // Complex impulse response of filter
@@ -22,7 +23,7 @@ fn main() {
         .iter()
         .cloned()
         .map(|h| Complex32 { re: h, im: 0.0 })
-        .collect::<heapless::Vec<Complex32, U64>>();
+        .collect::<heapless::Vec<Complex32, N>>();
 
     let _ = cfft_64(&mut dtfsecoef[..]);
 
@@ -30,15 +31,15 @@ fn main() {
     let mag = dtfsecoef
         .iter()
         .map(|complex| (complex.re * complex.re + complex.im * complex.im).sqrt())
-        .collect::<heapless::Vec<f32, U64>>();
-    display::<U64, _>("mag", mag.iter().cloned());
+        .collect::<heapless::Vec<f32, N>>();
+    display::<N, _>("mag", mag.iter().cloned());
 
     let phase = dtfsecoef
         .iter()
         .cloned()
         .map(|complex| complex.re.atan2(complex.im));
 
-    display::<U64, _>("phase", phase.clone());
+    display::<N, _>("phase", phase.clone());
 }
 
 // Points isn't a great representation as you can lose the line in the graph,

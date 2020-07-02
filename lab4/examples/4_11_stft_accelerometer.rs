@@ -34,9 +34,11 @@ use accelerometer::RawAccelerometer;
 use lis302dl;
 
 use core::f32::consts::PI;
-use heapless::consts::{U1024, U64};
 use microfft::{complex::cfft_1024, Complex32};
 use typenum::Unsigned;
+
+type N = heapless::consts::U1024;
+type WINDOW = heapless::consts::U64;
 
 #[entry]
 fn main() -> ! {
@@ -82,29 +84,29 @@ fn main() -> ! {
     dbgprint!("reading accel");
 
     // dont love the idea of delaying in an iterator ...
-    let accel = (0..U1024::to_usize())
+    let accel = (0..N::to_usize())
         .map(|_| {
             let dat = lis302dl.accel_raw().unwrap();
             delay.delay_ms(10u8);
 
             dat.x as f32
         })
-        .collect::<heapless::Vec<f32, U1024>>();
+        .collect::<heapless::Vec<f32, N>>();
 
     dbgprint!("computing");
 
-    let hamming = (0..U64::to_usize())
-        .map(|m| 0.54 - 0.46 * (2.0 * PI * m as f32 / U64::to_usize() as f32).cos());
+    let hamming = (0..WINDOW::to_usize())
+        .map(|m| 0.54 - 0.46 * (2.0 * PI * m as f32 / WINDOW::to_usize() as f32).cos());
 
     // get 64 input at a time, overlapping 32
     // windowing is easier to do on slices
     let overlapping_chirp_windows = Windows {
         v: &accel[..],
-        size: U64::to_usize(),
-        inc: U64::to_usize() / 2,
+        size: WINDOW::to_usize(),
+        inc: WINDOW::to_usize() / 2,
     };
 
-    let mut xst: heapless::Vec<heapless::Vec<_, U64>, U1024> = heapless::Vec::new();
+    let mut xst: heapless::Vec<heapless::Vec<_, WINDOW>, N> = heapless::Vec::new();
 
     for chirp_win in overlapping_chirp_windows {
         // 64-0=64 of input to 64-64=0, so input * chirp.rev
@@ -112,7 +114,7 @@ fn main() -> ! {
             .clone()
             .zip(chirp_win.iter().rev())
             .map(|(v, x)| Complex32 { re: v * x, im: 0.0 })
-            .collect::<heapless::Vec<Complex32, U64>>();
+            .collect::<heapless::Vec<Complex32, WINDOW>>();
 
         let _ = cfft_1024(&mut dtfsecoef[..]);
         // println!("dtfsecoef: {:?}", &dtfsecoef[..]);
@@ -121,7 +123,7 @@ fn main() -> ! {
         let mag = dtfsecoef
             .iter()
             .map(|complex| (complex.re * complex.re + complex.im * complex.im).sqrt())
-            .collect::<heapless::Vec<f32, U64>>();
+            .collect::<heapless::Vec<f32, WINDOW>>();
 
         xst.push(mag).ok();
     }

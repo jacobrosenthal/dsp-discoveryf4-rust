@@ -7,24 +7,23 @@
 //!
 //! `cargo run --example 2_6`
 
-use textplots::{Chart, Plot, Shape};
-
 use core::f32::consts::{FRAC_PI_4, PI};
-use heapless::consts::U512;
-// use itertools::Itertools;
+use textplots::{Chart, Plot, Shape};
 use typenum::Unsigned;
 
-fn main() {
-    let w0 = (0..U512::to_usize()).map(|n| (PI * n as f32 / 128.0).sin());
+type N = heapless::consts::U512;
 
-    let w1 = (0..U512::to_usize()).map(|n| (FRAC_PI_4 * n as f32).sin());
+fn main() {
+    let w0 = (0..N::to_usize()).map(|n| (PI * n as f32 / 128.0).sin());
+
+    let w1 = (0..N::to_usize()).map(|n| (FRAC_PI_4 * n as f32).sin());
 
     let y = w0
         .clone()
         .zip(w1.clone())
         .map(|(inny1, inny2)| inny1 + inny2);
 
-    display::<U512, _>("w1:", y);
+    display::<N, _>("w1:", y);
 }
 
 // Points isn't a great representation as you can lose the line in the graph,
@@ -36,7 +35,6 @@ where
     N: Unsigned,
     I: Iterator<Item = f32> + core::clone::Clone + std::fmt::Debug,
 {
-    // println!("{:?}: {:?}", name, input.clone().format(", "));
     let display = input
         .enumerate()
         .map(|(n, y)| (n as f32, y))

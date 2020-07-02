@@ -19,7 +19,6 @@ use crate::hal::{
 };
 
 use cortex_m_rt::entry;
-use heapless::consts::U100;
 use jlink_rtt;
 use panic_rtt as _;
 use typenum::Unsigned;
@@ -33,6 +32,8 @@ macro_rules! dbgprint {
         }
     };
 }
+
+type N = heapless::consts::U100;
 
 #[entry]
 fn main() -> ! {
@@ -57,12 +58,12 @@ fn main() -> ! {
     let mut adc = Adc::adc1(dp.ADC1, true, AdcConfig::default());
 
     // doing blocking reads instead of interrupt driven
-    let x = (0..U100::to_usize())
+    let x = (0..N::to_usize())
         .map(|_| {
             delay.delay_us(62u16); //0.0000625 s is  62.5us? 16.khz()
             adc.convert(&pa1, SampleTime::Cycles_84)
         })
-        .collect::<heapless::Vec<u16, U100>>();
+        .collect::<heapless::Vec<u16, N>>();
 
     dbgprint!("x: {:?}", &x[..]);
 

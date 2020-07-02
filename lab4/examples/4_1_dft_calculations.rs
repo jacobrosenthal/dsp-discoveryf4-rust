@@ -31,11 +31,13 @@ macro_rules! dbgprint {
 }
 
 use core::f32::consts::PI;
-use heapless::consts::U256;
 use typenum::Unsigned;
+
+type N = heapless::consts::U256;
 
 const W1: f32 = core::f32::consts::PI / 128.0;
 const W2: f32 = core::f32::consts::PI / 4.0;
+// const W2: f32 = core::f32::consts::PI / 5.0;
 
 #[entry]
 fn main() -> ! {
@@ -55,20 +57,20 @@ fn main() -> ! {
     let dwt = cp.DWT.constrain(cp.DCB, clocks);
 
     // Complex sum of sinusoidal signals
-    let s1 = (0..U256::to_usize()).map(|val| (W1 * val as f32).sin());
-    let s2 = (0..U256::to_usize()).map(|val| (W2 * val as f32).sin());
+    let s1 = (0..N::to_usize()).map(|val| (W1 * val as f32).sin());
+    let s2 = (0..N::to_usize()).map(|val| (W2 * val as f32).sin());
     let s = s1.zip(s2).map(|(ess1, ess2)| ess1 + ess2);
 
     // map it to real, leave im blank well fill in with dft
     let dtfsecoef = s.clone().map(|f| Complex32 { re: f, im: 0.0 });
 
     let time: ClockDuration = dwt.measure(|| {
-        let dft = dft::<U256, _>(dtfsecoef.clone());
+        let dft = dft::<N, _>(dtfsecoef.clone());
 
         //Magnitude calculation
         let _mag = dft
             .map(|complex| (complex.re * complex.re + complex.im * complex.im).sqrt())
-            .collect::<heapless::Vec<f32, U256>>();
+            .collect::<heapless::Vec<f32, N>>();
     });
     dbgprint!("dft ticks: {:?}", time.as_ticks());
 

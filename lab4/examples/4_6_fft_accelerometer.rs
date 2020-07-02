@@ -32,10 +32,11 @@ macro_rules! dbgprint {
 }
 
 use accelerometer::RawAccelerometer;
-use heapless::consts::U512;
 use lis302dl;
 use microfft::{complex::cfft_512, Complex32};
 use typenum::Unsigned;
+
+type N = heapless::consts::U512;
 
 #[entry]
 fn main() -> ! {
@@ -79,7 +80,7 @@ fn main() -> ! {
     let mut delay = hal::delay::Delay::new(cp.SYST, clocks);
 
     // dont love the idea of delaying in an iterator ...
-    let mut dtfsecoef = (0..U512::to_usize())
+    let mut dtfsecoef = (0..N::to_usize())
         .map(|_| {
             let dat = lis302dl.accel_raw().unwrap();
             delay.delay_ms(10u8);
@@ -89,7 +90,7 @@ fn main() -> ! {
                 im: 0.0,
             }
         })
-        .collect::<heapless::Vec<Complex32, U512>>();
+        .collect::<heapless::Vec<Complex32, N>>();
 
     let _ = cfft_512(&mut dtfsecoef[..]);
 
@@ -97,7 +98,7 @@ fn main() -> ! {
     let mag = dtfsecoef
         .iter()
         .map(|complex| (complex.re * complex.re + complex.im * complex.im).sqrt())
-        .collect::<heapless::Vec<f32, U512>>();
+        .collect::<heapless::Vec<f32, N>>();
 
     dbgprint!("mag: {:?}", &mag[..]);
 

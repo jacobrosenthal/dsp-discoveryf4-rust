@@ -7,35 +7,35 @@
 //!
 //! `cargo run --example 2_1_basic_signals`
 
-use textplots::{Chart, Plot, Shape};
-
-use heapless::consts::U10;
 use itertools::Itertools;
+use textplots::{Chart, Plot, Shape};
 use typenum::Unsigned;
+
+type N = heapless::consts::U10;
 
 const A: f32 = 0.8;
 const W0: f32 = core::f32::consts::PI / 5.0;
 
 fn main() {
     // d[n]
-    let unit_pulse = (0..(U10::to_usize())).map(|n| if n == 0 { 1.0 } else { 0.0 });
-    display::<U10, _>("unit_pulse", unit_pulse.clone());
+    let unit_pulse = (0..(N::to_usize())).map(|n| if n == 0 { 1.0 } else { 0.0 });
+    display::<N, _>("unit_pulse", unit_pulse.clone());
 
     // u[n]
-    let unit_step = core::iter::repeat(1.0).take(U10::to_usize());
-    display::<U10, _>("unit_step", unit_step.clone());
+    let unit_step = core::iter::repeat(1.0).take(N::to_usize());
+    display::<N, _>("unit_step", unit_step.clone());
 
     // r[n]
-    let unit_ramp = (0..(U10::to_usize())).map(|n| n as f32);
-    display::<U10, _>("unit_ramp", unit_ramp.clone());
+    let unit_ramp = (0..(N::to_usize())).map(|n| n as f32);
+    display::<N, _>("unit_ramp", unit_ramp.clone());
 
     // e[n]
-    let exponential = (0..(U10::to_usize())).map(|n| A.powf(n as f32));
-    display::<U10, _>("exponential", exponential.clone());
+    let exponential = (0..(N::to_usize())).map(|n| A.powf(n as f32));
+    display::<N, _>("exponential", exponential.clone());
 
     // s[n]
-    let sinusoidal = (0..(U10::to_usize())).map(|n| (W0 * n as f32).sin());
-    display::<U10, _>("sinusoidal", sinusoidal.clone());
+    let sinusoidal = (0..(N::to_usize())).map(|n| (W0 * n as f32).sin());
+    display::<N, _>("sinusoidal", sinusoidal.clone());
 }
 
 // Points isn't a great representation as you can lose the line in the graph,

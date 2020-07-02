@@ -9,20 +9,19 @@
 //! `cargo run --example 2_7_periodic_signals`
 
 use textplots::{Chart, Plot, Shape};
-
-use heapless::consts::U100;
-// use itertools::Itertools;
 use typenum::Unsigned;
+
+type N = heapless::consts::U100;
 
 const W1: f32 = core::f32::consts::PI / 10.0;
 const W2: f32 = 3.0 / 10.0;
 
 fn main() {
-    let sinusoidal1 = (0..(U100::to_usize())).map(|n| (W1 * (n as f32)).cos());
-    display::<U100, _>("sinusoidal1", sinusoidal1.clone());
+    let sinusoidal1 = (0..(N::to_usize())).map(|n| (W1 * (n as f32)).cos());
+    display::<N, _>("sinusoidal1", sinusoidal1.clone());
 
-    let sinusoidal2 = (0..(U100::to_usize())).map(|n| (W2 * (n as f32)).cos());
-    display::<U100, _>("sinusoidal2", sinusoidal2.clone());
+    let sinusoidal2 = (0..(N::to_usize())).map(|n| (W2 * (n as f32)).cos());
+    display::<N, _>("sinusoidal2", sinusoidal2.clone());
 }
 
 // Points isn't a great representation as you can lose the line in the graph,

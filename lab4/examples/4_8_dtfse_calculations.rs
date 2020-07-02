@@ -31,9 +31,10 @@ macro_rules! dbgprint {
 }
 
 use core::f32::consts::PI;
-use heapless::consts::U16;
 use microfft::{complex::cfft_16, Complex32};
 use typenum::Unsigned;
+
+type N = heapless::consts::U16;
 
 #[entry]
 fn main() -> ! {
@@ -53,13 +54,13 @@ fn main() -> ! {
     let dwt = cp.DWT.constrain(cp.DCB, clocks);
 
     // square signal
-    let square = (0..U16::to_usize()).map(|n| if n < U16::to_usize() / 2 { 1.0 } else { 0.0 });
+    let square = (0..N::to_usize()).map(|n| if n < N::to_usize() / 2 { 1.0 } else { 0.0 });
 
     // map it to real, leave im blank well fill in with cfft
     let mut dtfsecoef = square
         .clone()
         .map(|f| Complex32 { re: f, im: 0.0 })
-        .collect::<heapless::Vec<Complex32, U16>>();
+        .collect::<heapless::Vec<Complex32, N>>();
 
     // Coefficient calculation with CFFT function
     // arm_cfft_f32 uses a forward transform with enables bit reversal of output
@@ -68,7 +69,7 @@ fn main() -> ! {
 
     let time: ClockDuration = dwt.measure(|| {
         let _y_real =
-            dtfse::<U16, _>(dtfsecoef.iter().cloned(), 15).collect::<heapless::Vec<f32, U16>>();
+            dtfse::<N, _>(dtfsecoef.iter().cloned(), 15).collect::<heapless::Vec<f32, N>>();
     });
     dbgprint!("ticks: {:?}", time.as_ticks());
 

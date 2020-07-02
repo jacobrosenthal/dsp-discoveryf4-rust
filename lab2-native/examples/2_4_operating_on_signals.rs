@@ -7,78 +7,78 @@
 //!
 //! `cargo run --example 2_4_operating_on_signals`
 
-use textplots::{Chart, Plot, Shape};
-
-use heapless::consts::U10;
 use itertools::Itertools;
+use textplots::{Chart, Plot, Shape};
 use typenum::Unsigned;
+
+type N = heapless::consts::U10;
 
 const A: f32 = 0.8;
 const W0: f32 = core::f32::consts::PI / 5f32;
 
 fn main() {
     // d[n]
-    let unit_pulse = (0..(U10::to_usize())).map(|val| if val == 0 { 1.0 } else { 0.0 });
+    let unit_pulse = (0..(N::to_usize())).map(|val| if val == 0 { 1.0 } else { 0.0 });
 
     // u[n]
-    let unit_step = core::iter::repeat(1.0).take(U10::to_usize());
+    let unit_step = core::iter::repeat(1.0).take(N::to_usize());
 
     // e[n]
-    let exponential = (0..(U10::to_usize())).map(|val| A.powf(val as f32));
+    let exponential = (0..(N::to_usize())).map(|val| A.powf(val as f32));
 
     // s[n]
-    let sinusoidal = (0..(U10::to_usize())).map(|val| (W0 * val as f32).sin());
+    let sinusoidal = (0..(N::to_usize())).map(|val| (W0 * val as f32).sin());
 
     // shifted unit pulse signal u[n+3]
     let x1 = core::iter::repeat(0.0)
         .take(3)
         .chain(unit_pulse.clone())
-        .take(U10::to_usize());
-    display::<U10, _>("x1", x1.clone());
+        .take(N::to_usize());
+    display::<N, _>("x1", x1.clone());
 
     // elevated sinusoidal s[n]+1.0
     let x2 = sinusoidal.clone().map(|ess| ess + 1.0);
-    display::<U10, _>("x2", x2.clone());
+    display::<N, _>("x2", x2.clone());
 
     // negated unit step -u[n]
     let x3 = unit_step.clone().map(|us| -us);
-    display::<U10, _>("x3", x3.clone());
+    display::<N, _>("x3", x3.clone());
 
     // applying all operations on the sinusoidal signal
     // I disagree with the book on this, x4[0] and x4[1] would be -2 shifted
     let x4 = core::iter::repeat(0.0)
         .take(2)
         .chain(sinusoidal.clone())
-        .take(U10::to_usize())
+        .take(N::to_usize())
         .map(|ess| 3.0 * ess - 2.0);
-    display::<U10, _>("x4", x4.clone());
+    display::<N, _>("x4", x4.clone());
 
     // subtracting two unit step signals
     let x5 = core::iter::repeat(0.0)
         .take(4)
         .chain(unit_step.clone())
-        .take(U10::to_usize())
+        .take(N::to_usize())
         .zip(unit_step.clone())
         .map(|(us_delay, us)| us - us_delay);
-    display::<U10, _>("x5", x5.clone());
+    display::<N, _>("x5", x5.clone());
 
     // multiplying the exponential signal with the unit step signal
     let x6 = exponential
         .clone()
         .zip(unit_step.clone())
         .map(|(ex, us)| ex * us);
-    display::<U10, _>("x6", x6.clone());
+    display::<N, _>("x6", x6.clone());
 
     // multiplying the exponential signal with the sinusoidal signal
     let x7 = exponential
         .clone()
         .zip(sinusoidal.clone())
         .map(|(ex, ss)| ex * ss);
-    display::<U10, _>("x7", x7.clone());
+    display::<N, _>("x7", x7.clone());
 
     // multiplying the exponential signal with the window signal
     let x8 = exponential.clone().zip(x5.clone()).map(|(ex, x5)| ex * x5);
-    display::<U10, _>("x8", x8.clone());
+    display::<N, _>("x8", x8.clone());
 }
 
 // Points isn't a great representation as you can lose the line in the graph,

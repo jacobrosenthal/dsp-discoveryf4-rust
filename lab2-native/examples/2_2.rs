@@ -7,23 +7,22 @@
 //!
 //! `cargo run --example 2_2`
 
-use textplots::{Chart, Plot, Shape};
-
 use core::f32::consts::{FRAC_PI_4, PI};
-use heapless::consts::U512;
-// use itertools::Itertools;
+use textplots::{Chart, Plot, Shape};
 use typenum::Unsigned;
 
-fn main() {
-    let w0 = (0..U512::to_usize())
-        .map(|n| (PI * n as f32 / 128.0).sin())
-        .collect::<heapless::Vec<f32, U512>>();
-    display::<U512, _>("w0:", w0.iter().cloned());
+type N = heapless::consts::U512;
 
-    let w1 = (0..U512::to_usize())
+fn main() {
+    let w0 = (0..N::to_usize())
+        .map(|n| (PI * n as f32 / 128.0).sin())
+        .collect::<heapless::Vec<f32, N>>();
+    display::<N, _>("w0:", w0.iter().cloned());
+
+    let w1 = (0..N::to_usize())
         .map(|n| (FRAC_PI_4 * n as f32).sin())
-        .collect::<heapless::Vec<f32, U512>>();
-    display::<U512, _>("w1:", w1.iter().cloned());
+        .collect::<heapless::Vec<f32, N>>();
+    display::<N, _>("w1:", w1.iter().cloned());
 }
 
 // Points isn't a great representation as you can lose the line in the graph,
@@ -35,7 +34,6 @@ where
     N: Unsigned,
     I: Iterator<Item = f32> + core::clone::Clone + std::fmt::Debug,
 {
-    // println!("{:?}: {:?}", name, input.clone().format(", "));
     let display = input
         .enumerate()
         .map(|(n, y)| (n as f32, y))

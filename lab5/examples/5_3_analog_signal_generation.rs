@@ -28,11 +28,13 @@ use core::ops::DerefMut;
 use core::sync::atomic::{AtomicBool, Ordering};
 use cortex_m::interrupt::{free, Mutex};
 use cortex_m_rt::entry;
-use heapless::consts::U160;
+use heapless::consts::N;
 use micromath::F32Ext;
 use nb;
 use panic_rtt as _;
 use typenum::Unsigned;
+
+type N = heapless::consts::U160;
 
 static BUTTON: Mutex<RefCell<Option<PA0<Input<PullDown>>>>> = Mutex::new(RefCell::new(None));
 static FLAG: AtomicBool = AtomicBool::new(true);
@@ -72,17 +74,17 @@ fn main() -> ! {
 
     dac.enable();
 
-    let sq_lookup = (0..U160::to_usize())
-        .map(|n| if n < U160::to_usize() / 2 { 4095 } else { 0 })
-        .collect::<heapless::Vec<u16, U160>>();
+    let sq_lookup = (0..N::to_usize())
+        .map(|n| if n < N::to_usize() / 2 { 4095 } else { 0 })
+        .collect::<heapless::Vec<u16, N>>();
 
     // period 160
-    let sin_lookup = (0..U160::to_usize())
+    let sin_lookup = (0..N::to_usize())
         .map(|n| {
-            let sindummy = (2.0 * PI * n as f32 / U160::to_u16() as f32).sin();
+            let sindummy = (2.0 * PI * n as f32 / N::to_u16() as f32).sin();
             ((sindummy * 2047.0) + 2048.0) as u16
         })
-        .collect::<heapless::Vec<u16, U160>>();
+        .collect::<heapless::Vec<u16, N>>();
 
     // frequency dac 16khz, freq/period = 16000/160 = 100hz
     let mut timer = Timer::tim1(dp.TIM1, 16.khz(), clocks);
@@ -93,13 +95,13 @@ fn main() -> ! {
         // little wiggly because not an interrupt..
         let sin = FLAG.load(Ordering::Relaxed);
         if sin {
-            for n in 0..U160::to_usize() {
+            for n in 0..N::to_usize() {
                 dac.set_value(sin_lookup[n]);
                 timer.start(16.khz());
                 nb::block!(timer.wait()).unwrap();
             }
         } else {
-            for n in 0..U160::to_usize() {
+            for n in 0..N::to_usize() {
                 dac.set_value(sq_lookup[n]);
                 timer.start(16.khz());
                 nb::block!(timer.wait()).unwrap();

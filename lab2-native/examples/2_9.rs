@@ -6,11 +6,11 @@
 //!
 //! `cargo run --example 2_9`
 
-use textplots::{Chart, Plot, Shape};
-
-use heapless::consts::U100;
 use itertools::Itertools;
+use textplots::{Chart, Plot, Shape};
 use typenum::Unsigned;
+
+type N = heapless::consts::U100;
 
 const SAW_AMPLITUDE: f32 = 0.75;
 const SAW_PERIOD: usize = 20;
@@ -20,10 +20,10 @@ fn main() {
     let sawtooth = (0..SAW_PERIOD)
         .map(|n| (2.0 * SAW_AMPLITUDE / (SAW_PERIOD as f32 - 1.0)) * n as f32 - SAW_AMPLITUDE)
         .cycle()
-        .take(U100::to_usize())
-        .collect::<heapless::Vec<f32, U100>>();
+        .take(N::to_usize())
+        .collect::<heapless::Vec<f32, N>>();
 
-    display::<U100, _>("sawtooth signal", sawtooth.iter().cloned());
+    display::<N, _>("sawtooth signal", sawtooth.iter().cloned());
 }
 
 // Points isn't a great representation as you can lose the line in the graph,

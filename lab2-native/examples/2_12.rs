@@ -9,43 +9,44 @@
 
 use textplots::{Chart, Plot, Shape};
 
-use heapless::consts::U10;
 use itertools::Itertools;
 use typenum::Unsigned;
+
+type N = heapless::consts::U10;
 
 const A: f32 = 0.8;
 
 fn main() {
     // e[n]
-    let exponential = (0..(U10::to_usize())).map(|val| A.powf(val as f32));
+    let exponential = (0..(N::to_usize())).map(|val| A.powf(val as f32));
 
     // r[n]
-    let unit_ramp = (0..(U10::to_usize())).map(|n| n as f32);
+    let unit_ramp = (0..(N::to_usize())).map(|n| n as f32);
 
     // y1[n]=x1[n]+x2[n], where x1[n]=r[n] and x2[n]=e[n]
     let y1 = unit_ramp
         .clone()
         .zip(exponential.clone())
         .map(|(r, e)| r + e);
-    display::<U10, _>("y1", y1.clone());
+    display::<N, _>("y1", y1.clone());
 
     // y2[n]=x3[n], where x3[n]=r^2[n]
     let y2 = unit_ramp
         .clone()
         .zip(unit_ramp.clone())
         .map(|(r, rr)| r * rr);
-    display::<U10, _>("y2", y2.clone());
+    display::<N, _>("y2", y2.clone());
 
     // y3[n]=2.2y1[n]-1.1y1[n-1]+.7y3[n-1]
     let y3 = DigitalSystem5::new(y1.clone());
-    display::<U10, _>("y3", y3.clone());
+    display::<N, _>("y3", y3.clone());
 
     // y4[n]=2.2y2[n+1]-1.1y2[n]
     let y4 = y2
         .clone()
         .tuple_windows()
         .map(|(y2, y2_1)| 2.2 * y2_1 - 1.1 * y2);
-    display::<U10, _>("y4", y4.clone());
+    display::<N, _>("y4", y4.clone());
 }
 
 // y3[n]=2.2y1[n]-1.1y1[n-1]+.7y3[n-1]

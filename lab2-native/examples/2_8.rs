@@ -10,9 +10,10 @@
 
 use textplots::{Chart, Plot, Shape};
 
-use heapless::consts::U100;
 use itertools::Itertools;
 use typenum::Unsigned;
+
+type N = heapless::consts::U100;
 
 const SQUARE_AMPLITUDE: f32 = 2.4;
 const SQUARE_PERIOD: usize = 50;
@@ -31,9 +32,9 @@ fn main() {
             }
         })
         .cycle()
-        .take(U100::to_usize())
-        .collect::<heapless::Vec<f32, U100>>();
-    display::<U100, _>("square signal", square.iter().cloned());
+        .take(N::to_usize())
+        .collect::<heapless::Vec<f32, N>>();
+    display::<N, _>("square signal", square.iter().cloned());
 
     // Collecting to turn the Cycle into a clean iterator for our naive display fn
     let triangle = (0..TRIANGLE_PERIOD)
@@ -48,9 +49,9 @@ fn main() {
             }
         })
         .cycle()
-        .take(U100::to_usize())
-        .collect::<heapless::Vec<f32, U100>>();
-    display::<U100, _>("triangle signal", triangle.iter().cloned());
+        .take(N::to_usize())
+        .collect::<heapless::Vec<f32, N>>();
+    display::<N, _>("triangle signal", triangle.iter().cloned());
 }
 
 // Points isn't a great representation as you can lose the line in the graph,

@@ -29,9 +29,10 @@ macro_rules! dbgprint {
     };
 }
 
-use heapless::consts::U512;
 use microfft::{complex::cfft_512, Complex32};
 use typenum::Unsigned;
+
+type N = heapless::consts::U512;
 
 const W1: f32 = core::f32::consts::PI / 128.0;
 const W2: f32 = core::f32::consts::PI / 4.0;
@@ -54,22 +55,22 @@ fn main() -> ! {
     let dwt = cp.DWT.constrain(cp.DCB, clocks);
 
     // Complex sum of sinusoidal signals
-    let s1 = (0..U512::to_usize()).map(|val| (W1 * val as f32).sin());
-    let s2 = (0..U512::to_usize()).map(|val| (W2 * val as f32).sin());
+    let s1 = (0..N::to_usize()).map(|val| (W1 * val as f32).sin());
+    let s2 = (0..N::to_usize()).map(|val| (W2 * val as f32).sin());
     let s = s1.zip(s2).map(|(ess1, ess2)| ess1 + ess2);
 
     // map it to real, leave im blank well fill in with cfft
     let mut dtfsecoef = s
         .clone()
         .map(|f| Complex32 { re: f, im: 0.0 })
-        .collect::<heapless::Vec<Complex32, U512>>();
+        .collect::<heapless::Vec<Complex32, N>>();
 
     // Complex impulse response of filter
     let mut df_complex = H
         .iter()
         .cloned()
         .map(|f| Complex32 { re: f, im: 0.0 })
-        .collect::<heapless::Vec<Complex32, U512>>();
+        .collect::<heapless::Vec<Complex32, N>>();
 
     // Finding the FFT of the filter
     let _ = cfft_512(&mut df_complex[..]);

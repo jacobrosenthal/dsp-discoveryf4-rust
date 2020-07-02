@@ -13,24 +13,25 @@
 use textplots::{Chart, Plot, Shape};
 
 use core::f32::consts::PI;
-use heapless::consts::{U1024, U512};
 use itertools::Itertools;
 use microfft::{complex::cfft_16, Complex32};
 use plotly::HeatMap;
 use typenum::Unsigned;
 
+type N = heapless::consts::U1024;
+type N_OVER_2 = heapless::consts::U512;
 type WINDOW = heapless::consts::U16;
 
 const W1: f32 = 0.0;
 const W2: f32 = core::f32::consts::PI;
 
 fn main() {
-    let chirp = (0..U1024::to_usize())
+    let chirp = (0..N::to_usize())
         .map(|n| {
             let n = n as f32;
-            (W1 * n + (W2 - W1) * n * n / (2.0 * (U1024::to_usize() as f32 - 1.0))).cos()
+            (W1 * n + (W2 - W1) * n * n / (2.0 * (N::to_usize() as f32 - 1.0))).cos()
         })
-        .collect::<heapless::Vec<f32, U1024>>();
+        .collect::<heapless::Vec<f32, N>>();
 
     let hamming = (0..WINDOW::to_usize())
         .map(|m| 0.54 - 0.46 * (2.0 * PI * m as f32 / WINDOW::to_usize() as f32).cos());
@@ -61,7 +62,7 @@ fn main() {
 
             mag
         })
-        .collect::<heapless::Vec<heapless::Vec<_, WINDOW>, U512>>();
+        .collect::<heapless::Vec<heapless::Vec<_, WINDOW>, N_OVER_2>>();
 
     // // the answer key data for M=16
     // let z: Vec<Vec<f32>> = Windows {
