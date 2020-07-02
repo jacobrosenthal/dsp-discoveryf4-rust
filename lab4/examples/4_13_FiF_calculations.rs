@@ -61,7 +61,6 @@ fn main() -> ! {
 
     // map it to real, leave im blank well fill in with cfft
     let mut dtfsecoef = s
-        .clone()
         .map(|f| Complex32 { re: f, im: 0.0 })
         .collect::<heapless::Vec<Complex32, N>>();
 
@@ -81,20 +80,19 @@ fn main() -> ! {
 
         // Filtering in the frequency domain
         // arm_cmplx_mult_cmplx_f32(s_complex, df_complex, y_complex, 2 * N);
-        let mut y_complex = ;
+        // let mut y_complex = ;
 
         // Finding the complex result in time domain
         // arm_cfft_f32(&arm_cfft_sR_f32_len512, y_complex, 1, 1);
-        // Uh oh, 1,1 ... 
-        let _ = cfft_512(&mut y_complex[..]);
-
+        // Uh oh, 1,1 ...
+        // let _ = cfft_512(&mut y_complex[..]);
     });
     dbgprint!("dft ticks: {:?}", time.as_ticks());
 
     loop {}
 }
 
-static H: &'static [f32] = &[
+static H: &[f32] = &[
     0.002044, 0.007806, 0.014554, 0.020018, 0.024374, 0.027780, 0.030370, 0.032264, 0.033568,
     0.034372, 0.034757, 0.034791, 0.034534, 0.034040, 0.033353, 0.032511, 0.031549, 0.030496,
     0.029375, 0.028207, 0.027010, 0.025800, 0.024587, 0.023383, 0.022195, 0.021031, 0.019896,

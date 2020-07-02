@@ -32,7 +32,7 @@ macro_rules! dbgprint {
 }
 
 use accelerometer::RawAccelerometer;
-use lis302dl;
+use lis302dl::Lis302Dl;
 use microfft::{complex::cfft_512, Complex32};
 use typenum::Unsigned;
 
@@ -75,7 +75,7 @@ fn main() -> ! {
     let mut chip_select = gpioe.pe3.into_push_pull_output();
     chip_select.set_high().ok();
 
-    let mut lis302dl = lis302dl::Lis302Dl::new(spi, chip_select, Default::default());
+    let mut lis302dl = Lis302Dl::new(spi, chip_select, Default::default());
 
     let mut delay = hal::delay::Delay::new(cp.SYST, clocks);
 

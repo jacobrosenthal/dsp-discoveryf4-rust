@@ -62,7 +62,7 @@ fn main() -> ! {
     let s = s1.zip(s2).map(|(ess1, ess2)| ess1 + ess2);
 
     // map it to real, leave im blank well fill in with dft
-    let dtfsecoef = s.clone().map(|f| Complex32 { re: f, im: 0.0 });
+    let dtfsecoef = s.map(|f| Complex32 { re: f, im: 0.0 });
 
     let time: ClockDuration = dwt.measure(|| {
         let dft = dft::<N, _>(dtfsecoef.clone());

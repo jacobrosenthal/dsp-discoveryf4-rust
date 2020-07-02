@@ -19,7 +19,7 @@ use plotly::HeatMap;
 use typenum::Unsigned;
 
 type N = heapless::consts::U1024;
-type N_2 = heapless::consts::U512;
+type NDIV2 = heapless::consts::U512;
 type WINDOW = heapless::consts::U16;
 
 const W1: f32 = 0.0;
@@ -55,14 +55,12 @@ fn main() {
             let _ = cfft_16(&mut dtfsecoef[..]);
 
             // Magnitude calculation
-            let mag = dtfsecoef
+            dtfsecoef
                 .iter()
                 .map(|complex| (complex.re * complex.re + complex.im * complex.im).sqrt())
-                .collect::<heapless::Vec<f32, WINDOW>>();
-
-            mag
+                .collect::<heapless::Vec<f32, WINDOW>>()
         })
-        .collect::<heapless::Vec<heapless::Vec<_, WINDOW>, N_2>>();
+        .collect::<heapless::Vec<heapless::Vec<_, WINDOW>, NDIV2>>();
 
     // // the answer key data for M=16
     // let z: Vec<Vec<f32>> = Windows {
