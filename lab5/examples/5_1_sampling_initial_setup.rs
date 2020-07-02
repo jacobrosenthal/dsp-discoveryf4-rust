@@ -56,7 +56,7 @@ fn main() -> ! {
 
     let mut adc = Adc::adc1(dp.ADC1, true, AdcConfig::default());
 
-    //doing blocking reads instead of interrupt driven
+    // doing blocking reads instead of interrupt driven
     let x = (0..U100::to_usize())
         .map(|_| {
             delay.delay_us(62u16); //0.0000625 s is  62.5us? 16.khz()

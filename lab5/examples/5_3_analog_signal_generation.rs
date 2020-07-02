@@ -73,34 +73,34 @@ fn main() -> ! {
     dac.enable();
 
     let sq_lookup = (0..U160::to_usize())
-        .map(|idx| if idx < U160::to_usize() / 2 { 4095 } else { 0 })
+        .map(|n| if n < U160::to_usize() / 2 { 4095 } else { 0 })
         .collect::<heapless::Vec<u16, U160>>();
 
-    //period 160
+    // period 160
     let sin_lookup = (0..U160::to_usize())
-        .map(|idx| {
-            let sindummy = (2.0 * PI * idx as f32 / U160::to_u16() as f32).sin();
+        .map(|n| {
+            let sindummy = (2.0 * PI * n as f32 / U160::to_u16() as f32).sin();
             ((sindummy * 2047.0) + 2048.0) as u16
         })
         .collect::<heapless::Vec<u16, U160>>();
 
-    //frequency dac 16khz, freq/period = 16000/160 = 100hz
+    // frequency dac 16khz, freq/period = 16000/160 = 100hz
     let mut timer = Timer::tim1(dp.TIM1, 16.khz(), clocks);
-    //im not sure if you can create and start twice?
+    // im not sure if you can create and start twice?
     nb::block!(timer.wait()).unwrap();
 
     loop {
-        //little wiggly because not an interrupt..
+        // little wiggly because not an interrupt..
         let sin = FLAG.load(Ordering::Relaxed);
         if sin {
-            for idx in 0..U160::to_usize() {
-                dac.set_value(sin_lookup[idx]);
+            for n in 0..U160::to_usize() {
+                dac.set_value(sin_lookup[n]);
                 timer.start(16.khz());
                 nb::block!(timer.wait()).unwrap();
             }
         } else {
-            for idx in 0..U160::to_usize() {
-                dac.set_value(sq_lookup[idx]);
+            for n in 0..U160::to_usize() {
+                dac.set_value(sq_lookup[n]);
                 timer.start(16.khz());
                 nb::block!(timer.wait()).unwrap();
             }
@@ -108,8 +108,8 @@ fn main() -> ! {
     }
 }
 
-//todo what orderings?
-//todo no cap, need debouncing
+// todo what orderings?
+// todo no cap, need debouncing
 #[interrupt]
 fn EXTI0() {
     free(|cs| {
