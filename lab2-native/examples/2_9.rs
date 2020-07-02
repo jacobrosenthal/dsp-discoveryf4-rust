@@ -18,7 +18,7 @@ const SAW_PERIOD: usize = 20;
 fn main() {
     // Collecting to turn the Cycle into a clean iterator for our naive display fn
     let sawtooth = (0..SAW_PERIOD)
-        .map(|idx| (2.0 * SAW_AMPLITUDE / (SAW_PERIOD as f32 - 1.0)) * idx as f32 - SAW_AMPLITUDE)
+        .map(|n| (2.0 * SAW_AMPLITUDE / (SAW_PERIOD as f32 - 1.0)) * n as f32 - SAW_AMPLITUDE)
         .cycle()
         .take(U100::to_usize())
         .collect::<heapless::Vec<f32, U100>>();
@@ -38,7 +38,7 @@ where
     println!("{:?}: {:?}", name, input.clone().format(", "));
     let display = input
         .enumerate()
-        .map(|(idx, y)| (idx as f32, y))
+        .map(|(n, y)| (n as f32, y))
         .collect::<Vec<(f32, f32)>>();
     Chart::new(120, 60, 0.0, N::to_usize() as f32)
         .lineplot(Shape::Steps(&display[..]))

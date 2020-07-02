@@ -48,15 +48,15 @@ fn digital_system7(b: f32, a: f32, input: f32, output: f32) -> f32 {
     b * input + a * output
 }
 
-fn digital_system8(idx: f32, input: f32) -> f32 {
-    idx * input
+fn digital_system8(n: f32, input: f32) -> f32 {
+    n * input
 }
 
 fn main() {
     // d[n]
     let mut unit_pulse = [0f32; N];
-    unit_pulse.iter_mut().enumerate().for_each(|(idx, val)| {
-        if idx == 0 {
+    unit_pulse.iter_mut().enumerate().for_each(|(n, val)| {
+        if n == 0 {
             *val = 1.0;
         } else {
             *val = 0.0;
@@ -71,40 +71,40 @@ fn main() {
     sinusoidal
         .iter_mut()
         .enumerate()
-        .for_each(|(idx, val)| *val = (W0 * idx as f32).sin());
+        .for_each(|(n, val)| *val = (W0 * n as f32).sin());
 
     // multiplier
     // y[n] = b*x[n]
     let mut y1 = [0f32; N];
-    for idx in 0..N {
-        y1[idx] = digital_system1(2.2, unit_step[idx]);
+    for n in 0..N {
+        y1[n] = digital_system1(2.2, unit_step[n]);
     }
     display("digital_system1", &y1[..]);
 
     // adder accumulator
     // y[n] = x1[n] + x2[n]
     let mut y2 = [0f32; N];
-    for idx in 0..N {
-        y2[idx] = digital_system2(unit_step[idx], sinusoidal[idx]);
+    for n in 0..N {
+        y2[n] = digital_system2(unit_step[n], sinusoidal[n]);
     }
     display("digital_system2", &y2[..]);
 
     // squaring device
     // y[n] = x^2[n]
     let mut y3 = [0f32; N];
-    for idx in 0..N {
-        y3[idx] = digital_system3(sinusoidal[idx]);
+    for n in 0..N {
+        y3[n] = digital_system3(sinusoidal[n]);
     }
     display("digital_system3", &y3[..]);
 
     // multiplier and accumulator
     // y[n] = b0*x[n] + b1*x[n-1]
     let mut y4 = [0f32; N];
-    for idx in 0..N {
-        if idx == 0 {
-            y4[idx] = digital_system4(&[2.2, -1.1], sinusoidal[idx], 0.0);
+    for n in 0..N {
+        if n == 0 {
+            y4[n] = digital_system4(&[2.2, -1.1], sinusoidal[n], 0.0);
         } else {
-            y4[idx] = digital_system4(&[2.2, -1.1], sinusoidal[idx], sinusoidal[idx - 1]);
+            y4[n] = digital_system4(&[2.2, -1.1], sinusoidal[n], sinusoidal[n - 1]);
         }
     }
     display("digital_system4", &y4[..]);
@@ -112,16 +112,16 @@ fn main() {
     // multiplier and accumulator with feedback
     // y[n] = b0*x[n] + b1*x[n-1] + a*y[n-1]
     let mut y5 = [0f32; N];
-    for idx in 0..N {
-        if idx == 0 {
-            y5[idx] = digital_system5(&[2.2, -1.1], 0.7, sinusoidal[idx], 0.0, 0.0);
+    for n in 0..N {
+        if n == 0 {
+            y5[n] = digital_system5(&[2.2, -1.1], 0.7, sinusoidal[n], 0.0, 0.0);
         } else {
-            y5[idx] = digital_system5(
+            y5[n] = digital_system5(
                 &[2.2, -1.1],
                 0.7,
-                sinusoidal[idx],
-                sinusoidal[idx - 1],
-                y5[idx - 1],
+                sinusoidal[n],
+                sinusoidal[n - 1],
+                y5[n - 1],
             );
         }
     }
@@ -131,10 +131,10 @@ fn main() {
     // y[n] = b0*x[n+1] + b1*x[n]
     // digital_system6 in c version has oob array access, so y6[9] 0
     let mut y6 = [0f32; N];
-    for idx in 0..N {
+    for n in 0..N {
         // digital_system6 in c version has oob array access, should be if (n+1 < size)
-        if idx + 1 < N {
-            y6[idx] = digital_system6(&[2.2, -1.1], unit_step[idx + 1], unit_step[idx]);
+        if n + 1 < N {
+            y6[n] = digital_system6(&[2.2, -1.1], unit_step[n + 1], unit_step[n]);
         }
     }
     display("digital_system6", &y6[..]);
@@ -142,11 +142,11 @@ fn main() {
     // multiplier and accumulator with unbounded output
     // y[n] = b0*x[n] + b1*y[n-1]
     let mut y7 = [0f32; N];
-    for idx in 0..N {
-        if idx == 0 {
-            y7[idx] = digital_system7(1.0, 2.0, unit_pulse[idx], 0.0);
+    for n in 0..N {
+        if n == 0 {
+            y7[n] = digital_system7(1.0, 2.0, unit_pulse[n], 0.0);
         } else {
-            y7[idx] = digital_system7(1.0, 2.0, unit_pulse[idx], y7[idx - 1]);
+            y7[n] = digital_system7(1.0, 2.0, unit_pulse[n], y7[n - 1]);
         }
     }
     display("digital_system7", &y7[..]);
@@ -154,8 +154,8 @@ fn main() {
     // multiplier with a time based coefficient
     // y[n]=n*x[n]
     let mut y8 = [0f32; N];
-    for idx in 0..N {
-        y8[idx] = digital_system8(idx as f32, sinusoidal[idx]);
+    for n in 0..N {
+        y8[n] = digital_system8(n as f32, sinusoidal[n]);
     }
     display("digital_system8", &y8[..]);
 }
@@ -169,7 +169,7 @@ fn display(name: &str, input: &[f32]) {
     let display = input
         .iter()
         .enumerate()
-        .map(|(idx, y)| (idx as f32, *y))
+        .map(|(n, y)| (n as f32, *y))
         .collect::<Vec<(f32, f32)>>();
     Chart::new(120, 60, 0.0, input.len() as f32)
         .lineplot(Shape::Points(&display[..]))

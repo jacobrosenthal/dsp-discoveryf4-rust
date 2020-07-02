@@ -18,10 +18,10 @@ const W1: f32 = core::f32::consts::PI / 10.0;
 const W2: f32 = 3.0 / 10.0;
 
 fn main() {
-    let sinusoidal1 = (0..(U100::to_usize())).map(|idx| (W1 * (idx as f32)).cos());
+    let sinusoidal1 = (0..(U100::to_usize())).map(|n| (W1 * (n as f32)).cos());
     display::<U100, _>("sinusoidal1", sinusoidal1.clone());
 
-    let sinusoidal2 = (0..(U100::to_usize())).map(|idx| (W2 * (idx as f32)).cos());
+    let sinusoidal2 = (0..(U100::to_usize())).map(|n| (W2 * (n as f32)).cos());
     display::<U100, _>("sinusoidal2", sinusoidal2.clone());
 }
 
@@ -37,7 +37,7 @@ where
     // println!("{:?}: {:?}", name, input.clone().format(", "));
     let display = input
         .enumerate()
-        .map(|(idx, y)| (idx as f32, y))
+        .map(|(n, y)| (n as f32, y))
         .collect::<Vec<(f32, f32)>>();
     Chart::new(120, 60, 0.0, N::to_usize() as f32)
         .lineplot(Shape::Points(&display[..]))

@@ -33,7 +33,7 @@ fn main() {
     let sinusoidal = (0..(U10::to_usize())).map(|val| (W0 * val as f32).sin());
 
     // r[n]
-    let unit_ramp = (0..(U10::to_usize())).map(|idx| idx as f32);
+    let unit_ramp = (0..(U10::to_usize())).map(|n| n as f32);
 
     // x1[n] =.6r[n+4]
     // I dont agree?... Book seems to think r[n+4] would be a window?
@@ -78,7 +78,7 @@ where
     I: Iterator<Item = f32>,
 {
     delay: u32,
-    idx: u32,
+    n: u32,
     iter: I,
 }
 
@@ -89,7 +89,7 @@ where
     fn new(iter: I, delay: u32) -> Self {
         Self {
             delay,
-            idx: 0,
+            n: 0,
             iter: iter,
         }
     }
@@ -102,8 +102,8 @@ where
     type Item = f32;
 
     fn next(&mut self) -> Option<f32> {
-        if self.idx < self.delay {
-            self.idx += 1;
+        if self.n < self.delay {
+            self.n += 1;
             Some(0.0)
         } else {
             self.iter.next()
@@ -123,7 +123,7 @@ where
     println!("{:?}: {:?}", name, input.clone().format(", "));
     let display = input
         .enumerate()
-        .map(|(idx, y)| (idx as f32, y))
+        .map(|(n, y)| (n as f32, y))
         .collect::<Vec<(f32, f32)>>();
     Chart::new(120, 60, 0.0, N::to_usize() as f32)
         .lineplot(Shape::Points(&display[..]))

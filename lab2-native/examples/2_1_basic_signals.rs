@@ -18,7 +18,7 @@ const W0: f32 = core::f32::consts::PI / 5.0;
 
 fn main() {
     // d[n]
-    let unit_pulse = (0..(U10::to_usize())).map(|idx| if idx == 0 { 1.0 } else { 0.0 });
+    let unit_pulse = (0..(U10::to_usize())).map(|n| if n == 0 { 1.0 } else { 0.0 });
     display::<U10, _>("unit_pulse", unit_pulse.clone());
 
     // u[n]
@@ -26,15 +26,15 @@ fn main() {
     display::<U10, _>("unit_step", unit_step.clone());
 
     // r[n]
-    let unit_ramp = (0..(U10::to_usize())).map(|idx| idx as f32);
+    let unit_ramp = (0..(U10::to_usize())).map(|n| n as f32);
     display::<U10, _>("unit_ramp", unit_ramp.clone());
 
     // e[n]
-    let exponential = (0..(U10::to_usize())).map(|idx| A.powf(idx as f32));
+    let exponential = (0..(U10::to_usize())).map(|n| A.powf(n as f32));
     display::<U10, _>("exponential", exponential.clone());
 
     // s[n]
-    let sinusoidal = (0..(U10::to_usize())).map(|idx| (W0 * idx as f32).sin());
+    let sinusoidal = (0..(U10::to_usize())).map(|n| (W0 * n as f32).sin());
     display::<U10, _>("sinusoidal", sinusoidal.clone());
 }
 
@@ -50,7 +50,7 @@ where
     println!("{:?}: {:?}", name, input.clone().format(", "));
     let display = input
         .enumerate()
-        .map(|(idx, y)| (idx as f32, y))
+        .map(|(n, y)| (n as f32, y))
         .collect::<Vec<(f32, f32)>>();
     Chart::new(120, 60, 0.0, N::to_usize() as f32)
         .lineplot(Shape::Points(&display[..]))

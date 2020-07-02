@@ -16,12 +16,12 @@ use typenum::Unsigned;
 
 fn main() {
     let w0 = (0..U512::to_usize())
-        .map(|idx| (PI * idx as f32 / 128.0).sin())
+        .map(|n| (PI * n as f32 / 128.0).sin())
         .collect::<heapless::Vec<f32, U512>>();
     display::<U512, _>("w0:", w0.iter().cloned());
 
     let w1 = (0..U512::to_usize())
-        .map(|idx| (FRAC_PI_4 * idx as f32).sin())
+        .map(|n| (FRAC_PI_4 * n as f32).sin())
         .collect::<heapless::Vec<f32, U512>>();
     display::<U512, _>("w1:", w1.iter().cloned());
 }
@@ -38,7 +38,7 @@ where
     // println!("{:?}: {:?}", name, input.clone().format(", "));
     let display = input
         .enumerate()
-        .map(|(idx, y)| (idx as f32, y))
+        .map(|(n, y)| (n as f32, y))
         .collect::<Vec<(f32, f32)>>();
     Chart::new(120, 60, 0.0, N::to_usize() as f32)
         .lineplot(Shape::Points(&display[..]))

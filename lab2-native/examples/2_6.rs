@@ -15,9 +15,9 @@ use heapless::consts::U512;
 use typenum::Unsigned;
 
 fn main() {
-    let w0 = (0..U512::to_usize()).map(|idx| (PI * idx as f32 / 128.0).sin());
+    let w0 = (0..U512::to_usize()).map(|n| (PI * n as f32 / 128.0).sin());
 
-    let w1 = (0..U512::to_usize()).map(|idx| (FRAC_PI_4 * idx as f32).sin());
+    let w1 = (0..U512::to_usize()).map(|n| (FRAC_PI_4 * n as f32).sin());
 
     let y = w0
         .clone()
@@ -39,7 +39,7 @@ where
     // println!("{:?}: {:?}", name, input.clone().format(", "));
     let display = input
         .enumerate()
-        .map(|(idx, y)| (idx as f32, y))
+        .map(|(n, y)| (n as f32, y))
         .collect::<Vec<(f32, f32)>>();
     Chart::new(120, 60, 0.0, N::to_usize() as f32)
         .lineplot(Shape::Points(&display[..]))

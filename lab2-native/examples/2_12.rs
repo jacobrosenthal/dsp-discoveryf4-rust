@@ -20,7 +20,7 @@ fn main() {
     let exponential = (0..(U10::to_usize())).map(|val| A.powf(val as f32));
 
     // r[n]
-    let unit_ramp = (0..(U10::to_usize())).map(|idx| idx as f32);
+    let unit_ramp = (0..(U10::to_usize())).map(|n| n as f32);
 
     // y1[n]=x1[n]+x2[n], where x1[n]=r[n] and x2[n]=e[n]
     let y1 = unit_ramp
@@ -108,7 +108,7 @@ where
     println!("{:?}: {:?}", name, input.clone().format(", "));
     let display = input
         .enumerate()
-        .map(|(idx, y)| (idx as f32, y))
+        .map(|(n, y)| (n as f32, y))
         .collect::<Vec<(f32, f32)>>();
     Chart::new(120, 60, 0.0, N::to_usize() as f32)
         .lineplot(Shape::Points(&display[..]))

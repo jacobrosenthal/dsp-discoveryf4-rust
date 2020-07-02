@@ -23,8 +23,8 @@ const TRIANGLE_PERIOD: usize = 40;
 fn main() {
     // Collecting to turn the Cycle into a clean iterator for our naive display fn
     let square = (0..SQUARE_PERIOD)
-        .map(|idx| {
-            if idx < (SQUARE_PERIOD / 2) {
+        .map(|n| {
+            if n < (SQUARE_PERIOD / 2) {
                 SQUARE_AMPLITUDE
             } else {
                 -SQUARE_AMPLITUDE
@@ -37,13 +37,13 @@ fn main() {
 
     // Collecting to turn the Cycle into a clean iterator for our naive display fn
     let triangle = (0..TRIANGLE_PERIOD)
-        .map(|idx| {
+        .map(|n| {
             let period = TRIANGLE_PERIOD as f32;
 
-            if idx < (TRIANGLE_PERIOD / 2) {
-                (2.0 * TRIANGLE_AMPLITUDE / (period / 2.0)) * idx as f32 - TRIANGLE_AMPLITUDE
+            if n < (TRIANGLE_PERIOD / 2) {
+                (2.0 * TRIANGLE_AMPLITUDE / (period / 2.0)) * n as f32 - TRIANGLE_AMPLITUDE
             } else {
-                -(2.0 * TRIANGLE_AMPLITUDE / (period / 2.0)) * (idx as f32 - period / 2.0)
+                -(2.0 * TRIANGLE_AMPLITUDE / (period / 2.0)) * (n as f32 - period / 2.0)
                     + TRIANGLE_AMPLITUDE
             }
         })
@@ -65,7 +65,7 @@ where
     println!("{:?}: {:?}", name, input.clone().format(", "));
     let display = input
         .enumerate()
-        .map(|(idx, y)| (idx as f32, y))
+        .map(|(n, y)| (n as f32, y))
         .collect::<Vec<(f32, f32)>>();
     Chart::new(120, 60, 0.0, N::to_usize() as f32)
         .lineplot(Shape::Steps(&display[..]))

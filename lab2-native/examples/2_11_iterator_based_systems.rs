@@ -85,7 +85,7 @@ fn main() {
     let y8 = sinusoidal
         .clone()
         .enumerate()
-        .map(|(idx, inny)| idx as f32 * inny);
+        .map(|(n, inny)| n as f32 * inny);
     display::<U10, _>("digital_system8", y8.clone());
 }
 
@@ -230,7 +230,7 @@ where
     println!("{:?}: {:?}", name, input.clone().format(", "));
     let display = input
         .enumerate()
-        .map(|(idx, y)| (idx as f32, y))
+        .map(|(n, y)| (n as f32, y))
         .collect::<Vec<(f32, f32)>>();
     Chart::new(120, 60, 0.0, N::to_usize() as f32)
         .lineplot(Shape::Points(&display[..]))

@@ -21,73 +21,73 @@ const N: usize = 10;
 const W0: f32 = core::f32::consts::PI / 5.0;
 
 fn digital_system1(b: f32, input: &[f32], output: &mut [f32]) {
-    for idx in 0..output.len() {
-        output[idx] = b * input[idx];
+    for n in 0..output.len() {
+        output[n] = b * input[n];
     }
 }
 
 fn digital_system2(input1: &[f32], input2: &[f32], output: &mut [f32]) {
-    for idx in 0..output.len() {
-        output[idx] = input1[idx] + input2[idx];
+    for n in 0..output.len() {
+        output[n] = input1[n] + input2[n];
     }
 }
 
 fn digital_system3(input: &[f32], output: &mut [f32]) {
-    for idx in 0..output.len() {
-        output[idx] = input[idx] * input[idx];
+    for n in 0..output.len() {
+        output[n] = input[n] * input[n];
     }
 }
 
 fn digital_system4(b: &[f32], input: &[f32], output: &mut [f32]) {
-    for idx in 0..output.len() {
-        if idx == 0 {
-            output[idx] = b[0] * input[idx];
+    for n in 0..output.len() {
+        if n == 0 {
+            output[n] = b[0] * input[n];
         } else {
-            output[idx] = b[0] * input[idx] + b[1] * input[idx - 1];
+            output[n] = b[0] * input[n] + b[1] * input[n - 1];
         }
     }
 }
 
 fn digital_system5(b: &[f32], a: f32, input: &[f32], output: &mut [f32]) {
-    for idx in 0..output.len() {
-        if idx == 0 {
-            output[idx] = b[0] * input[idx];
+    for n in 0..output.len() {
+        if n == 0 {
+            output[n] = b[0] * input[n];
         } else {
-            output[idx] = b[0] * input[idx] + b[1] * input[idx - 1] + a * output[idx - 1];
+            output[n] = b[0] * input[n] + b[1] * input[n - 1] + a * output[n - 1];
         }
     }
 }
 
 fn digital_system6(b: &[f32], input: &[f32], output: &mut [f32]) {
-    for idx in 0..output.len() {
+    for n in 0..output.len() {
         // digital_system6 in c version has oob array access, should be if (n+1 < size)
-        if idx + 1 < input.len() {
-            output[idx] = b[0] * input[idx + 1] + b[1] * input[idx];
+        if n + 1 < input.len() {
+            output[n] = b[0] * input[n + 1] + b[1] * input[n];
         }
     }
 }
 
 fn digital_system7(b: f32, a: f32, input: &[f32], output: &mut [f32]) {
-    for idx in 0..output.len() {
-        if idx == 0 {
-            output[idx] = b * input[idx];
+    for n in 0..output.len() {
+        if n == 0 {
+            output[n] = b * input[n];
         } else {
-            output[idx] = b * input[idx] + a * output[idx - 1];
+            output[n] = b * input[n] + a * output[n - 1];
         }
     }
 }
 
 fn digital_system8(input: &[f32], output: &mut [f32]) {
-    for idx in 0..output.len() {
-        output[idx] = idx as f32 * input[idx];
+    for n in 0..output.len() {
+        output[n] = n as f32 * input[n];
     }
 }
 
 fn main() {
     // d[n]
     let mut unit_pulse = [0f32; N];
-    unit_pulse.iter_mut().enumerate().for_each(|(idx, val)| {
-        if idx == 0 {
+    unit_pulse.iter_mut().enumerate().for_each(|(n, val)| {
+        if n == 0 {
             *val = 1.0;
         } else {
             *val = 0.0;
@@ -102,7 +102,7 @@ fn main() {
     sinusoidal
         .iter_mut()
         .enumerate()
-        .for_each(|(idx, val)| *val = (W0 * idx as f32).sin());
+        .for_each(|(n, val)| *val = (W0 * n as f32).sin());
 
     // multiplier
     // y[n] = b*x[n]
@@ -163,7 +163,7 @@ fn display(name: &str, input: &[f32]) {
     let display = input
         .iter()
         .enumerate()
-        .map(|(idx, y)| (idx as f32, *y))
+        .map(|(n, y)| (n as f32, *y))
         .collect::<Vec<(f32, f32)>>();
     Chart::new(120, 60, 0.0, input.len() as f32)
         .lineplot(Shape::Points(&display[..]))
