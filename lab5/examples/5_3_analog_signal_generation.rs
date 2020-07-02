@@ -28,7 +28,6 @@ use core::ops::DerefMut;
 use core::sync::atomic::{AtomicBool, Ordering};
 use cortex_m::interrupt::{free, Mutex};
 use cortex_m_rt::entry;
-use heapless::consts::N;
 use micromath::F32Ext;
 use nb;
 use panic_rtt as _;
