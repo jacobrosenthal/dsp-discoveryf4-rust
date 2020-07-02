@@ -47,7 +47,7 @@ where
     N: Unsigned,
     I: Iterator<Item = f32> + core::clone::Clone + std::fmt::Debug,
 {
-    println!("{:?}: {:?}", name, input.clone().format(", "));
+    println!("{:?}: {:.4?}", name, input.clone().format(", "));
     let display = input
         .enumerate()
         .map(|(n, y)| (n as f32, y))

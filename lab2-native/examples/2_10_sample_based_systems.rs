@@ -165,7 +165,7 @@ fn main() {
 // Continuous requires to be in a fn pointer closure which cant capture any
 // external data so not useful without lots of code duplication.
 fn display(name: &str, input: &[f32]) {
-    println!("{:?}: {:?}", name, &input[..]);
+    println!("{:?}: {:.4?}", name, &input[..]);
     let display = input
         .iter()
         .enumerate()

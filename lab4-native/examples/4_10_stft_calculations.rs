@@ -150,13 +150,13 @@ where
     N: Unsigned,
     I: Iterator<Item = f32> + core::clone::Clone + std::fmt::Debug,
 {
-    println!("{:?}: {:?}", name, input.clone().format(", "));
+    println!("{:?}: {:.4?}", name, input.clone().format(", "));
     let display = input
         .enumerate()
         .map(|(n, y)| (n as f32, y))
         .collect::<Vec<(f32, f32)>>();
     Chart::new(120, 60, 0.0, N::to_usize() as f32)
-        .lineplot(Shape::Points(&display[..]))
+        .lineplot(Shape::Lines(&display[..]))
         .display();
 }
 
