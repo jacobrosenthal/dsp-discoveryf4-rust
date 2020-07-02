@@ -80,16 +80,16 @@ where
 
     fn next(&mut self) -> Option<f32> {
         if let Some(val) = self.iter.next() {
-            let abc = if let (Some(last_in), Some(last_out)) = (self.last_in, self.last_out) {
+            let out = if let (Some(last_in), Some(last_out)) = (self.last_in, self.last_out) {
                 2.2 * val + -1.1 * last_in + 0.7 * last_out
             } else {
                 2.2 * val
             };
 
             self.last_in = Some(val);
-            self.last_out = Some(abc);
+            self.last_out = Some(out);
 
-            Some(abc)
+            Some(out)
         } else {
             None
         }
