@@ -19,23 +19,23 @@ const W0: f32 = core::f32::consts::PI / 5.0;
 fn main() {
     // d[n]
     let unit_pulse = (0..(N::to_usize())).map(|n| if n == 0 { 1.0 } else { 0.0 });
-    display::<N, _>("unit_pulse", unit_pulse.clone());
+    display::<N, _>("unit_pulse", unit_pulse);
 
     // u[n]
     let unit_step = core::iter::repeat(1.0).take(N::to_usize());
-    display::<N, _>("unit_step", unit_step.clone());
+    display::<N, _>("unit_step", unit_step);
 
     // r[n]
     let unit_ramp = (0..(N::to_usize())).map(|n| n as f32);
-    display::<N, _>("unit_ramp", unit_ramp.clone());
+    display::<N, _>("unit_ramp", unit_ramp);
 
     // e[n]
     let exponential = (0..(N::to_usize())).map(|n| A.powf(n as f32));
-    display::<N, _>("exponential", exponential.clone());
+    display::<N, _>("exponential", exponential);
 
     // s[n]
     let sinusoidal = (0..(N::to_usize())).map(|n| (W0 * n as f32).sin());
-    display::<N, _>("sinusoidal", sinusoidal.clone());
+    display::<N, _>("sinusoidal", sinusoidal);
 }
 
 // Points isn't a great representation as you can lose the line in the graph,

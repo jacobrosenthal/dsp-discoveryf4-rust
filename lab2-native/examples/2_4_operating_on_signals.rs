@@ -32,17 +32,17 @@ fn main() {
     // shifted unit pulse signal u[n+3]
     let x1 = core::iter::repeat(0.0)
         .take(3)
-        .chain(unit_pulse.clone())
+        .chain(unit_pulse)
         .take(N::to_usize());
-    display::<N, _>("x1", x1.clone());
+    display::<N, _>("x1", x1);
 
     // elevated sinusoidal s[n]+1.0
     let x2 = sinusoidal.clone().map(|ess| ess + 1.0);
-    display::<N, _>("x2", x2.clone());
+    display::<N, _>("x2", x2);
 
     // negated unit step -u[n]
     let x3 = unit_step.clone().map(|us| -us);
-    display::<N, _>("x3", x3.clone());
+    display::<N, _>("x3", x3);
 
     // applying all operations on the sinusoidal signal
     // I disagree with the book on this, x4[0] and x4[1] would be -2 shifted
@@ -51,7 +51,7 @@ fn main() {
         .chain(sinusoidal.clone())
         .take(N::to_usize())
         .map(|ess| 3.0 * ess - 2.0);
-    display::<N, _>("x4", x4.clone());
+    display::<N, _>("x4", x4);
 
     // subtracting two unit step signals
     let x5 = core::iter::repeat(0.0)
@@ -65,20 +65,20 @@ fn main() {
     // multiplying the exponential signal with the unit step signal
     let x6 = exponential
         .clone()
-        .zip(unit_step.clone())
+        .zip(unit_step)
         .map(|(ex, us)| ex * us);
-    display::<N, _>("x6", x6.clone());
+    display::<N, _>("x6", x6);
 
     // multiplying the exponential signal with the sinusoidal signal
     let x7 = exponential
         .clone()
-        .zip(sinusoidal.clone())
+        .zip(sinusoidal)
         .map(|(ex, ss)| ex * ss);
-    display::<N, _>("x7", x7.clone());
+    display::<N, _>("x7", x7);
 
     // multiplying the exponential signal with the window signal
-    let x8 = exponential.clone().zip(x5.clone()).map(|(ex, x5)| ex * x5);
-    display::<N, _>("x8", x8.clone());
+    let x8 = exponential.zip(x5).map(|(ex, x5)| ex * x5);
+    display::<N, _>("x8", x8);
 }
 
 // Points isn't a great representation as you can lose the line in the graph,

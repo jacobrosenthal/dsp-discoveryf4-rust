@@ -39,9 +39,9 @@ fn main() {
     // I dont agree?... Book seems to think r[n+4] would be a window?
     let x1 = core::iter::repeat(0.0)
         .take(4)
-        .chain(unit_ramp.clone())
+        .chain(unit_ramp)
         .map(|dr| dr * 0.6);
-    display::<N, _>("x1", x1.clone());
+    display::<N, _>("x1", x1);
 
     // x2[n] = u[n-3]-u[n-8]
     let d3u = Delay::new(unit_step.clone(), 3);
@@ -51,25 +51,25 @@ fn main() {
 
     // x3[n] = u[n]-u[n-3]+u[n-8]
     let x3 = unit_step
-        .clone()
-        .zip(d3u.clone())
-        .zip(d8u.clone())
+        
+        .zip(d3u)
+        .zip(d8u)
         .map(|((u, d3u), d8u)| u - d3u + d8u);
-    display::<N, _>("x3", x3.clone());
+    display::<N, _>("x3", x3);
 
     // x4[n] = x2[n]s[n]+d[n]
     let x4 = x2
-        .clone()
+        
         .zip(sinusoidal.clone().zip(unit_pulse))
         .map(|(x2, (s, d))| x2 * s + d);
-    display::<N, _>("x4", x4.clone());
+    display::<N, _>("x4", x4);
 
     // x5[n] = -2.4e[n]s[n]
     let x5 = exponential
-        .clone()
-        .zip(sinusoidal.clone())
+        
+        .zip(sinusoidal)
         .map(|(e, s)| -2.4 * e * s);
-    display::<N, _>("x5", x5.clone());
+    display::<N, _>("x5", x5);
 }
 
 #[derive(Clone, Debug)]
@@ -90,7 +90,7 @@ where
         Self {
             delay,
             n: 0,
-            iter: iter,
+            iter,
         }
     }
 }

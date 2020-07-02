@@ -18,10 +18,10 @@ const W2: f32 = 3.0 / 10.0;
 
 fn main() {
     let sinusoidal1 = (0..(N::to_usize())).map(|n| (W1 * (n as f32)).cos());
-    display::<N, _>("sinusoidal1", sinusoidal1.clone());
+    display::<N, _>("sinusoidal1", sinusoidal1);
 
     let sinusoidal2 = (0..(N::to_usize())).map(|n| (W2 * (n as f32)).cos());
-    display::<N, _>("sinusoidal2", sinusoidal2.clone());
+    display::<N, _>("sinusoidal2", sinusoidal2);
 }
 
 // Points isn't a great representation as you can lose the line in the graph,

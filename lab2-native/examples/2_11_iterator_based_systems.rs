@@ -36,7 +36,7 @@ fn main() {
     // multiplier
     // y[n] = b*x[n]
     let y1 = unit_step.clone().map(|u| 2.2 * u);
-    display::<N, _>("digital_system1", y1.clone());
+    display::<N, _>("digital_system1", y1);
 
     // adder accumulator
     // y[n] = x1[n] + x2[n]
@@ -44,12 +44,12 @@ fn main() {
         .clone()
         .zip(unit_step.clone())
         .map(|(inny1, inny2)| inny1 + inny2);
-    display::<N, _>("digital_system2", y2.clone());
+    display::<N, _>("digital_system2", y2);
 
     // squaring device
     // y[n] = x^2[n]
     let y3 = sinusoidal.clone().map(|inny| inny * inny);
-    display::<N, _>("digital_system3", y3.clone());
+    display::<N, _>("digital_system3", y3);
 
     // multiplier and accumulator
     // y[n] = b0*x[n] + b1*x[n-1]
@@ -59,34 +59,34 @@ fn main() {
         .map(|s| 2.2 * s)
         .zip(delay_sin.map(|ds| ds * -1.1))
         .map(|(a, b)| a + b);
-    display::<N, _>("digital_system4", y4.clone());
+    display::<N, _>("digital_system4", y4);
 
     // multiplier and accumulator with feedback
     // y[n] = b0*x[n] + b1*x[n-1] + a*y[n-1]
     let y5 = DigitalSystem5::new(sinusoidal.clone());
-    display::<N, _>("digital_system5", y5.clone());
+    display::<N, _>("digital_system5", y5);
 
     // multiplier and accumulator with future input
     // y[n] = b0*x[n+1] + b1*x[n]
     // digital_system6 in c version has oob array access, should be if (n+1 < size) so y6[9] undefined
     let y6 = unit_step
-        .clone()
+        
         .tuple_windows()
         .map(|(u0, u1)| 2.2 * u1 + -1.1 * u0);
-    display::<N, _>("digital_system6", y6.clone());
+    display::<N, _>("digital_system6", y6);
 
     // multiplier and accumulator with unbounded output
     // y[n] = b0*x[n] + b1*y[n-1]
-    let y7 = DigitalSystem7::new(unit_pulse.clone());
-    display::<N, _>("digital_system7", y7.clone());
+    let y7 = DigitalSystem7::new(unit_pulse);
+    display::<N, _>("digital_system7", y7);
 
     // multiplier with a time based coefficient
     // y[n]=n*x[n]
     let y8 = sinusoidal
-        .clone()
+        
         .enumerate()
         .map(|(n, inny)| n as f32 * inny);
-    display::<N, _>("digital_system8", y8.clone());
+    display::<N, _>("digital_system8", y8);
 }
 
 #[derive(Clone, Debug)]
@@ -107,7 +107,7 @@ where
         Self {
             delay,
             idx: 0,
-            iter: iter,
+            iter,
         }
     }
 }
@@ -147,7 +147,7 @@ where
         Self {
             last_in: None,
             last_out: None,
-            iter: iter,
+            iter,
         }
     }
 }
@@ -193,7 +193,7 @@ where
     fn new(iter: I) -> Self {
         Self {
             last_out: None,
-            iter: iter,
+            iter,
         }
     }
 }
