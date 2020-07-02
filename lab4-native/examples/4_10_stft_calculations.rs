@@ -19,7 +19,7 @@ use plotly::HeatMap;
 use typenum::Unsigned;
 
 type N = heapless::consts::U1024;
-type N_OVER_2 = heapless::consts::U512;
+type N_2 = heapless::consts::U512;
 type WINDOW = heapless::consts::U16;
 
 const W1: f32 = 0.0;
@@ -62,7 +62,7 @@ fn main() {
 
             mag
         })
-        .collect::<heapless::Vec<heapless::Vec<_, WINDOW>, N_OVER_2>>();
+        .collect::<heapless::Vec<heapless::Vec<_, WINDOW>, N_2>>();
 
     // // the answer key data for M=16
     // let z: Vec<Vec<f32>> = Windows {
