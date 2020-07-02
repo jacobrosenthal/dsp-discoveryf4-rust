@@ -67,8 +67,8 @@ fn main() -> ! {
         .sysclk(168.mhz())
         .freeze();
 
-    let x = (0..U512::to_usize())
-        .map(|idx| (PI * idx as f32 / 128.0).sin() + (FRAC_PI_4 * idx as f32).sin());
+    let x =
+        (0..U512::to_usize()).map(|n| (PI * n as f32 / 128.0).sin() + (FRAC_PI_4 * n as f32).sin());
 
     // Collecting to have a clean iterator for our naive display fn
     let y = convolution_sum(x).collect::<heapless::Vec<f32, U512>>();
@@ -84,9 +84,9 @@ where
         + core::iter::DoubleEndedIterator
         + Clone,
 {
-    (0..x.len()).map(move |y_idx| {
+    (0..x.len()).map(move |y_n| {
         x.clone()
-            .take(y_idx + 1)
+            .take(y_n + 1)
             .rev()
             .zip(H.iter())
             .map(|(exx, h)| h * exx)

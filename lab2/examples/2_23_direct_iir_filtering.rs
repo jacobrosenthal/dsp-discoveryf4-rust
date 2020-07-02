@@ -56,18 +56,18 @@ fn main() -> ! {
         .freeze();
 
     let x = (0..U512::to_usize())
-        .map(|idx| (PI * idx as f32 / 128.0).sin() + (FRAC_PI_4 * idx as f32).sin())
+        .map(|n| (PI * n as f32 / 128.0).sin() + (FRAC_PI_4 * n as f32).sin())
         .collect::<heapless::Vec<f32, U512>>();
 
     //random access of &mut y were iterating over.. so no iterators unless ... todo
     let mut y = [0f32; N];
-    for y_idx in 0..N {
-        y[y_idx] = B
+    for y_n in 0..N {
+        y[y_n] = B
             .iter()
             .enumerate()
-            .map(|(coeff_idx, coeff)| {
-                if coeff_idx < (y_idx + 1) {
-                    coeff * x[y_idx - coeff_idx]
+            .map(|(coeff_n, coeff)| {
+                if coeff_n < (y_n + 1) {
+                    coeff * x[y_n - coeff_n]
                 } else {
                     0.0
                 }
@@ -75,9 +75,9 @@ fn main() -> ! {
             .sum::<f32>()
             + A.iter()
                 .enumerate()
-                .map(|(coeff_idx, coeff)| {
-                    if coeff_idx < (y_idx + 1) {
-                        -(coeff * y[y_idx - coeff_idx])
+                .map(|(coeff_n, coeff)| {
+                    if coeff_n < (y_n + 1) {
+                        -(coeff * y[y_n - coeff_n])
                     } else {
                         0.0
                     }
