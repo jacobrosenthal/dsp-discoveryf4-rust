@@ -29,6 +29,7 @@ macro_rules! dbgprint {
     };
 }
 
+use core::f32::consts::PI;
 use microfft::{complex::cfft_512, Complex32};
 use typenum::Unsigned;
 
@@ -59,8 +60,7 @@ fn main() -> ! {
     let s2 = (0..N::to_usize()).map(|val| (W2 * val as f32).sin());
     let s = s1.zip(s2).map(|(ess1, ess2)| ess1 + ess2);
 
-    // map it to real, leave im blank well fill in with cfft
-    let mut dtfsecoef = s
+    let mut s_complex = s
         .map(|f| Complex32 { re: f, im: 0.0 })
         .collect::<heapless::Vec<Complex32, N>>();
 
@@ -69,6 +69,9 @@ fn main() -> ! {
         .iter()
         .cloned()
         .map(|f| Complex32 { re: f, im: 0.0 })
+        .chain(core::iter::repeat(Complex32 { re: 0.0, im: 0.0 }))
+        //fill rest with zeros up to N
+        .take(N::to_usize())
         .collect::<heapless::Vec<Complex32, N>>();
 
     // Finding the FFT of the filter
@@ -76,16 +79,25 @@ fn main() -> ! {
 
     let time: ClockDuration = dwt.measure(|| {
         // Finding the FFT of the input signal
-        let _ = cfft_512(&mut dtfsecoef[..]);
+        let _ = cfft_512(&mut s_complex[..]);
 
         // Filtering in the frequency domain
-        // arm_cmplx_mult_cmplx_f32(s_complex, df_complex, y_complex, 2 * N);
-        // let mut y_complex = ;
+        let y_complex = s_complex
+            .iter()
+            .zip(df_complex.iter())
+            //multiply complex
+            .map(|(s, df)| Complex32 {
+                re: s.re * df.re - s.im * df.im,
+                im: s.re * df.im + s.im * df.re,
+            });
 
         // Finding the complex result in time domain
-        // arm_cfft_f32(&arm_cfft_sR_f32_len512, y_complex, 1, 1);
-        // Uh oh, 1,1 ...
-        // let _ = cfft_512(&mut y_complex[..]);
+        // supposed to be inverse transform but microfft doesnt have it
+        // Could patch it in. inverse DFT is the same as the DFT, but with the
+        // opposite sign in the exponent and a 1/N factor, any FFT algorithm can
+        // easily be adapted for it.
+        // just dtfse approx instead for now
+        let _y_freq = dtfse::<N, _>(y_complex.clone(), 15).collect::<heapless::Vec<f32, N>>();
     });
     dbgprint!("dft ticks: {:?}", time.as_ticks());
 
@@ -102,3 +114,22 @@ static H: &[f32] = &[
     0.002912, 0.002698, 0.002499, 0.002313, 0.002141, 0.001981, 0.001833, 0.001695, 0.001567,
     0.001448,
 ];
+
+fn dtfse<N: Unsigned, I: Iterator<Item = Complex32> + Clone>(
+    coeff: I,
+    k_var: usize,
+) -> impl Iterator<Item = f32> {
+    let size = N::to_usize() as f32;
+    (0..N::to_usize()).map(move |n| {
+        coeff
+            .clone()
+            .take(k_var + 1)
+            .enumerate()
+            .map(|(k, complex)| {
+                let a = (complex.re * complex.re + complex.im * complex.im).sqrt();
+                let p = complex.im.atan2(complex.re);
+                a * ((2.0 * PI * k as f32 * n as f32 / size) + p).cos() / size
+            })
+            .sum::<f32>()
+    })
+}
