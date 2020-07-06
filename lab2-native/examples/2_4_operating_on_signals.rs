@@ -63,17 +63,11 @@ fn main() {
     display::<N, _>("x5", x5.clone());
 
     // multiplying the exponential signal with the unit step signal
-    let x6 = exponential
-        .clone()
-        .zip(unit_step)
-        .map(|(ex, us)| ex * us);
+    let x6 = exponential.clone().zip(unit_step).map(|(ex, us)| ex * us);
     display::<N, _>("x6", x6);
 
     // multiplying the exponential signal with the sinusoidal signal
-    let x7 = exponential
-        .clone()
-        .zip(sinusoidal)
-        .map(|(ex, ss)| ex * ss);
+    let x7 = exponential.clone().zip(sinusoidal).map(|(ex, ss)| ex * ss);
     display::<N, _>("x7", x7);
 
     // multiplying the exponential signal with the window signal

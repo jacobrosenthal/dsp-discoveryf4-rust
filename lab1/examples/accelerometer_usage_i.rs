@@ -15,7 +15,7 @@ use panic_halt as _;
 
 use crate::hal::spi;
 use accelerometer::RawAccelerometer;
-
+use lis302dl::Lis302Dl;
 
 #[entry]
 fn main() -> ! {
@@ -55,7 +55,7 @@ fn main() -> ! {
     let mut chip_select = gpioe.pe3.into_push_pull_output();
     chip_select.set_high().ok();
 
-    let mut lis302dl = lis302dl::Lis302Dl::new(spi, chip_select, Default::default());
+    let mut lis302dl = Lis302Dl::new(spi, chip_select, Default::default());
 
     let mut top = gpiod.pd12.into_push_pull_output();
     let mut left = gpiod.pd13.into_push_pull_output();

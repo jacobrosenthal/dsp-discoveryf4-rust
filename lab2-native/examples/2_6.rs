@@ -18,10 +18,7 @@ fn main() {
 
     let w1 = (0..N::to_usize()).map(|n| (FRAC_PI_4 * n as f32).sin());
 
-    let y = w0
-        
-        .zip(w1)
-        .map(|(inny1, inny2)| inny1 + inny2);
+    let y = w0.zip(w1).map(|(inny1, inny2)| inny1 + inny2);
 
     display::<N, _>("w1:", y);
 }

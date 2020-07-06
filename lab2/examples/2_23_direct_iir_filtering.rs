@@ -13,14 +13,13 @@ use stm32f4xx_hal as hal;
 
 use crate::hal::{prelude::*, stm32};
 use cortex_m_rt::entry;
-use jlink_rtt;
 use panic_rtt as _;
 
 macro_rules! dbgprint {
     ($($arg:tt)*) => {
         {
             use core::fmt::Write;
-            let mut out = $crate::jlink_rtt::NonBlockingOutput::new();
+            let mut out = jlink_rtt::Output::new();
             writeln!(out, $($arg)*).ok();
         }
     };

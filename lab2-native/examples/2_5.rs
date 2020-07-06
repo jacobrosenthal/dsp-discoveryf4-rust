@@ -51,7 +51,6 @@ fn main() {
 
     // x3[n] = u[n]-u[n-3]+u[n-8]
     let x3 = unit_step
-        
         .zip(d3u)
         .zip(d8u)
         .map(|((u, d3u), d8u)| u - d3u + d8u);
@@ -59,16 +58,12 @@ fn main() {
 
     // x4[n] = x2[n]s[n]+d[n]
     let x4 = x2
-        
         .zip(sinusoidal.clone().zip(unit_pulse))
         .map(|(x2, (s, d))| x2 * s + d);
     display::<N, _>("x4", x4);
 
     // x5[n] = -2.4e[n]s[n]
-    let x5 = exponential
-        
-        .zip(sinusoidal)
-        .map(|(e, s)| -2.4 * e * s);
+    let x5 = exponential.zip(sinusoidal).map(|(e, s)| -2.4 * e * s);
     display::<N, _>("x5", x5);
 }
 
@@ -87,11 +82,7 @@ where
     I: Iterator<Item = f32>,
 {
     fn new(iter: I, delay: u32) -> Self {
-        Self {
-            delay,
-            n: 0,
-            iter,
-        }
+        Self { delay, n: 0, iter }
     }
 }
 

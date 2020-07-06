@@ -29,7 +29,7 @@ use core::sync::atomic::{AtomicBool, Ordering};
 use cortex_m::interrupt::{free, Mutex};
 use cortex_m_rt::entry;
 use micromath::F32Ext;
-use nb;
+use nb::block;
 use panic_rtt as _;
 use typenum::Unsigned;
 
@@ -88,7 +88,7 @@ fn main() -> ! {
     // frequency dac 16khz, freq/period = 16000/160 = 100hz
     let mut timer = Timer::tim1(dp.TIM1, 16.khz(), clocks);
     // im not sure if you can create and start twice?
-    nb::block!(timer.wait()).unwrap();
+    block!(timer.wait()).unwrap();
 
     loop {
         // little wiggly because not an interrupt..
@@ -97,13 +97,13 @@ fn main() -> ! {
             for n in 0..N::to_usize() {
                 dac.set_value(sin_lookup[n]);
                 timer.start(16.khz());
-                nb::block!(timer.wait()).unwrap();
+                block!(timer.wait()).unwrap();
             }
         } else {
             for n in 0..N::to_usize() {
                 dac.set_value(sq_lookup[n]);
                 timer.start(16.khz());
-                nb::block!(timer.wait()).unwrap();
+                block!(timer.wait()).unwrap();
             }
         }
     }

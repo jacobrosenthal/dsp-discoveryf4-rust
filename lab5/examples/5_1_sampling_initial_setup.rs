@@ -19,7 +19,6 @@ use crate::hal::{
 };
 
 use cortex_m_rt::entry;
-use jlink_rtt;
 use panic_rtt as _;
 use typenum::Unsigned;
 
@@ -27,7 +26,7 @@ macro_rules! dbgprint {
     ($($arg:tt)*) => {
         {
             use core::fmt::Write;
-            let mut out = $crate::jlink_rtt::Output::new();
+            let mut out = jlink_rtt::Output::new();
             writeln!(out, $($arg)*).ok();
         }
     };

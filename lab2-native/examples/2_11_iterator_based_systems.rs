@@ -70,7 +70,6 @@ fn main() {
     // y[n] = b0*x[n+1] + b1*x[n]
     // digital_system6 in c version has oob array access, should be if (n+1 < size) so y6[9] undefined
     let y6 = unit_step
-        
         .tuple_windows()
         .map(|(u0, u1)| 2.2 * u1 + -1.1 * u0);
     display::<N, _>("digital_system6", y6);
@@ -82,10 +81,7 @@ fn main() {
 
     // multiplier with a time based coefficient
     // y[n]=n*x[n]
-    let y8 = sinusoidal
-        
-        .enumerate()
-        .map(|(n, inny)| n as f32 * inny);
+    let y8 = sinusoidal.enumerate().map(|(n, inny)| n as f32 * inny);
     display::<N, _>("digital_system8", y8);
 }
 
