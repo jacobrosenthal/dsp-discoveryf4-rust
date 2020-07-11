@@ -32,11 +32,20 @@ use accelerometer::RawAccelerometer;
 use lis302dl::Lis302Dl;
 
 use core::f32::consts::PI;
-use microfft::{complex::cfft_1024, Complex32};
-use typenum::Unsigned;
+use typenum::{Sum, Unsigned};
+mod arm_math;
+use arm_math::{
+    armBitRevIndexTable64, arm_cfft_f32, arm_cfft_instance_f32, arm_cmplx_mag_f32, twiddleCoef_64,
+    ARMBITREVINDEXTABLE_64_TABLE_LENGTH,
+};
+use cty::uint32_t;
+use itertools::Itertools;
 
 type N = heapless::consts::U1024;
 type WINDOW = heapless::consts::U64;
+type WINDOWCOMPLEX = Sum<WINDOW, WINDOW>;
+//todo derive this from WINDOW
+const WINDOW_CONST: usize = 64;
 
 #[entry]
 fn main() -> ! {
@@ -96,6 +105,13 @@ fn main() -> ! {
     let hamming = (0..WINDOW::to_usize())
         .map(|m| 0.54 - 0.46 * (2.0 * PI * m as f32 / WINDOW::to_usize() as f32).cos());
 
+    let cfft = arm_cfft_instance_f32 {
+        fftLen: 64,
+        pTwiddle: twiddleCoef_64.as_ptr(),
+        pBitRevTable: armBitRevIndexTable64.as_ptr(),
+        bitRevLength: ARMBITREVINDEXTABLE_64_TABLE_LENGTH,
+    };
+
     // get 64 input at a time, overlapping 32
     // windowing is easier to do on slices
     let overlapping_chirp_windows = Windows {
@@ -104,28 +120,35 @@ fn main() -> ! {
         inc: WINDOW::to_usize() / 2,
     };
 
-    let mut xst: heapless::Vec<heapless::Vec<_, WINDOW>, N> = heapless::Vec::new();
+    let mut xst: heapless::Vec<[f32; WINDOW_CONST], N> = heapless::Vec::new();
+
+    let mut mag = [0f32; WINDOW_CONST];
 
     for chirp_win in overlapping_chirp_windows {
         // 64-0=64 of input to 64-64=0, so input * chirp.rev
         let mut dtfsecoef = hamming
             .clone()
             .zip(chirp_win.iter().rev())
-            .map(|(v, x)| Complex32 { re: v * x, im: 0.0 })
-            .collect::<heapless::Vec<Complex32, WINDOW>>();
+            .map(|(v, x)| v * x)
+            .interleave_shortest(core::iter::repeat(0.0))
+            .collect::<heapless::Vec<f32, WINDOWCOMPLEX>>();
 
-        let _ = cfft_1024(&mut dtfsecoef[..]);
-        // println!("dtfsecoef: {:?}", &dtfsecoef[..]);
+        unsafe {
+            //Finding the FFT of window
+            arm_cfft_f32(&cfft, dtfsecoef.as_mut_ptr(), 0, 1);
+            arm_cmplx_mag_f32(
+                dtfsecoef.as_ptr(),
+                mag.as_mut_ptr(),
+                WINDOW_CONST as uint32_t,
+            );
+        }
 
-        // Magnitude calculation
-        let mag = dtfsecoef
-            .iter()
-            .map(|complex| (complex.re * complex.re + complex.im * complex.im).sqrt())
-            .collect::<heapless::Vec<f32, WINDOW>>();
+        // dbgprint!("mag: {:?}", &mag[..]);
 
         xst.push(mag).ok();
     }
-    dbgprint!("xst: {:?}", &xst[..]);
+    // dbgprint!("xst: {:?}", &xst[..]);
+    dbgprint!("done");
 
     loop {}
 }

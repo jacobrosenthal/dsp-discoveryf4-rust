@@ -17,7 +17,6 @@ use stm32f4xx_hal as hal;
 
 use crate::hal::{prelude::*, spi, stm32};
 use cortex_m_rt::entry;
-use micromath::F32Ext;
 use panic_rtt as _;
 
 macro_rules! dbgprint {
@@ -31,11 +30,20 @@ macro_rules! dbgprint {
 }
 
 use accelerometer::RawAccelerometer;
+use cty::uint32_t;
 use lis302dl::Lis302Dl;
-use microfft::{complex::cfft_512, Complex32};
-use typenum::Unsigned;
+use typenum::{Sum, Unsigned};
+mod arm_math;
+use arm_math::{
+    armBitRevIndexTable512, arm_cfft_f32, arm_cfft_instance_f32, arm_cmplx_mag_f32,
+    twiddleCoef_512, ARMBITREVINDEXTABLE_512_TABLE_LENGTH,
+};
+use itertools::Itertools;
 
 type N = heapless::consts::U512;
+type NCOMPLEX = Sum<N, N>;
+//todo derive this from N
+const N_CONST: usize = 512;
 
 #[entry]
 fn main() -> ! {
@@ -79,25 +87,36 @@ fn main() -> ! {
     let mut delay = hal::delay::Delay::new(cp.SYST, clocks);
 
     // dont love the idea of delaying in an iterator ...
-    let mut dtfsecoef = (0..N::to_usize())
-        .map(|_| {
-            let dat = lis302dl.accel_raw().unwrap();
-            delay.delay_ms(10u8);
+    let dtfsecoef = (0..N::to_usize()).map(|_| {
+        delay.delay_ms(10u8);
+        let dat = lis302dl.accel_raw().unwrap();
+        dat.x as f32
+    });
 
-            Complex32 {
-                re: dat.x as f32,
-                im: 0.0,
-            }
-        })
-        .collect::<heapless::Vec<Complex32, N>>();
+    let mut dtfsecoef = dtfsecoef
+        .interleave_shortest(core::iter::repeat(0.0))
+        .collect::<heapless::Vec<f32, NCOMPLEX>>();
 
-    let _ = cfft_512(&mut dtfsecoef[..]);
+    let cfft = arm_cfft_instance_f32 {
+        fftLen: 512,
+        pTwiddle: twiddleCoef_512.as_ptr(),
+        pBitRevTable: armBitRevIndexTable512.as_ptr(),
+        bitRevLength: ARMBITREVINDEXTABLE_512_TABLE_LENGTH,
+    };
 
-    // Magnitude calculation
-    let mag = dtfsecoef
-        .iter()
-        .map(|complex| (complex.re * complex.re + complex.im * complex.im).sqrt())
-        .collect::<heapless::Vec<f32, N>>();
+    let mut mag = [0f32; N_CONST];
+
+    unsafe {
+        //CFFT calculation
+        arm_cfft_f32(&cfft, dtfsecoef.as_mut_ptr(), 0, 1);
+
+        // Magnitude calculation
+        arm_cmplx_mag_f32(
+            dtfsecoef.as_ptr(),
+            mag.as_mut_ptr(),
+            N::to_usize() as uint32_t,
+        );
+    }
 
     dbgprint!("mag: {:?}", &mag[..]);
 

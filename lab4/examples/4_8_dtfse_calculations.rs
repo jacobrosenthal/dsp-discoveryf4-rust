@@ -7,7 +7,7 @@
 //!
 //! Requires cargo embed `cargo install cargo-embed`
 //!
-//! `cargo embed --example 4_8_dtfse_calculations`
+//! `cargo embed --release --example 4_8_dtfse_calculations`
 
 #![no_std]
 #![no_main]
@@ -30,8 +30,13 @@ macro_rules! dbgprint {
 }
 
 use core::f32::consts::PI;
-use microfft::{complex::cfft_16, Complex32};
 use typenum::Unsigned;
+mod arm_math;
+use arm_math::{
+    armBitRevIndexTable16, arm_cfft_f32, arm_cfft_instance_f32, arm_cos_f32, twiddleCoef_16,
+    ARMBITREVINDEXTABLE_16_TABLE_LENGTH,
+};
+use cty::c_float;
 
 type N = heapless::consts::U16;
 
@@ -60,10 +65,17 @@ fn main() -> ! {
         .map(|f| Complex32 { re: f, im: 0.0 })
         .collect::<heapless::Vec<Complex32, N>>();
 
-    // Coefficient calculation with CFFT function
-    // arm_cfft_f32 uses a forward transform with enables bit reversal of output
-    // well use microfft uses an in place Radix-2 FFT, for some reasons returns itself we dont need
-    let _ = cfft_16(&mut dtfsecoef[..]);
+    let cfft = arm_cfft_instance_f32 {
+        fftLen: 16,
+        pTwiddle: twiddleCoef_16.as_ptr(),
+        pBitRevTable: armBitRevIndexTable16.as_ptr(),
+        bitRevLength: ARMBITREVINDEXTABLE_16_TABLE_LENGTH,
+    };
+
+    //Coefficient calculation with CFFT function
+    unsafe {
+        arm_cfft_f32(&cfft, dtfsecoef.as_mut_ptr() as *mut c_float, 0, 1);
+    }
 
     let time: ClockDuration = dwt.measure(|| {
         let _y_real =
@@ -87,8 +99,14 @@ fn dtfse<N: Unsigned, I: Iterator<Item = Complex32> + Clone>(
             .map(|(k, complex)| {
                 let a = (complex.re * complex.re + complex.im * complex.im).sqrt();
                 let p = complex.im.atan2(complex.re);
-                a * ((2.0 * PI * k as f32 * n as f32 / size) + p).cos() / size
+                unsafe { a * arm_cos_f32((2.0 * PI * k as f32 * n as f32 / size) + p) / size }
             })
             .sum::<f32>()
     })
+}
+
+#[derive(Clone)]
+struct Complex32 {
+    re: f32,
+    im: f32,
 }

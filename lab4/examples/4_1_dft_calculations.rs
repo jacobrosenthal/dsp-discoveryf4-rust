@@ -7,7 +7,7 @@
 //!
 //! Requires cargo embed `cargo install cargo-embed`
 //!
-//! `cargo embed --example 4_1_dft_calculations`
+//! `cargo embed --release --example 4_1_dft_calculations`
 
 #![no_std]
 #![no_main]
@@ -71,7 +71,7 @@ fn main() -> ! {
             .map(|complex| (complex.re * complex.re + complex.im * complex.im).sqrt())
             .collect::<heapless::Vec<f32, N>>();
     });
-    dbgprint!("dft ticks: {:?}", time.as_ticks());
+    dbgprint!("ticks: {:?}", time.as_ticks());
 
     loop {}
 }
