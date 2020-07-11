@@ -58,7 +58,7 @@ fn main() -> ! {
         .map(|n| (PI * n as f32 / 128.0).sin() + (FRAC_PI_4 * n as f32).sin())
         .collect::<heapless::Vec<f32, N>>();
 
-    //random access of &mut y were iterating over.. so no iterators unless ... todo
+    //random access of &mut y were iterating over.. so no iterators unless
     let mut y = [0.0; N_CONST];
     for y_n in 0..N_CONST {
         y[y_n] = B

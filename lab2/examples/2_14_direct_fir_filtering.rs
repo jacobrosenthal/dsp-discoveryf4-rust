@@ -72,6 +72,7 @@ fn main() -> ! {
 
     // Collecting to have a clean iterator for our naive display fn
     let y = convolution_sum(x).collect::<heapless::Vec<f32, N>>();
+
     dbgprint!("y: {:?}", &y[..]);
 
     loop {}
