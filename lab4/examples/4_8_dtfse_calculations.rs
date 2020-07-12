@@ -29,14 +29,10 @@ macro_rules! dbgprint {
     };
 }
 
+use cmsis_dsp_sys::{arm_cfft_f32, arm_cfft_sR_f32_len16, arm_cos_f32};
 use core::f32::consts::PI;
-use typenum::Unsigned;
-mod arm_math;
-use arm_math::{
-    armBitRevIndexTable16, arm_cfft_f32, arm_cfft_instance_f32, arm_cos_f32, twiddleCoef_16,
-    ARMBITREVINDEXTABLE_16_TABLE_LENGTH,
-};
 use cty::c_float;
+use typenum::Unsigned;
 
 type N = heapless::consts::U16;
 
@@ -65,16 +61,14 @@ fn main() -> ! {
         .map(|f| Complex32 { re: f, im: 0.0 })
         .collect::<heapless::Vec<Complex32, N>>();
 
-    let cfft = arm_cfft_instance_f32 {
-        fftLen: 16,
-        pTwiddle: twiddleCoef_16.as_ptr(),
-        pBitRevTable: armBitRevIndexTable16.as_ptr(),
-        bitRevLength: ARMBITREVINDEXTABLE_16_TABLE_LENGTH,
-    };
-
     //Coefficient calculation with CFFT function
     unsafe {
-        arm_cfft_f32(&cfft, dtfsecoef.as_mut_ptr() as *mut c_float, 0, 1);
+        arm_cfft_f32(
+            &arm_cfft_sR_f32_len16,
+            dtfsecoef.as_mut_ptr() as *mut c_float,
+            0,
+            1,
+        );
     }
 
     let time: ClockDuration = dwt.measure(|| {

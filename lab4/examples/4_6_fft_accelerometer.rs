@@ -17,6 +17,7 @@ use stm32f4xx_hal as hal;
 
 use crate::hal::{prelude::*, spi, stm32};
 use cortex_m_rt::entry;
+use micromath::F32Ext;
 use panic_rtt as _;
 
 macro_rules! dbgprint {
@@ -30,15 +31,11 @@ macro_rules! dbgprint {
 }
 
 use accelerometer::RawAccelerometer;
+use cmsis_dsp_sys::{arm_cfft_f32, arm_cfft_sR_f32_len512, arm_cmplx_mag_f32};
 use cty::uint32_t;
+use itertools::Itertools;
 use lis302dl::Lis302Dl;
 use typenum::{Sum, Unsigned};
-mod arm_math;
-use arm_math::{
-    armBitRevIndexTable512, arm_cfft_f32, arm_cfft_instance_f32, arm_cmplx_mag_f32,
-    twiddleCoef_512, ARMBITREVINDEXTABLE_512_TABLE_LENGTH,
-};
-use itertools::Itertools;
 
 type N = heapless::consts::U512;
 type NCOMPLEX = Sum<N, N>;
@@ -97,18 +94,11 @@ fn main() -> ! {
         .interleave_shortest(core::iter::repeat(0.0))
         .collect::<heapless::Vec<f32, NCOMPLEX>>();
 
-    let cfft = arm_cfft_instance_f32 {
-        fftLen: 512,
-        pTwiddle: twiddleCoef_512.as_ptr(),
-        pBitRevTable: armBitRevIndexTable512.as_ptr(),
-        bitRevLength: ARMBITREVINDEXTABLE_512_TABLE_LENGTH,
-    };
-
     let mut mag = [0f32; N_CONST];
 
     unsafe {
         //CFFT calculation
-        arm_cfft_f32(&cfft, dtfsecoef.as_mut_ptr(), 0, 1);
+        arm_cfft_f32(&arm_cfft_sR_f32_len512, dtfsecoef.as_mut_ptr(), 0, 1);
 
         // Magnitude calculation
         arm_cmplx_mag_f32(
@@ -121,4 +111,10 @@ fn main() -> ! {
     dbgprint!("mag: {:?}", &mag[..]);
 
     loop {}
+}
+
+//C needs access to a sqrt fn, lets use micromath
+#[no_mangle]
+pub extern "C" fn sqrtf(x: f32) -> f32 {
+    x.sqrt()
 }

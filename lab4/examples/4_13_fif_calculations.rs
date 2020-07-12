@@ -28,14 +28,10 @@ macro_rules! dbgprint {
     };
 }
 
-use typenum::{Sum, Unsigned};
-mod arm_math;
-use arm_math::{
-    armBitRevIndexTable512, arm_cfft_f32, arm_cfft_instance_f32, arm_cmplx_mult_cmplx_f32,
-    twiddleCoef_512, ARMBITREVINDEXTABLE_512_TABLE_LENGTH,
-};
+use cmsis_dsp_sys::{arm_cfft_f32, arm_cfft_sR_f32_len512, arm_cmplx_mult_cmplx_f32};
 use cty::uint32_t;
 use itertools::Itertools;
+use typenum::{Sum, Unsigned};
 
 type N = heapless::consts::U512;
 type NCOMPLEX = Sum<N, N>;
@@ -73,13 +69,6 @@ fn main() -> ! {
         .interleave_shortest(core::iter::repeat(0.0))
         .collect::<heapless::Vec<f32, NCOMPLEX>>();
 
-    let cfft = arm_cfft_instance_f32 {
-        fftLen: 512,
-        pTwiddle: twiddleCoef_512.as_ptr(),
-        pBitRevTable: armBitRevIndexTable512.as_ptr(),
-        bitRevLength: ARMBITREVINDEXTABLE_512_TABLE_LENGTH,
-    };
-
     // Complex impulse response of filter
     let mut df_complex = H
         .iter()
@@ -92,7 +81,7 @@ fn main() -> ! {
 
     // Finding the FFT of the filter
     unsafe {
-        arm_cfft_f32(&cfft, df_complex.as_mut_ptr(), 0, 1);
+        arm_cfft_f32(&arm_cfft_sR_f32_len512, df_complex.as_mut_ptr(), 0, 1);
     }
 
     let mut y_complex = [0f32; N_CONST * 2];
@@ -100,7 +89,7 @@ fn main() -> ! {
     let time: ClockDuration = dwt.measure(|| {
         // Finding the FFT of the input signal
         unsafe {
-            arm_cfft_f32(&cfft, s_complex.as_mut_ptr(), 0, 1);
+            arm_cfft_f32(&arm_cfft_sR_f32_len512, s_complex.as_mut_ptr(), 0, 1);
         }
 
         // Filtering in the frequency domain
@@ -115,7 +104,7 @@ fn main() -> ! {
 
         // Finding the complex result in time domain
         unsafe {
-            arm_cfft_f32(&cfft, y_complex.as_mut_ptr(), 1, 1);
+            arm_cfft_f32(&arm_cfft_sR_f32_len512, y_complex.as_mut_ptr(), 1, 1);
         }
     });
     dbgprint!("dft ticks: {:?}", time.as_ticks());
@@ -133,3 +122,9 @@ static H: &[f32] = &[
     0.002912, 0.002698, 0.002499, 0.002313, 0.002141, 0.001981, 0.001833, 0.001695, 0.001567,
     0.001448,
 ];
+
+//C needs access to a sqrt fn, lets use micromath
+#[no_mangle]
+pub extern "C" fn sqrtf(x: f32) -> f32 {
+    x.sqrt()
+}

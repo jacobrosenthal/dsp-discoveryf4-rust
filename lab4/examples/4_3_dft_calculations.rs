@@ -33,11 +33,10 @@ macro_rules! dbgprint {
     };
 }
 
+use cmsis_dsp_sys::{arm_cmplx_mag_f32, arm_cos_f32, arm_sin_f32};
 use core::f32::consts::PI;
 use cty::{c_float, uint32_t};
 use typenum::Unsigned;
-mod arm_math;
-use arm_math::{arm_cmplx_mag_f32, arm_cos_f32, arm_sin_f32};
 
 type N = heapless::consts::U256;
 //todo derive this from N
@@ -125,4 +124,10 @@ fn dft<N: Unsigned, I: Iterator<Item = Complex32> + Clone>(
             im: -sum_im,
         }
     })
+}
+
+//C needs access to a sqrt fn, lets use micromath
+#[no_mangle]
+pub extern "C" fn sqrtf(x: f32) -> f32 {
+    x.sqrt()
 }

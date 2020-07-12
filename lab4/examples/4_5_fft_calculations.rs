@@ -32,14 +32,10 @@ macro_rules! dbgprint {
     };
 }
 
+use cmsis_dsp_sys::{arm_cfft_f32, arm_cfft_sR_f32_len256, arm_cmplx_mag_f32};
 use cty::uint32_t;
 use itertools::Itertools;
 use typenum::{Sum, Unsigned};
-mod arm_math;
-use arm_math::{
-    armBitRevIndexTable256, arm_cfft_f32, arm_cfft_instance_f32, arm_cmplx_mag_f32,
-    twiddleCoef_256, ARMBITREVINDEXTABLE_256_TABLE_LENGTH,
-};
 
 type N = heapless::consts::U256;
 type NCOMPLEX = Sum<N, N>;
@@ -78,18 +74,11 @@ fn main() -> ! {
         .interleave_shortest(core::iter::repeat(0.0))
         .collect::<heapless::Vec<f32, NCOMPLEX>>();
 
-    let cfft = arm_cfft_instance_f32 {
-        fftLen: 256,
-        pTwiddle: twiddleCoef_256.as_ptr(),
-        pBitRevTable: armBitRevIndexTable256.as_ptr(),
-        bitRevLength: ARMBITREVINDEXTABLE_256_TABLE_LENGTH,
-    };
-
     let mut mag = [0f32; N_CONST];
 
     let time: ClockDuration = dwt.measure(|| unsafe {
         //CFFT calculation
-        arm_cfft_f32(&cfft, s.as_mut_ptr(), 0, 1);
+        arm_cfft_f32(&arm_cfft_sR_f32_len256, s.as_mut_ptr(), 0, 1);
 
         // Magnitude calculation
         arm_cmplx_mag_f32(s.as_ptr(), mag.as_mut_ptr(), N::to_usize() as uint32_t);
@@ -97,4 +86,10 @@ fn main() -> ! {
     dbgprint!("ticks: {:?}", time.as_ticks());
 
     loop {}
+}
+
+//C needs access to a sqrt fn, lets use micromath
+#[no_mangle]
+pub extern "C" fn sqrtf(x: f32) -> f32 {
+    x.sqrt()
 }

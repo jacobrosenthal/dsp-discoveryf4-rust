@@ -29,17 +29,12 @@ macro_rules! dbgprint {
     };
 }
 use accelerometer::RawAccelerometer;
-use lis302dl::Lis302Dl;
-
+use cmsis_dsp_sys::{arm_cfft_f32, arm_cfft_sR_f32_len64, arm_cmplx_mag_f32};
 use core::f32::consts::PI;
-use typenum::{Sum, Unsigned};
-mod arm_math;
-use arm_math::{
-    armBitRevIndexTable64, arm_cfft_f32, arm_cfft_instance_f32, arm_cmplx_mag_f32, twiddleCoef_64,
-    ARMBITREVINDEXTABLE_64_TABLE_LENGTH,
-};
 use cty::uint32_t;
 use itertools::Itertools;
+use lis302dl::Lis302Dl;
+use typenum::{Sum, Unsigned};
 
 type N = heapless::consts::U1024;
 type WINDOW = heapless::consts::U64;
@@ -105,13 +100,6 @@ fn main() -> ! {
     let hamming = (0..WINDOW::to_usize())
         .map(|m| 0.54 - 0.46 * (2.0 * PI * m as f32 / WINDOW::to_usize() as f32).cos());
 
-    let cfft = arm_cfft_instance_f32 {
-        fftLen: 64,
-        pTwiddle: twiddleCoef_64.as_ptr(),
-        pBitRevTable: armBitRevIndexTable64.as_ptr(),
-        bitRevLength: ARMBITREVINDEXTABLE_64_TABLE_LENGTH,
-    };
-
     // get 64 input at a time, overlapping 32
     // windowing is easier to do on slices
     let overlapping_chirp_windows = Windows {
@@ -135,7 +123,7 @@ fn main() -> ! {
 
         unsafe {
             //Finding the FFT of window
-            arm_cfft_f32(&cfft, dtfsecoef.as_mut_ptr(), 0, 1);
+            arm_cfft_f32(&arm_cfft_sR_f32_len64, dtfsecoef.as_mut_ptr(), 0, 1);
             arm_cmplx_mag_f32(
                 dtfsecoef.as_ptr(),
                 mag.as_mut_ptr(),
@@ -172,4 +160,10 @@ impl<'a, T> Iterator for Windows<'a, T> {
             ret
         }
     }
+}
+
+//C needs access to a sqrt fn, lets use micromath
+#[no_mangle]
+pub extern "C" fn sqrtf(x: f32) -> f32 {
+    x.sqrt()
 }
