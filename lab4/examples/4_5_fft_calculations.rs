@@ -20,17 +20,8 @@ use crate::hal::{dwt::ClockDuration, dwt::DwtExt, prelude::*, stm32};
 
 use cortex_m_rt::entry;
 use micromath::F32Ext;
-use panic_rtt as _;
-
-macro_rules! dbgprint {
-    ($($arg:tt)*) => {
-        {
-            use core::fmt::Write;
-            let mut out = jlink_rtt::Output::new();
-            writeln!(out, $($arg)*).ok();
-        }
-    };
-}
+use panic_rtt_target as _;
+use rtt_target::{rprintln, rtt_init_print};
 
 use cmsis_dsp_sys::{arm_cfft_f32, arm_cfft_sR_f32_len256, arm_cmplx_mag_f32};
 use cty::uint32_t;
@@ -48,6 +39,8 @@ const W2: f32 = core::f32::consts::PI / 4.0;
 
 #[entry]
 fn main() -> ! {
+    rtt_init_print!();
+
     let dp = stm32::Peripherals::take().unwrap();
     let cp = cortex_m::peripheral::Peripherals::take().unwrap();
 
@@ -83,7 +76,7 @@ fn main() -> ! {
         // Magnitude calculation
         arm_cmplx_mag_f32(s.as_ptr(), mag.as_mut_ptr(), N::to_usize() as uint32_t);
     });
-    dbgprint!("ticks: {:?}", time.as_ticks());
+    rprintln!("ticks: {:?}", time.as_ticks());
 
     loop {}
 }

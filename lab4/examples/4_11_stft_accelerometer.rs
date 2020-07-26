@@ -17,17 +17,9 @@ use stm32f4xx_hal as hal;
 use crate::hal::{prelude::*, spi, stm32};
 use cortex_m_rt::entry;
 use micromath::F32Ext;
-use panic_rtt as _;
+use panic_rtt_target as _;
+use rtt_target::{rprintln, rtt_init_print};
 
-macro_rules! dbgprint {
-    ($($arg:tt)*) => {
-        {
-            use core::fmt::Write;
-            let mut out = jlink_rtt::Output::new();
-            writeln!(out, $($arg)*).ok();
-        }
-    };
-}
 use accelerometer::RawAccelerometer;
 use cmsis_dsp_sys::{arm_cfft_f32, arm_cfft_sR_f32_len64, arm_cmplx_mag_f32};
 use core::f32::consts::PI;
@@ -83,7 +75,7 @@ fn main() -> ! {
 
     let mut delay = hal::delay::Delay::new(cp.SYST, clocks);
 
-    dbgprint!("reading accel");
+    rprintln!("reading accel");
 
     // dont love the idea of delaying in an iterator ...
     let accel = (0..N::to_usize())
@@ -95,7 +87,7 @@ fn main() -> ! {
         })
         .collect::<heapless::Vec<f32, N>>();
 
-    dbgprint!("computing");
+    rprintln!("computing");
 
     let hamming = (0..WINDOW::to_usize())
         .map(|m| 0.54 - 0.46 * (2.0 * PI * m as f32 / WINDOW::to_usize() as f32).cos());
@@ -136,7 +128,7 @@ fn main() -> ! {
         xst.push(mag).ok();
     }
     // dbgprint!("xst: {:?}", &xst[..]);
-    dbgprint!("done");
+    rprintln!("done");
 
     loop {}
 }

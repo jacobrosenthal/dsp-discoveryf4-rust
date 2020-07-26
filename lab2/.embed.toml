@@ -1,5 +1,6 @@
 [default.rtt]
 enabled = true
+log_enabled = true
 
 [default.general]
 chip = "STM32F407VGTx"

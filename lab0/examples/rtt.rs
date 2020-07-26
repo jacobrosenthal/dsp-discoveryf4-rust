@@ -9,21 +9,13 @@
 #![no_main]
 
 use cortex_m_rt::entry;
-use panic_rtt as _;
+use panic_rtt_target as _;
+use rtt_target::{rprintln, rtt_init_print};
 use stm32f4xx_hal as _;
-
-macro_rules! dbgprint {
-    ($($arg:tt)*) => {
-        {
-            use core::fmt::Write;
-            let mut out = jlink_rtt::Output::new();
-            writeln!(out, $($arg)*).ok();
-        }
-    };
-}
 
 #[entry]
 fn main() -> ! {
-    dbgprint!("main entered");
+    rtt_init_print!();
+    rprintln!("main entered");
     panic!("ded");
 }

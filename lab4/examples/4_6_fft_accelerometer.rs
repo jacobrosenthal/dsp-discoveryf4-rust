@@ -18,17 +18,8 @@ use stm32f4xx_hal as hal;
 use crate::hal::{prelude::*, spi, stm32};
 use cortex_m_rt::entry;
 use micromath::F32Ext;
-use panic_rtt as _;
-
-macro_rules! dbgprint {
-    ($($arg:tt)*) => {
-        {
-            use core::fmt::Write;
-            let mut out = jlink_rtt::Output::new();
-            writeln!(out, $($arg)*).ok();
-        }
-    };
-}
+use panic_rtt_target as _;
+use rtt_target::{rprintln, rtt_init_print};
 
 use accelerometer::RawAccelerometer;
 use cmsis_dsp_sys::{arm_cfft_f32, arm_cfft_sR_f32_len512, arm_cmplx_mag_f32};

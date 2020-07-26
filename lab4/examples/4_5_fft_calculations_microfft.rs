@@ -21,17 +21,8 @@ use crate::hal::{dwt::ClockDuration, dwt::DwtExt, prelude::*, stm32};
 use cortex_m_rt::entry;
 use microfft::{complex::cfft_256, Complex32};
 use micromath::F32Ext;
-use panic_rtt as _;
-
-macro_rules! dbgprint {
-    ($($arg:tt)*) => {
-        {
-            use core::fmt::Write;
-            let mut out = jlink_rtt::Output::new();
-            writeln!(out, $($arg)*).ok();
-        }
-    };
-}
+use panic_rtt_target as _;
+use rtt_target::{rprintln, rtt_init_print};
 
 use typenum::Unsigned;
 
@@ -43,6 +34,8 @@ const W2: f32 = core::f32::consts::PI / 4.0;
 
 #[entry]
 fn main() -> ! {
+    rtt_init_print!();
+
     let dp = stm32::Peripherals::take().unwrap();
     let cp = cortex_m::peripheral::Peripherals::take().unwrap();
 
@@ -78,7 +71,7 @@ fn main() -> ! {
             .map(|complex| (complex.re * complex.re + complex.im * complex.im).sqrt())
             .collect::<heapless::Vec<f32, N>>();
     });
-    dbgprint!("ticks: {:?}", time.as_ticks());
+    rprintln!("ticks: {:?}", time.as_ticks());
 
     loop {}
 }

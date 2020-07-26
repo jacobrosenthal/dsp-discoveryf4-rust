@@ -8,20 +8,14 @@
 #![no_main]
 
 use cortex_m_rt::entry;
-use panic_rtt as _;
+use panic_rtt_target as _;
+use rtt_target::{rprintln, rtt_init_print};
 use stm32f4xx_hal::{dwt::ClockDuration, dwt::DwtExt, prelude::*, stm32};
 
-macro_rules! dbgprint {
-    ($($arg:tt)*) => {
-        {
-            use core::fmt::Write;
-            let mut out = jlink_rtt::Output::new();
-            writeln!(out, $($arg)*).ok();
-        }
-    };
-}
 #[entry]
 fn main() -> ! {
+    rtt_init_print!();
+
     let dp = stm32::Peripherals::take().unwrap();
     let cp = cortex_m::peripheral::Peripherals::take().unwrap();
 
@@ -39,7 +33,7 @@ fn main() -> ! {
     let mut delay = dwt.delay();
 
     let time: ClockDuration = dwt.measure(|| delay.delay_ms(100_u32));
-    dbgprint!("ticks: {:?}", time.as_ticks());
+    rprintln!("ticks: {:?}", time.as_ticks());
 
     loop {}
 }

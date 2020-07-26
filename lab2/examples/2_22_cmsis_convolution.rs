@@ -27,17 +27,8 @@ use stm32f4xx_hal as hal;
 
 use crate::hal::{dwt::ClockDuration, dwt::DwtExt, prelude::*, stm32};
 use cortex_m_rt::entry;
-use panic_rtt as _;
-
-macro_rules! dbgprint {
-    ($($arg:tt)*) => {
-        {
-            use core::fmt::Write;
-            let mut out = jlink_rtt::Output::new();
-            writeln!(out, $($arg)*).ok();
-        }
-    };
-}
+use panic_rtt_target as _;
+use rtt_target::{rprintln, rtt_init_print};
 
 use core::f32::consts::{FRAC_PI_4, PI};
 use cty::{c_float, c_void, uint32_t};
@@ -47,6 +38,8 @@ type N = heapless::consts::U512;
 
 #[entry]
 fn main() -> ! {
+    rtt_init_print!();
+
     let dp = stm32::Peripherals::take().unwrap();
     let cp = cortex_m::peripheral::Peripherals::take().unwrap();
 
@@ -81,7 +74,7 @@ fn main() -> ! {
         );
     });
 
-    dbgprint!("dft ticks: {:?}", time.as_ticks());
+    rprintln!("dft ticks: {:?}", time.as_ticks());
 
     loop {}
 }

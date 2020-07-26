@@ -30,7 +30,7 @@ use cortex_m::interrupt::{free, Mutex};
 use cortex_m_rt::entry;
 use micromath::F32Ext;
 use nb::block;
-use panic_rtt as _;
+use panic_rtt_target as _;
 use typenum::Unsigned;
 
 type N = heapless::consts::U160;

@@ -19,23 +19,16 @@ use crate::hal::{
 };
 
 use cortex_m_rt::entry;
-use panic_rtt as _;
+use panic_rtt_target as _;
+use rtt_target::{rprintln, rtt_init_print};
 use typenum::Unsigned;
-
-macro_rules! dbgprint {
-    ($($arg:tt)*) => {
-        {
-            use core::fmt::Write;
-            let mut out = jlink_rtt::Output::new();
-            writeln!(out, $($arg)*).ok();
-        }
-    };
-}
 
 type N = heapless::consts::U100;
 
 #[entry]
 fn main() -> ! {
+    rtt_init_print!();
+
     let dp = stm32::Peripherals::take().unwrap();
     let cp = cortex_m::peripheral::Peripherals::take().unwrap();
 

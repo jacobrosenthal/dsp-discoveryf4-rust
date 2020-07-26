@@ -23,17 +23,8 @@ use stm32f4xx_hal as hal;
 
 use crate::hal::{prelude::*, stm32};
 use cortex_m_rt::entry;
-use panic_rtt as _;
-
-macro_rules! dbgprint {
-    ($($arg:tt)*) => {
-        {
-            use core::fmt::Write;
-            let mut out = jlink_rtt::Output::new();
-            writeln!(out, $($arg)*).ok();
-        }
-    };
-}
+use panic_rtt_target as _;
+use rtt_target::{rprintln, rtt_init, set_print_channel};
 
 use core::f32::consts::{FRAC_PI_4, PI};
 use core::mem::MaybeUninit;
@@ -46,6 +37,21 @@ const K_CONST: usize = 64;
 
 #[entry]
 fn main() -> ! {
+    let channels = rtt_init! {
+        up: {
+            0: {
+                size: 1024
+                name: "Text"
+            }
+            1: {
+                size: 1024
+                name: "RawData"
+            }
+        }
+    };
+    set_print_channel(channels.up.0);
+    let mut raw = channels.up.1;
+
     let dp = stm32::Peripherals::take().unwrap();
     let _cp = cortex_m::peripheral::Peripherals::take().unwrap();
 
@@ -88,7 +94,10 @@ fn main() -> ! {
         arm_fir_f32(&s, x.as_ptr(), y.as_mut_ptr(), N_CONST as uint32_t);
     }
 
-    dbgprint!("y: {:?}", &y[..]);
+    y.iter().for_each(|f| {
+        raw.write(&f.to_le_bytes().as_ref());
+    });
+    rprintln!("Done");
 
     loop {}
 }
