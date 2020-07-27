@@ -1,9 +1,9 @@
 //! Demo iterators.
 //!
-//! With cargo embed
-//! `cargo install cargo-embed`
+//! With cargo flash
+//! `cargo install cargo-flash`
 //!
-//! `cargo embed --release --example first`
+//! `cargo flash --example first --release --chip STM32F407VGTx --protocol swd`
 
 #![no_std]
 #![no_main]
@@ -29,6 +29,9 @@ fn main() -> ! {
         .sysclk(168.mhz())
         .freeze();
 
+    let gpiod = dp.GPIOD.split();
+    let mut green = gpiod.pd12.into_push_pull_output();
+
     //can't collect into an array, so use a heapless (static) vec
     let c = A
         .iter()
@@ -36,7 +39,9 @@ fn main() -> ! {
         .map(|(a, b)| a + b)
         .collect::<Vec<_, U5>>();
 
-    assert_eq!(c, [1, 2, 3, 4, 5]);
+    if c == [2, 4, 6, 8, 10] {
+        let _ = green.set_high();
+    }
 
     loop {}
 }
