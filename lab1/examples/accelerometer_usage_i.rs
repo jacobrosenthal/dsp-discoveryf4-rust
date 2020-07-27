@@ -2,7 +2,7 @@
 //!
 //! With cargo flash `cargo install cargo-flash`
 //!
-//! `cargo flash --example accelerometer_usage_i --chip STM32F407VGTx --protocol swd`
+//! `cargo flash --example accelerometer_usage_i`
 
 #![no_std]
 #![no_main]

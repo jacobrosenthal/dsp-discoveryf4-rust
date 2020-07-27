@@ -3,7 +3,7 @@
 //! With cargo flash
 //! `cargo install cargo-flash`
 //!
-//! `cargo flash --example first --release --chip STM32F407VGTx --protocol swd`
+//! `cargo flash --example first --release`
 
 #![no_std]
 #![no_main]

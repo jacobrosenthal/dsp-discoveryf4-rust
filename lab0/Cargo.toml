@@ -17,3 +17,7 @@ jlink_rtt = "0.2.0"
 [dependencies.embedded-hal]
 features = ["unproven"]
 version = "0.2.3"
+
+# for cargo flash
+[package.metadata]
+chip = "STM32F407VGTx"
