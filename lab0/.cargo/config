@@ -13,3 +13,7 @@ rustflags = [
 
 [build]
 target = "thumbv7em-none-eabihf"
+
+# build.rs dependencies fix #5730
+[unstable]
+features = ["host_dep"]

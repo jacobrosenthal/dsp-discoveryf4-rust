@@ -11,7 +11,7 @@ cortex-m-rt = "0.6.12"
 stm32f4xx-hal = { version = "0.8.1", features = ["stm32f407", "rt"] }
 panic_break = { path = "../panic_break" }
 panic-halt = "0.2.0"
-rtt-target = { version = "0.2.1", features = ["cortex-m"] }
+rtt-target = { version = "0.2.2", features = ["cortex-m"] }
 micromath = "1.0.1"
 microfft = "0.3.0"
 itertools = { version = "0.9.0", default-features = false }

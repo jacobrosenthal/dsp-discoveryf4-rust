@@ -12,8 +12,10 @@ stm32f4xx-hal = { version = "0.8.1", features = ["stm32f407", "rt"] }
 panic-halt = "0.2.0"
 panic_break = { path = "../panic_break" }
 panic-rtt-target = { version = "0.1.1", features = ["cortex-m"] }
-rtt-target = { version = "0.2.1", features = ["cortex-m"] }
+rtt-target = { version = "0.2.2", features = ["cortex-m"] }
 heapless = "0.5.5"
+lis3dsh = { git = "https://github.com/jacobrosenthal/lis3dsh-rs", branch = "bdu" }
+tfmicro = "0.1.0"
 
 [dependencies.embedded-hal]
 features = ["unproven"]
@@ -37,6 +39,6 @@ codegen-units = 1
 debug = 1
 debug-assertions = false
 incremental = false
-lto = "fat"
+lto = "thin" # tensorflow hardfaults on invoke with fat
 opt-level = 3
 overflow-checks = false

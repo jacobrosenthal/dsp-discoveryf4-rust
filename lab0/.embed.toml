@@ -1,5 +1,10 @@
 [default.rtt]
 enabled = true
+log_enabled = false
+show_timestamps = false
 
 [default.general]
 chip = "STM32F407VGTx"
+
+[default.flashing]
+enabled = true
