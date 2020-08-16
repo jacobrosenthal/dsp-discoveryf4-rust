@@ -1,21 +1,22 @@
 //! Led Blinky Roulette example using the DWT peripheral for timing.
 //!
-//! With cargo flash
-//! `cargo install cargo-flash`
+//! Requires `cargo install cargo-flash`
+//!
+//! cargo-flash builds and uploads your code to run standalone. Its a more
+//! traditional method of uploading firmware which doesn't maintain any
+//! communication link for debug information.
 //!
 //! `cargo flash --example roulette --release`
 
 #![no_std]
 #![no_main]
 
+use panic_halt as _;
 use stm32f4xx_hal as hal;
 
-use crate::hal::{dwt::DwtExt, prelude::*, stm32};
+use hal::{dwt::DwtExt, prelude::*, stm32};
 
-use cortex_m_rt::entry;
-use panic_halt as _;
-
-#[entry]
+#[cortex_m_rt::entry]
 fn main() -> ! {
     let dp = stm32::Peripherals::take().unwrap();
     let cp = cortex_m::peripheral::Peripherals::take().unwrap();

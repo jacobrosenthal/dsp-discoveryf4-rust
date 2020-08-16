@@ -1,23 +1,31 @@
 //! Demo iterators.
 //!
-//! With cargo flash
-//! `cargo install cargo-flash`
+//! Requires `cargo install cargo-embed`
 //!
-//! `cargo flash --example first --release`
+//! cargo-embed builds and uploads your code and maintains a two way connection
+//! which in combination with panic-rtt-target and rtt-target lets you send and
+//! receive debug data over long lasting sessions.
+//!
+//! `cargo embed --example roulette --release`
 
 #![no_std]
 #![no_main]
 
-use cortex_m_rt::entry;
+use panic_rtt_target as _;
+use stm32f4xx_hal as hal;
+
+use hal::{prelude::*, stm32};
 use heapless::{consts::*, Vec};
-use panic_halt as _;
-use stm32f4xx_hal::{prelude::*, stm32};
+use rtt_target::{rprintln, rtt_init_print};
 
 static A: &[i32] = &[1, 2, 3, 4, 5];
 static B: &[i32] = &[1, 2, 3, 4, 5];
 
-#[entry]
+#[cortex_m_rt::entry]
 fn main() -> ! {
+    // setup the rtt machinery for printing
+    rtt_init_print!(BlockIfFull);
+
     let dp = stm32::Peripherals::take().unwrap();
 
     // Set up the system clock.
@@ -29,9 +37,6 @@ fn main() -> ! {
         .sysclk(168.mhz())
         .freeze();
 
-    let gpiod = dp.GPIOD.split();
-    let mut green = gpiod.pd12.into_push_pull_output();
-
     //can't collect into an array, so use a heapless (static) vec
     let c = A
         .iter()
@@ -39,9 +44,7 @@ fn main() -> ! {
         .map(|(a, b)| a + b)
         .collect::<Vec<_, U5>>();
 
-    if c == [2, 4, 6, 8, 10] {
-        let _ = green.set_high();
-    }
+    rprintln!("{:?}", c);
 
     loop {}
 }
