@@ -11,41 +11,32 @@
 //! "FIR_hpf_coefficients.h") line in main.c file and repeat same steps for
 //! obtaining second output array.  
 //!
-//! Requires cargo embed
-//! `cargo install cargo-embed`
-//!
-//! `cargo embed --example 2_17_cmsis_fir_filtering`
+//! Requires `cargo install probe-run`
+//! `cargo run --release --example 2_17_cmsis_fir_filtering`
 
 #![no_std]
 #![no_main]
 
+use panic_break as _;
 use stm32f4xx_hal as hal;
 
-use crate::hal::{prelude::*, stm32};
-use cortex_m_rt::entry;
-use panic_rtt as _;
-
-macro_rules! dbgprint {
-    ($($arg:tt)*) => {
-        {
-            use core::fmt::Write;
-            let mut out = jlink_rtt::Output::new();
-            writeln!(out, $($arg)*).ok();
-        }
-    };
-}
-
-use core::f32::consts::{FRAC_PI_4, PI};
-use core::mem::MaybeUninit;
+use core::{
+    f32::consts::{FRAC_PI_4, PI},
+    mem::MaybeUninit,
+};
 use cty::{c_float, c_void, uint16_t, uint32_t};
+use hal::{prelude::*, stm32};
+use rtt_target::{rprintln, rtt_init_print};
 
 type N = heapless::consts::U512;
 //todo derive this from N
 const N_CONST: usize = 512;
 const K_CONST: usize = 64;
 
-#[entry]
+#[cortex_m_rt::entry]
 fn main() -> ! {
+    rtt_init_print!(BlockIfFull);
+
     let dp = stm32::Peripherals::take().unwrap();
     let _cp = cortex_m::peripheral::Peripherals::take().unwrap();
 
@@ -88,9 +79,12 @@ fn main() -> ! {
         arm_fir_f32(&s, x.as_ptr(), y.as_mut_ptr(), N_CONST as uint32_t);
     }
 
-    dbgprint!("y: {:?}", &y[..]);
+    rprintln!("y: {:?}", &y[..]);
 
-    loop {}
+    // signal to probe-run to exit
+    loop {
+        cortex_m::asm::bkpt()
+    }
 }
 
 // low pass filter coefficients

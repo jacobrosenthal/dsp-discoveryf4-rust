@@ -1,35 +1,69 @@
 //! This project is used for explaining FIR filtering operation using
 //! convolution sum operation.
 //!
-//! Requires cargo embed
-//! `cargo install cargo-embed`
-//!
-//! `cargo embed --example 2_14_direct_fir_filtering`
+//! Requires `cargo install probe-run`
+//! `cargo run --release --example 2_14_direct_fir_filtering`
 
 #![no_std]
 #![no_main]
 
+use panic_break as _;
 use stm32f4xx_hal as hal;
 
-use crate::hal::{prelude::*, stm32};
-use cortex_m_rt::entry;
-use panic_rtt as _;
-
-macro_rules! dbgprint {
-    ($($arg:tt)*) => {
-        {
-            use core::fmt::Write;
-            let mut out = jlink_rtt::Output::new();
-            writeln!(out, $($arg)*).ok();
-        }
-    };
-}
-
 use core::f32::consts::{FRAC_PI_4, PI};
+use hal::{prelude::*, stm32};
 use micromath::F32Ext;
+use rtt_target::{rprintln, rtt_init_print};
 use typenum::Unsigned;
 
 type N = heapless::consts::U512;
+
+#[cortex_m_rt::entry]
+fn main() -> ! {
+    rtt_init_print!(BlockIfFull);
+
+    let dp = stm32::Peripherals::take().unwrap();
+    let _cp = cortex_m::peripheral::Peripherals::take().unwrap();
+
+    // Set up the system clock.
+    let rcc = dp.RCC.constrain();
+
+    let _clocks = rcc
+        .cfgr
+        .use_hse(8.mhz()) //discovery board has 8 MHz crystal for HSE
+        .sysclk(168.mhz())
+        .freeze();
+
+    let x =
+        (0..N::to_usize()).map(|n| (PI * n as f32 / 128.0).sin() + (FRAC_PI_4 * n as f32).sin());
+
+    // Collecting to have a clean iterator for our naive display fn
+    let y = convolution_sum(x).collect::<heapless::Vec<f32, N>>();
+
+    rprintln!("y: {:?}", &y[..]);
+
+    // signal to probe-run to exit
+    loop {
+        cortex_m::asm::bkpt()
+    }
+}
+
+pub fn convolution_sum<I>(x: I) -> impl Iterator<Item = f32> + Clone
+where
+    I: Iterator<Item = f32>
+        + core::iter::ExactSizeIterator
+        + core::iter::DoubleEndedIterator
+        + Clone,
+{
+    (0..x.len()).map(move |y_n| {
+        x.clone()
+            .take(y_n + 1)
+            .rev()
+            .zip(H.iter())
+            .map(|(exx, h)| h * exx)
+            .sum()
+    })
+}
 
 // low pass filter coefficients
 static H: &[f32] = &[
@@ -52,45 +86,3 @@ static H: &[f32] = &[
 //     0.000004, 0.000003, 0.000002, 0.000002, 0.000001, 0.000001, 0.000001, 0.000000, 0.000000,
 //     0.000000, 0.000000, 0.000000,
 // ];
-
-#[entry]
-fn main() -> ! {
-    let dp = stm32::Peripherals::take().unwrap();
-    let _cp = cortex_m::peripheral::Peripherals::take().unwrap();
-
-    // Set up the system clock.
-    let rcc = dp.RCC.constrain();
-
-    let _clocks = rcc
-        .cfgr
-        .use_hse(8.mhz()) //discovery board has 8 MHz crystal for HSE
-        .sysclk(168.mhz())
-        .freeze();
-
-    let x =
-        (0..N::to_usize()).map(|n| (PI * n as f32 / 128.0).sin() + (FRAC_PI_4 * n as f32).sin());
-
-    // Collecting to have a clean iterator for our naive display fn
-    let y = convolution_sum(x).collect::<heapless::Vec<f32, N>>();
-
-    dbgprint!("y: {:?}", &y[..]);
-
-    loop {}
-}
-
-pub fn convolution_sum<I>(x: I) -> impl Iterator<Item = f32> + Clone
-where
-    I: Iterator<Item = f32>
-        + core::iter::ExactSizeIterator
-        + core::iter::DoubleEndedIterator
-        + Clone,
-{
-    (0..x.len()).map(move |y_n| {
-        x.clone()
-            .take(y_n + 1)
-            .rev()
-            .zip(H.iter())
-            .map(|(exx, h)| h * exx)
-            .sum()
-    })
-}

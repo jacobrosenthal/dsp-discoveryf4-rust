@@ -12,41 +12,31 @@
 //! "FIR_hpf_coefficients.h") line in main.c file and repeat same steps for
 //! obtaining second output array.  
 //!
-//! Requires cargo embed and binutils
-//! `cargo install cargo-embed`
-//! `cargo install cargo-binutils`
-//! `rustup component add llvm-tools-preview`
+//! Requires `cargo install probe-run`
+//! `cargo run --release --example 2_22_cmsis_convolution`
 //!
+//! Requires `cargo install cargo-binutils`
+//! Requires `rustup component add llvm-tools-preview`
 //! `cargo size --release --example 2_22_cmsis_convolution`
-//! `cargo embed --release --example 2_22_cmsis_convolution`
 
 #![no_std]
 #![no_main]
 
+use panic_break as _;
 use stm32f4xx_hal as hal;
-
-use crate::hal::{dwt::ClockDuration, dwt::DwtExt, prelude::*, stm32};
-use cortex_m_rt::entry;
-use panic_rtt as _;
-
-macro_rules! dbgprint {
-    ($($arg:tt)*) => {
-        {
-            use core::fmt::Write;
-            let mut out = jlink_rtt::Output::new();
-            writeln!(out, $($arg)*).ok();
-        }
-    };
-}
 
 use core::f32::consts::{FRAC_PI_4, PI};
 use cty::{c_float, c_void, uint32_t};
+use hal::{dwt::ClockDuration, dwt::DwtExt, prelude::*, stm32};
+use rtt_target::{rprintln, rtt_init_print};
 use typenum::Unsigned;
 
 type N = heapless::consts::U512;
 
-#[entry]
+#[cortex_m_rt::entry]
 fn main() -> ! {
+    rtt_init_print!(BlockIfFull);
+
     let dp = stm32::Peripherals::take().unwrap();
     let cp = cortex_m::peripheral::Peripherals::take().unwrap();
 
@@ -81,9 +71,12 @@ fn main() -> ! {
         );
     });
 
-    dbgprint!("dft ticks: {:?}", time.as_ticks());
+    rprintln!("dft ticks: {:?}", time.as_ticks());
 
-    loop {}
+    // signal to probe-run to exit
+    loop {
+        cortex_m::asm::bkpt()
+    }
 }
 
 // low pass filter coefficients

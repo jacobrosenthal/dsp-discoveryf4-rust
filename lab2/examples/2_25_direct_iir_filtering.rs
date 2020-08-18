@@ -1,35 +1,23 @@
 //! This project is used for measuring memory and execution time of IIR
 //! filtering operation using constant coefficient difference equation.
 //!
-//! Requires cargo embed and binutils
-//! `cargo install cargo-embed`
-//! `cargo install cargo-binutils`
-//! `rustup component add llvm-tools-preview`
+//! Requires `cargo install probe-run`
+//! `cargo run --release --example 2_25_direct_iir_filtering`
 //!
+//! Requires `cargo install cargo-binutils`
+//! Requires `rustup component add llvm-tools-preview`
 //! `cargo size --release --example 2_25_direct_iir_filtering`
-//! `cargo embed --release --example 2_25_direct_iir_filtering`
 
 #![no_std]
 #![no_main]
 
+use panic_break as _;
 use stm32f4xx_hal as hal;
 
-use crate::hal::{dwt::ClockDuration, dwt::DwtExt, prelude::*, stm32};
-use cortex_m_rt::entry;
-use panic_rtt as _;
-
-macro_rules! dbgprint {
-    ($($arg:tt)*) => {
-        {
-            use core::fmt::Write;
-            let mut out = jlink_rtt::Output::new();
-            writeln!(out, $($arg)*).ok();
-        }
-    };
-}
-
 use core::f32::consts::{FRAC_PI_4, PI};
+use hal::{dwt::ClockDuration, dwt::DwtExt, prelude::*, stm32};
 use micromath::F32Ext;
+use rtt_target::{rprintln, rtt_init_print};
 use typenum::Unsigned;
 
 type N = heapless::consts::U512;
@@ -44,8 +32,10 @@ static A: &[f32] = &[1.0, -1.819168, 0.827343];
 // static B: &[f32] = &[0.705514, -1.411028, 0.705514];
 // static A: &[f32] = &[1.0, -1.359795, 0.462261];
 
-#[entry]
+#[cortex_m_rt::entry]
 fn main() -> ! {
+    rtt_init_print!(BlockIfFull);
+
     let dp = stm32::Peripherals::take().unwrap();
     let cp = cortex_m::peripheral::Peripherals::take().unwrap();
 
@@ -93,7 +83,10 @@ fn main() -> ! {
         }
     });
 
-    dbgprint!("dft ticks: {:?}", time.as_ticks());
+    rprintln!("dft ticks: {:?}", time.as_ticks());
 
-    loop {}
+    // signal to probe-run to exit
+    loop {
+        cortex_m::asm::bkpt()
+    }
 }
