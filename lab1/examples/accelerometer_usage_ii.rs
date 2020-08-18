@@ -1,37 +1,26 @@
 //! This project is used for acquiring the accelerometer data as a digital
 //! signal.
 //!
-//! With cargo embed `cargo install cargo-embed`
-//!
-//! `cargo embed --example accelerometer_usage_ii`
+//! Requires `cargo install probe-run`
+//! `cargo run --release --example accelerometer_usage_ii`
 
 #![no_std]
 #![no_main]
 
+use panic_break as _;
 use stm32f4xx_hal as hal;
 
-use crate::hal::{prelude::*, stm32};
-use cortex_m_rt::entry;
-use panic_rtt as _;
-
-macro_rules! dbgprint {
-    ($($arg:tt)*) => {
-        {
-            use core::fmt::Write;
-            let mut out = jlink_rtt::Output::new();
-            writeln!(out, $($arg)*).ok();
-        }
-    };
-}
-
-use crate::hal::spi;
 use accelerometer::RawAccelerometer;
+use hal::{prelude::*, spi, stm32};
 use lis302dl::Lis302Dl;
+use rtt_target::{rprintln, rtt_init_print};
 
 const N: usize = 1000;
 
-#[entry]
+#[cortex_m_rt::entry]
 fn main() -> ! {
+    rtt_init_print!(BlockIfFull);
+
     let dp = stm32::Peripherals::take().unwrap();
     let cp = cortex_m::peripheral::Peripherals::take().unwrap();
 
@@ -77,7 +66,10 @@ fn main() -> ! {
         delay.delay_ms(10u8);
     });
 
-    dbgprint!("{:?}", &buffer[..]);
+    rprintln!("{:?}", &buffer[..]);
 
-    loop {}
+    // signal to probe-run to exit
+    loop {
+        cortex_m::asm::bkpt()
+    }
 }

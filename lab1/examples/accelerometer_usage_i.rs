@@ -1,23 +1,19 @@
 //! Basic BSP accelerometer functions and how they are used are given below.
 //!
-//! With cargo flash `cargo install cargo-flash`
-//!
-//! `cargo flash --example accelerometer_usage_i`
+//! Requires `cargo install cargo-flash`
+//! `cargo flash --example accelerometer_usage_i --release`
 
 #![no_std]
 #![no_main]
 
+use panic_halt as _;
 use stm32f4xx_hal as hal;
 
-use crate::hal::{prelude::*, stm32};
-use cortex_m_rt::entry;
-use panic_halt as _;
-
-use crate::hal::spi;
 use accelerometer::RawAccelerometer;
+use hal::{prelude::*, spi, stm32};
 use lis302dl::Lis302Dl;
 
-#[entry]
+#[cortex_m_rt::entry]
 fn main() -> ! {
     let dp = stm32::Peripherals::take().unwrap();
     let cp = cortex_m::peripheral::Peripherals::take().unwrap();
