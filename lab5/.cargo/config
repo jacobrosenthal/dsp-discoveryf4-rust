@@ -1,7 +1,12 @@
-# openocd
 # cargo run --example whatever
 [target.'cfg(all(target_arch = "arm", target_os = "none"))']
-runner = "gdb-multiarch -q -x openocd.gdb"
+
+# openocd
+#runner = "arm-none-eabi-gdb -x openocd.gdb"
+
+# probe-run
+runner = "probe-run --chip STM32F407VGTx"
+
 rustflags = [
   "-C", "link-arg=-Tlink.x",
 ]

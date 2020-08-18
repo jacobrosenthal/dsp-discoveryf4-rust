@@ -3,39 +3,29 @@
 //! every 1/16000 sec. Also the ADC interrupt is enabled such that when the
 //! conversion ends, an interrupt is generated.
 //!
-//! Requires cargo embed `cargo install cargo-embed`
-//!
-//! `cargo embed --example 5_1_sampling_initial_setup`
+//! Requires `cargo install probe-run`
+//! `cargo run --release --example 5_1_sampling_initial_setup`
 
 #![no_std]
 #![no_main]
 
+use panic_break as _;
 use stm32f4xx_hal as hal;
 
-use crate::hal::{
+use hal::{
     adc::{config::AdcConfig, config::SampleTime, Adc},
     prelude::*,
     stm32,
 };
-
-use cortex_m_rt::entry;
-use panic_rtt as _;
+use rtt_target::{rprintln, rtt_init_print};
 use typenum::Unsigned;
-
-macro_rules! dbgprint {
-    ($($arg:tt)*) => {
-        {
-            use core::fmt::Write;
-            let mut out = jlink_rtt::Output::new();
-            writeln!(out, $($arg)*).ok();
-        }
-    };
-}
 
 type N = heapless::consts::U100;
 
-#[entry]
+#[cortex_m_rt::entry]
 fn main() -> ! {
+    rtt_init_print!(BlockIfFull);
+
     let dp = stm32::Peripherals::take().unwrap();
     let cp = cortex_m::peripheral::Peripherals::take().unwrap();
 
@@ -64,7 +54,10 @@ fn main() -> ! {
         })
         .collect::<heapless::Vec<u16, N>>();
 
-    dbgprint!("x: {:?}", &x[..]);
+    rprintln!("x: {:?}", &x[..]);
 
-    loop {}
+    // signal to probe-run to exit
+    loop {
+        cortex_m::asm::bkpt()
+    }
 }

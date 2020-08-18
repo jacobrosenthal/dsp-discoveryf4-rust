@@ -4,33 +4,32 @@
 //! interrupt subroutine using these tables. Here, the signal waveform can be
 //! changed by pressing onboard push button of the STM32F4 Discovery kit.  
 //!
-//! Requires cargo embed `cargo install cargo-embed`
-//!
+//! Requires `cargo install cargo-embed`
 //! `cargo embed --example 5_3_analog_signal_generation`
 
 #![no_std]
 #![no_main]
 
+use panic_rtt_target as _;
 use stm32f4xx_hal as hal;
 
 use crate::hal::{
-    dac::DacOut,
-    dac::DacPin,
+    dac::{DacOut, DacPin},
     gpio::{gpioa::PA0, Edge, ExtiPin, Input, PullDown},
     interrupt,
     prelude::*,
     stm32,
     timer::Timer,
 };
-use core::cell::RefCell;
-use core::f32::consts::PI;
-use core::ops::DerefMut;
-use core::sync::atomic::{AtomicBool, Ordering};
+use core::{
+    cell::RefCell,
+    f32::consts::PI,
+    ops::DerefMut,
+    sync::atomic::{AtomicBool, Ordering},
+};
 use cortex_m::interrupt::{free, Mutex};
-use cortex_m_rt::entry;
 use micromath::F32Ext;
 use nb::block;
-use panic_rtt as _;
 use typenum::Unsigned;
 
 type N = heapless::consts::U160;
@@ -38,8 +37,10 @@ type N = heapless::consts::U160;
 static BUTTON: Mutex<RefCell<Option<PA0<Input<PullDown>>>>> = Mutex::new(RefCell::new(None));
 static FLAG: AtomicBool = AtomicBool::new(true);
 
-#[entry]
+#[cortex_m_rt::entry]
 fn main() -> ! {
+    rtt_init_print!(BlockIfFull);
+
     let mut dp = stm32::Peripherals::take().unwrap();
     let _cp = cortex_m::peripheral::Peripherals::take().unwrap();
 
