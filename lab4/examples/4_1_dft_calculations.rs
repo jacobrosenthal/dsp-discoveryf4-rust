@@ -5,31 +5,19 @@
 //! DFT function. Real and imaginary parts of the obtained DFT are represented
 //! with XR and XI arrays. The magnitude of DFT is kept in the Mag array.
 //!
-//! Requires cargo embed `cargo install cargo-embed`
-//!
-//! `cargo embed --release --example 4_1_dft_calculations`
+//! Requires `cargo install probe-run`
+//! `cargo run --release --example 4_1_dft_calculations`
 
 #![no_std]
 #![no_main]
 
+use panic_break as _;
 use stm32f4xx_hal as hal;
 
-use crate::hal::{dwt::ClockDuration, dwt::DwtExt, prelude::*, stm32};
-use cortex_m_rt::entry;
-use micromath::F32Ext;
-use panic_rtt as _;
-
-macro_rules! dbgprint {
-    ($($arg:tt)*) => {
-        {
-            use core::fmt::Write;
-            let mut out = jlink_rtt::Output::new();
-            writeln!(out, $($arg)*).ok();
-        }
-    };
-}
-
 use core::f32::consts::PI;
+use hal::{dwt::ClockDuration, dwt::DwtExt, prelude::*, stm32};
+use micromath::F32Ext;
+use rtt_target::{rprintln, rtt_init_print};
 use typenum::Unsigned;
 
 type N = heapless::consts::U256;
@@ -38,8 +26,10 @@ const W1: f32 = core::f32::consts::PI / 128.0;
 const W2: f32 = core::f32::consts::PI / 4.0;
 // const W2: f32 = core::f32::consts::PI / 5.0;
 
-#[entry]
+#[cortex_m_rt::entry]
 fn main() -> ! {
+    rtt_init_print!(BlockIfFull);
+
     let dp = stm32::Peripherals::take().unwrap();
     let cp = cortex_m::peripheral::Peripherals::take().unwrap();
 
@@ -71,9 +61,12 @@ fn main() -> ! {
             .map(|complex| (complex.re * complex.re + complex.im * complex.im).sqrt())
             .collect::<heapless::Vec<f32, N>>();
     });
-    dbgprint!("ticks: {:?}", time.as_ticks());
+    rprintln!("ticks: {:?}", time.as_ticks());
 
-    loop {}
+    // signal to probe-run to exit
+    loop {
+        cortex_m::asm::bkpt()
+    }
 }
 
 struct Complex32 {

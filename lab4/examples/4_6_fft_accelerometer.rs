@@ -6,35 +6,23 @@
 //! the output signal is calculated with the arm_cmplx_mag_f32 function. The
 //! result is saved in the Mag array.
 //!
-//! Requires cargo embed `cargo install cargo-embed`
-//!
-//! `cargo embed --example 4_6_fft_accelerometer`
+//! Requires `cargo install probe-run`
+//! `cargo run --release --example 4_6_fft_accelerometer`
 
 #![no_std]
 #![no_main]
 
+use panic_break as _;
 use stm32f4xx_hal as hal;
-
-use crate::hal::{prelude::*, spi, stm32};
-use cortex_m_rt::entry;
-use micromath::F32Ext;
-use panic_rtt as _;
-
-macro_rules! dbgprint {
-    ($($arg:tt)*) => {
-        {
-            use core::fmt::Write;
-            let mut out = jlink_rtt::Output::new();
-            writeln!(out, $($arg)*).ok();
-        }
-    };
-}
 
 use accelerometer::RawAccelerometer;
 use cmsis_dsp_sys::{arm_cfft_f32, arm_cfft_sR_f32_len512, arm_cmplx_mag_f32};
 use cty::uint32_t;
+use hal::{prelude::*, spi, stm32};
 use itertools::Itertools;
 use lis302dl::Lis302Dl;
+use micromath::F32Ext;
+use rtt_target::{rprintln, rtt_init_print};
 use typenum::{Sum, Unsigned};
 
 type N = heapless::consts::U512;
@@ -42,8 +30,10 @@ type NCOMPLEX = Sum<N, N>;
 //todo derive this from N
 const N_CONST: usize = 512;
 
-#[entry]
+#[cortex_m_rt::entry]
 fn main() -> ! {
+    rtt_init_print!(BlockIfFull);
+
     let dp = stm32::Peripherals::take().unwrap();
     let cp = cortex_m::peripheral::Peripherals::take().unwrap();
 
@@ -108,9 +98,12 @@ fn main() -> ! {
         );
     }
 
-    dbgprint!("mag: {:?}", &mag[..]);
+    rprintln!("mag: {:?}", &mag[..]);
 
-    loop {}
+    // signal to probe-run to exit
+    loop {
+        cortex_m::asm::bkpt()
+    }
 }
 
 //C needs access to a sqrt fn, lets use micromath

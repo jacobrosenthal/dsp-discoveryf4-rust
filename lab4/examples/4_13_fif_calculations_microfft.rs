@@ -4,32 +4,20 @@
 //! array in main.c file. Also we have a digital filter represented with h array
 //! given in FIR_lpf_coefficients.h file.
 //!
-//! Requires cargo embed `cargo install cargo-embed`
-//!
-//! `cargo embed --release --example 4_13_fif_calculations_microfft`
+//! Requires `cargo install probe-run`
+//! `cargo run --release --example 4_13_fif_calculations_microfft`
 
 #![no_std]
 #![no_main]
 
+use panic_break as _;
 use stm32f4xx_hal as hal;
 
-use crate::hal::{dwt::ClockDuration, dwt::DwtExt, prelude::*, stm32};
-use cortex_m_rt::entry;
-use micromath::F32Ext;
-use panic_rtt as _;
-
-macro_rules! dbgprint {
-    ($($arg:tt)*) => {
-        {
-            use core::fmt::Write;
-            let mut out = jlink_rtt::Output::new();
-            writeln!(out, $($arg)*).ok();
-        }
-    };
-}
-
 use core::f32::consts::PI;
+use hal::{dwt::ClockDuration, dwt::DwtExt, prelude::*, stm32};
 use microfft::{complex::cfft_512, Complex32};
+use micromath::F32Ext;
+use rtt_target::{rprintln, rtt_init_print};
 use typenum::Unsigned;
 
 type N = heapless::consts::U512;
@@ -37,8 +25,10 @@ type N = heapless::consts::U512;
 const W1: f32 = core::f32::consts::PI / 128.0;
 const W2: f32 = core::f32::consts::PI / 4.0;
 
-#[entry]
+#[cortex_m_rt::entry]
 fn main() -> ! {
+    rtt_init_print!(BlockIfFull);
+
     let dp = stm32::Peripherals::take().unwrap();
     let cp = cortex_m::peripheral::Peripherals::take().unwrap();
 
@@ -98,9 +88,12 @@ fn main() -> ! {
         // just dtfse approx instead for now
         let _y_freq = dtfse::<N, _>(y_complex.clone(), 15).collect::<heapless::Vec<f32, N>>();
     });
-    dbgprint!("dft ticks: {:?}", time.as_ticks());
+    rprintln!("dft ticks: {:?}", time.as_ticks());
 
-    loop {}
+    // signal to probe-run to exit
+    loop {
+        cortex_m::asm::bkpt()
+    }
 }
 
 static H: &[f32] = &[

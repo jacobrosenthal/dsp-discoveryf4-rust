@@ -5,35 +5,24 @@
 //! signal is divided into subwindows and FFT of each subwindow is calculated by
 //! the STFT function. The result is stored in the XST array.
 //!
-//! Requires cargo embed `cargo install cargo-embed`
-//!
-//! `cargo embed --example 4_11_stft_accelerometer`
+//! Requires `cargo install probe-run`
+//! `cargo run --release --example 4_11_stft_accelerometer`
 
 #![no_std]
 #![no_main]
 
+use panic_break as _;
 use stm32f4xx_hal as hal;
 
-use crate::hal::{prelude::*, spi, stm32};
-use cortex_m_rt::entry;
-use micromath::F32Ext;
-use panic_rtt as _;
-
-macro_rules! dbgprint {
-    ($($arg:tt)*) => {
-        {
-            use core::fmt::Write;
-            let mut out = jlink_rtt::Output::new();
-            writeln!(out, $($arg)*).ok();
-        }
-    };
-}
 use accelerometer::RawAccelerometer;
 use cmsis_dsp_sys::{arm_cfft_f32, arm_cfft_sR_f32_len64, arm_cmplx_mag_f32};
 use core::f32::consts::PI;
 use cty::uint32_t;
+use hal::{prelude::*, spi, stm32};
 use itertools::Itertools;
 use lis302dl::Lis302Dl;
+use micromath::F32Ext;
+use rtt_target::{rprintln, rtt_init_print};
 use typenum::{Sum, Unsigned};
 
 type N = heapless::consts::U1024;
@@ -42,8 +31,10 @@ type WINDOWCOMPLEX = Sum<WINDOW, WINDOW>;
 //todo derive this from WINDOW
 const WINDOW_CONST: usize = 64;
 
-#[entry]
+#[cortex_m_rt::entry]
 fn main() -> ! {
+    rtt_init_print!(BlockIfFull);
+
     let dp = stm32::Peripherals::take().unwrap();
     let cp = cortex_m::peripheral::Peripherals::take().unwrap();
 
@@ -83,7 +74,7 @@ fn main() -> ! {
 
     let mut delay = hal::delay::Delay::new(cp.SYST, clocks);
 
-    dbgprint!("reading accel");
+    rprintln!("reading accel");
 
     // dont love the idea of delaying in an iterator ...
     let accel = (0..N::to_usize())
@@ -95,7 +86,7 @@ fn main() -> ! {
         })
         .collect::<heapless::Vec<f32, N>>();
 
-    dbgprint!("computing");
+    rprintln!("computing");
 
     let hamming = (0..WINDOW::to_usize())
         .map(|m| 0.54 - 0.46 * (2.0 * PI * m as f32 / WINDOW::to_usize() as f32).cos());
@@ -131,14 +122,17 @@ fn main() -> ! {
             );
         }
 
-        // dbgprint!("mag: {:?}", &mag[..]);
+        // rprintln!("mag: {:?}", &mag[..]);
 
         xst.push(mag).ok();
     }
-    // dbgprint!("xst: {:?}", &xst[..]);
-    dbgprint!("done");
 
-    loop {}
+    rprintln!("xst: {:?}", &xst[..]);
+
+    // signal to probe-run to exit
+    loop {
+        cortex_m::asm::bkpt()
+    }
 }
 
 pub struct Windows<'a, T: 'a> {

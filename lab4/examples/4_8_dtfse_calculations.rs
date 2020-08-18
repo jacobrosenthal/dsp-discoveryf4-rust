@@ -5,39 +5,29 @@
 //! real form because original signal has only real parts in this example. The
 //! result is kept in the y_real array.
 //!
-//! Requires cargo embed `cargo install cargo-embed`
-//!
-//! `cargo embed --release --example 4_8_dtfse_calculations`
+//! Requires `cargo install probe-run`
+//! `cargo run --release --example 4_8_dtfse_calculations`
 
 #![no_std]
 #![no_main]
 
+use panic_break as _;
 use stm32f4xx_hal as hal;
-
-use crate::hal::{dwt::ClockDuration, dwt::DwtExt, prelude::*, stm32};
-use cortex_m_rt::entry;
-use micromath::F32Ext;
-use panic_rtt as _;
-
-macro_rules! dbgprint {
-    ($($arg:tt)*) => {
-        {
-            use core::fmt::Write;
-            let mut out = jlink_rtt::Output::new();
-            writeln!(out, $($arg)*).ok();
-        }
-    };
-}
 
 use cmsis_dsp_sys::{arm_cfft_f32, arm_cfft_sR_f32_len16, arm_cos_f32};
 use core::f32::consts::PI;
 use cty::c_float;
+use hal::{dwt::ClockDuration, dwt::DwtExt, prelude::*, stm32};
+use micromath::F32Ext;
+use rtt_target::{rprintln, rtt_init_print};
 use typenum::Unsigned;
 
 type N = heapless::consts::U16;
 
-#[entry]
+#[cortex_m_rt::entry]
 fn main() -> ! {
+    rtt_init_print!(BlockIfFull);
+
     let dp = stm32::Peripherals::take().unwrap();
     let cp = cortex_m::peripheral::Peripherals::take().unwrap();
 
@@ -75,9 +65,12 @@ fn main() -> ! {
         let _y_real =
             dtfse::<N, _>(dtfsecoef.iter().cloned(), 15).collect::<heapless::Vec<f32, N>>();
     });
-    dbgprint!("ticks: {:?}", time.as_ticks());
+    rprintln!("ticks: {:?}", time.as_ticks());
 
-    loop {}
+    // signal to probe-run to exit
+    loop {
+        cortex_m::asm::bkpt()
+    }
 }
 
 fn dtfse<N: Unsigned, I: Iterator<Item = Complex32> + Clone>(
