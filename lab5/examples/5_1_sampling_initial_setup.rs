@@ -12,11 +12,8 @@
 use panic_break as _;
 use stm32f4xx_hal as hal;
 
-use hal::{
-    adc::{config::AdcConfig, config::SampleTime, Adc},
-    prelude::*,
-    stm32,
-};
+use hal::adc::{config::AdcConfig, config::SampleTime, Adc};
+use hal::{prelude::*, stm32};
 use rtt_target::{rprintln, rtt_init_print};
 use typenum::Unsigned;
 

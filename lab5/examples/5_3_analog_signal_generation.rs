@@ -13,21 +13,15 @@
 use panic_rtt_target as _;
 use stm32f4xx_hal as hal;
 
-use crate::hal::{
-    dac::{DacOut, DacPin},
-    gpio::{gpioa::PA0, Edge, ExtiPin, Input, PullDown},
-    interrupt,
-    prelude::*,
-    stm32,
-    timer::Timer,
-};
-use core::{
-    cell::RefCell,
-    f32::consts::PI,
-    ops::DerefMut,
-    sync::atomic::{AtomicBool, Ordering},
-};
+use core::cell::RefCell;
+use core::f32::consts::PI;
+use core::ops::DerefMut;
+use core::sync::atomic::{AtomicBool, Ordering};
 use cortex_m::interrupt::{free, Mutex};
+use hal::dac::{DacOut, DacPin};
+use hal::gpio::{gpioa::PA0, Edge, ExtiPin, Input, PullDown};
+use hal::timer::Timer;
+use hal::{interrupt, prelude::*, stm32};
 use micromath::F32Ext;
 use nb::block;
 use typenum::Unsigned;
