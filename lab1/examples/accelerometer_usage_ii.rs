@@ -10,9 +10,8 @@
 use panic_break as _;
 use stm32f4xx_hal as hal;
 
-use accelerometer::RawAccelerometer;
 use hal::{prelude::*, spi, stm32};
-use lis302dl::Lis302Dl;
+use lis3dsh::Lis3dsh;
 use rtt_target::{rprintln, rtt_init_print};
 
 const N: usize = 1000;
@@ -32,6 +31,8 @@ fn main() -> ! {
         .use_hse(8.mhz()) //discovery board has 8 MHz crystal for HSE
         .sysclk(168.mhz())
         .freeze();
+
+    let mut delay = hal::delay::Delay::new(cp.SYST, clocks);
 
     let gpioa = dp.GPIOA.split();
     let gpioe = dp.GPIOE.split();
@@ -53,17 +54,15 @@ fn main() -> ! {
         clocks,
     );
 
-    let mut chip_select = gpioe.pe3.into_push_pull_output();
-    chip_select.set_high().ok();
+    let chip_select = gpioe.pe3.into_push_pull_output();
+    let mut lis3dsh = Lis3dsh::new_spi(spi, chip_select);
+    lis3dsh.init(&mut delay).unwrap();
+    assert_eq!(lis3dsh.who_am_i().unwrap(), lis3dsh::EXPECTED_WHO_AM_I);
 
-    let mut lis302dl = Lis302Dl::new(spi, chip_select, Default::default());
-
-    let mut delay = hal::delay::Delay::new(cp.SYST, clocks);
-
-    let mut buffer = [0i8; N];
+    let mut buffer = [0i16; N];
     buffer.iter_mut().for_each(|buffer_ref| {
-        *buffer_ref = lis302dl.accel_raw().unwrap().x;
         delay.delay_ms(10u8);
+        *buffer_ref = lis3dsh.read_data().unwrap()[0];
     });
 
     rprintln!("{:?}", &buffer[..]);

@@ -7,6 +7,8 @@
 //!
 //! Requires `cargo install probe-run`
 //! `cargo run --release --example 4_11_stft_accelerometer`
+//!
+//! Note: This is currently stack overflowing I think
 
 #![no_std]
 #![no_main]
@@ -14,13 +16,12 @@
 use panic_break as _;
 use stm32f4xx_hal as hal;
 
-use accelerometer::RawAccelerometer;
 use cmsis_dsp_sys::{arm_cfft_f32, arm_cfft_sR_f32_len64, arm_cmplx_mag_f32};
 use core::f32::consts::PI;
 use cty::uint32_t;
 use hal::{prelude::*, spi, stm32};
 use itertools::Itertools;
-use lis302dl::Lis302Dl;
+use lis3dsh::Lis3dsh;
 use micromath::F32Ext;
 use rtt_target::{rprintln, rtt_init_print};
 use typenum::{Sum, Unsigned};
@@ -47,6 +48,8 @@ fn main() -> ! {
         .sysclk(168.mhz())
         .freeze();
 
+    let mut delay = hal::delay::Delay::new(cp.SYST, clocks);
+
     let gpioa = dp.GPIOA.split();
     let gpioe = dp.GPIOE.split();
 
@@ -67,22 +70,19 @@ fn main() -> ! {
         clocks,
     );
 
-    let mut chip_select = gpioe.pe3.into_push_pull_output();
-    chip_select.set_high().ok();
-
-    let mut lis302dl = Lis302Dl::new(spi, chip_select, Default::default());
-
-    let mut delay = hal::delay::Delay::new(cp.SYST, clocks);
+    let chip_select = gpioe.pe3.into_push_pull_output();
+    let mut lis3dsh = Lis3dsh::new_spi(spi, chip_select);
+    lis3dsh.init(&mut delay).unwrap();
+    assert_eq!(lis3dsh.who_am_i().unwrap(), lis3dsh::EXPECTED_WHO_AM_I);
 
     rprintln!("reading accel");
 
     // dont love the idea of delaying in an iterator ...
     let accel = (0..N::to_usize())
         .map(|_| {
-            let dat = lis302dl.accel_raw().unwrap();
             delay.delay_ms(10u8);
-
-            dat.x as f32
+            let dat = lis3dsh.read_data().unwrap();
+            dat[0] as f32
         })
         .collect::<heapless::Vec<f32, N>>();
 

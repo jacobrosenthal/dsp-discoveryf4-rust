@@ -9,9 +9,8 @@
 use panic_halt as _;
 use stm32f4xx_hal as hal;
 
-use accelerometer::RawAccelerometer;
 use hal::{prelude::*, spi, stm32};
-use lis302dl::Lis302Dl;
+use lis3dsh::Lis3dsh;
 
 #[cortex_m_rt::entry]
 fn main() -> ! {
@@ -26,6 +25,8 @@ fn main() -> ! {
         .use_hse(8.mhz()) //discovery board has 8 MHz crystal for HSE
         .sysclk(168.mhz())
         .freeze();
+
+    let mut delay = hal::delay::Delay::new(cp.SYST, clocks);
 
     let gpioa = dp.GPIOA.split();
     let gpioe = dp.GPIOE.split();
@@ -49,23 +50,22 @@ fn main() -> ! {
     );
 
     let mut chip_select = gpioe.pe3.into_push_pull_output();
-    chip_select.set_high().ok();
-
-    let mut lis302dl = Lis302Dl::new(spi, chip_select, Default::default());
+    let mut lis3dsh = Lis3dsh::new_spi(spi, chip_select);
+    lis3dsh.init(&mut delay).unwrap();
+    assert_eq!(lis3dsh.who_am_i().unwrap(), lis3dsh::EXPECTED_WHO_AM_I);
 
     let mut top = gpiod.pd12.into_push_pull_output();
     let mut left = gpiod.pd13.into_push_pull_output();
     let mut right = gpiod.pd14.into_push_pull_output();
     let mut bottom = gpiod.pd15.into_push_pull_output();
 
-    let mut delay = hal::delay::Delay::new(cp.SYST, clocks);
-
     loop {
-        let dat = lis302dl.accel_raw().unwrap();
+        while !lis3dsh.is_data_ready().unwrap() {}
+        let dat = lis3dsh.read_data().unwrap();
 
         //not entirely sure this represents the example exactly..
-        if dat.z > 50 {
-            if dat.x < 10 && dat.x > -10 && dat.y < 10 && dat.y > -10 {
+        if dat[2] > 50 {
+            if dat[0] < 10 && dat[0] > -10 && dat[1] < 10 && dat[1] > -10 {
                 top.set_high().ok();
                 left.set_high().ok();
                 right.set_high().ok();
