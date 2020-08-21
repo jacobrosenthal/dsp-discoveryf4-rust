@@ -39,7 +39,7 @@ static FLAG: AtomicBool = AtomicBool::new(true);
 
 #[cortex_m_rt::entry]
 fn main() -> ! {
-    rtt_init_print!(BlockIfFull);
+    rtt_init_print!(BlockIfFull, 128);
 
     let mut dp = stm32::Peripherals::take().unwrap();
     let _cp = cortex_m::peripheral::Peripherals::take().unwrap();

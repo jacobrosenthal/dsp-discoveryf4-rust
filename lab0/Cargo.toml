@@ -10,10 +10,10 @@ cortex-m = "0.6.3"
 cortex-m-rt = "0.6.12"
 stm32f4xx-hal = { version = "0.8.1", features = ["stm32f407", "rt"] }
 panic-halt = "0.2.0"
-heapless = "0.5.5"
-rtt-target = { version = "0.2.0", features = ["cortex-m"] }
 panic_break = { path = "../panic_break" }
-panic-rtt-target = { version = "0.1.0", features = ["cortex-m"] }
+panic-rtt-target = { version = "0.1.1", features = ["cortex-m"] }
+rtt-target = { version = "0.2.1", features = ["cortex-m"] }
+heapless = "0.5.5"
 
 [dependencies.embedded-hal]
 features = ["unproven"]

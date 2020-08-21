@@ -23,8 +23,8 @@ static B: &[i32] = &[1, 2, 3, 4, 5];
 
 #[cortex_m_rt::entry]
 fn main() -> ! {
-    // setup the rtt machinery for printing
-    rtt_init_print!(BlockIfFull);
+    // allocate the rtt machinery for printing
+    rtt_init_print!(BlockIfFull, 128);
 
     let dp = stm32::Peripherals::take().unwrap();
 

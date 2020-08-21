@@ -8,13 +8,14 @@ edition = "2018"
 [dependencies]
 cortex-m = "0.6.3"
 cortex-m-rt = "0.6.12"
-micromath = "1.0.1"
-rtt-target = { version = "0.2.0", features = ["cortex-m"] }
 panic_break = { path = "../panic_break" }
+panic-rtt-target = { version = "0.1.1", features = ["cortex-m"] }
+rtt-target = { version = "0.2.1", features = ["cortex-m"] }
+panic_break = { path = "../panic_break" }
+micromath = "1.0.1"
 heapless = "0.5.5"
 typenum = "1.12.0"
 nb = "0.1.2"
-panic-rtt-target = { version = "0.1.0", features = ["cortex-m"] }
 
 [dependencies.stm32f4xx-hal]
 features = ["stm32f407", "rt"]

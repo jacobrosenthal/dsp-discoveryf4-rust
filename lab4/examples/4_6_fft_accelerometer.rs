@@ -32,7 +32,7 @@ const N_CONST: usize = 512;
 
 #[cortex_m_rt::entry]
 fn main() -> ! {
-    rtt_init_print!(BlockIfFull);
+    rtt_init_print!(BlockIfFull, 128);
 
     let dp = stm32::Peripherals::take().unwrap();
     let cp = cortex_m::peripheral::Peripherals::take().unwrap();

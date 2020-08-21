@@ -21,8 +21,8 @@ use rtt_target::{rprintln, rtt_init_print};
 
 #[cortex_m_rt::entry]
 fn main() -> ! {
-    // setup the rtt machinery for printing
-    rtt_init_print!(BlockIfFull);
+    // allocate the rtt machinery for printing
+    rtt_init_print!(BlockIfFull, 128);
 
     let dp = stm32::Peripherals::take().unwrap();
     let cp = cortex_m::peripheral::Peripherals::take().unwrap();

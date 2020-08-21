@@ -34,7 +34,7 @@ static A: &[f32] = &[1.0, -1.819168, 0.827343];
 
 #[cortex_m_rt::entry]
 fn main() -> ! {
-    rtt_init_print!(BlockIfFull);
+    rtt_init_print!(BlockIfFull, 128);
 
     let dp = stm32::Peripherals::take().unwrap();
     let cp = cortex_m::peripheral::Peripherals::take().unwrap();
