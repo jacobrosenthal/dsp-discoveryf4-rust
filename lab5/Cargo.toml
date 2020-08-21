@@ -11,7 +11,6 @@ cortex-m-rt = "0.6.12"
 panic_break = { path = "../panic_break" }
 panic-rtt-target = { version = "0.1.1", features = ["cortex-m"] }
 rtt-target = { version = "0.2.1", features = ["cortex-m"] }
-panic_break = { path = "../panic_break" }
 micromath = "1.0.1"
 heapless = "0.5.5"
 typenum = "1.12.0"
