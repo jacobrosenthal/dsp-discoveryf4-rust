@@ -8,7 +8,7 @@
 //! Requires `cargo install probe-run`
 //! `cargo run --release --example 4_11_stft_accelerometer`
 //!
-//! Note: This is currently stack overflowing I think
+//! Note: This is currently stack overflowing with Window larger than 16
 
 #![no_std]
 #![no_main]
@@ -16,7 +16,7 @@
 use panic_break as _;
 use stm32f4xx_hal as hal;
 
-use cmsis_dsp_sys::{arm_cfft_f32, arm_cfft_sR_f32_len64, arm_cmplx_mag_f32};
+use cmsis_dsp_sys::{arm_cfft_f32, arm_cfft_sR_f32_len16, arm_cmplx_mag_f32};
 use core::f32::consts::PI;
 use cty::uint32_t;
 use hal::{prelude::*, spi, stm32};
@@ -27,10 +27,10 @@ use rtt_target::{rprintln, rtt_init_print};
 use typenum::{Sum, Unsigned};
 
 type N = heapless::consts::U1024;
-type WINDOW = heapless::consts::U64;
+type WINDOW = heapless::consts::U16;
 type WINDOWCOMPLEX = Sum<WINDOW, WINDOW>;
 //todo derive this from WINDOW
-const WINDOW_CONST: usize = 64;
+const WINDOW_CONST: usize = 16;
 
 #[cortex_m_rt::entry]
 fn main() -> ! {
@@ -114,7 +114,7 @@ fn main() -> ! {
 
         unsafe {
             //Finding the FFT of window
-            arm_cfft_f32(&arm_cfft_sR_f32_len64, dtfsecoef.as_mut_ptr(), 0, 1);
+            arm_cfft_f32(&arm_cfft_sR_f32_len16, dtfsecoef.as_mut_ptr(), 0, 1);
             arm_cmplx_mag_f32(
                 dtfsecoef.as_ptr(),
                 mag.as_mut_ptr(),

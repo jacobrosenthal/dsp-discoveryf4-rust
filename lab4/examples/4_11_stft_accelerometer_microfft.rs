@@ -8,7 +8,7 @@
 //! Requires `cargo install probe-run`
 //! `cargo run --release --example 4_11_stft_accelerometer_microfft`
 //!
-//! Note: This is currently stack overflowing I think
+//! Note: This is currently stack overflowing with Window larger than 16
 
 #![no_std]
 #![no_main]
@@ -19,13 +19,14 @@ use stm32f4xx_hal as hal;
 use core::f32::consts::PI;
 use hal::{prelude::*, spi, stm32};
 use lis3dsh::Lis3dsh;
-use microfft::{complex::cfft_64, Complex32};
+use microfft::{complex::cfft_16, Complex32};
 use micromath::F32Ext;
 use rtt_target::{rprintln, rtt_init_print};
 use typenum::Unsigned;
 
 type N = heapless::consts::U1024;
-type WINDOW = heapless::consts::U64;
+type WINDOW = heapless::consts::U16;
+type NDIV2 = heapless::consts::U512;
 
 #[cortex_m_rt::entry]
 fn main() -> ! {
@@ -94,26 +95,24 @@ fn main() -> ! {
         inc: WINDOW::to_usize() / 2,
     };
 
-    let mut xst: heapless::Vec<heapless::Vec<_, WINDOW>, N> = heapless::Vec::new();
+    let xst = overlapping_chirp_windows
+        .map(|chirp_win| {
+            let mut dtfsecoef = hamming
+                .clone()
+                .zip(chirp_win.iter().rev())
+                .map(|(v, x)| Complex32 { re: v * x, im: 0.0 })
+                .collect::<heapless::Vec<Complex32, WINDOW>>();
 
-    for chirp_win in overlapping_chirp_windows {
-        // 64-0=64 of input to 64-64=0, so input * chirp.rev
-        let mut dtfsecoef = hamming
-            .clone()
-            .zip(chirp_win.iter().rev())
-            .map(|(v, x)| Complex32 { re: v * x, im: 0.0 })
-            .collect::<heapless::Vec<Complex32, WINDOW>>();
+            // todo pick the right size based on WINDOW
+            let _ = cfft_16(&mut dtfsecoef[..]);
 
-        let _ = cfft_64(&mut dtfsecoef[..]);
-
-        // Magnitude calculation
-        let mag = dtfsecoef
-            .iter()
-            .map(|complex| (complex.re * complex.re + complex.im * complex.im).sqrt())
-            .collect::<heapless::Vec<f32, WINDOW>>();
-
-        xst.push(mag).ok();
-    }
+            // Magnitude calculation
+            dtfsecoef
+                .iter()
+                .map(|complex| (complex.re * complex.re + complex.im * complex.im).sqrt())
+                .collect::<heapless::Vec<f32, WINDOW>>()
+        })
+        .collect::<heapless::Vec<heapless::Vec<_, WINDOW>, NDIV2>>();
 
     rprintln!("xst: {:?}", &xst[..]);
 
