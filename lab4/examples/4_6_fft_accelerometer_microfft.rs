@@ -88,7 +88,7 @@ fn main() -> ! {
         .map(|complex| (complex.re * complex.re + complex.im * complex.im).sqrt())
         .collect::<heapless::Vec<f32, N>>();
 
-    rprintln!("mag: {:?}", &mag[..]);
+    rprintln!("mag: {:?}", mag);
 
     // signal to probe-run to exit
     loop {

@@ -97,7 +97,7 @@ fn main() -> ! {
         );
     }
 
-    rprintln!("mag: {:?}", &mag[..]);
+    rprintln!("mag: {:?}", mag);
 
     // signal to probe-run to exit
     loop {

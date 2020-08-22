@@ -73,7 +73,7 @@ fn main() -> ! {
                 .sum::<f32>();
     }
 
-    rprintln!("y: {:?}", &y[..]);
+    rprintln!("y: {:?}", y);
 
     // signal to probe-run to exit
     loop {

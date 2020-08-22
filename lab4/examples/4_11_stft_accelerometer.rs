@@ -122,12 +122,10 @@ fn main() -> ! {
             );
         }
 
-        // rprintln!("mag: {:?}", &mag[..]);
-
         xst.push(mag).ok();
     }
 
-    rprintln!("xst: {:?}", &xst[..]);
+    rprintln!("xst: {:?}", xst);
 
     // signal to probe-run to exit
     loop {

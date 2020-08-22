@@ -79,7 +79,7 @@ fn main() -> ! {
         arm_fir_f32(&s, x.as_ptr(), y.as_mut_ptr(), N_CONST as uint32_t);
     }
 
-    rprintln!("y: {:?}", &y[..]);
+    rprintln!("y: {:?}", y);
 
     // signal to probe-run to exit
     loop {

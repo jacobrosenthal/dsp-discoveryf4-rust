@@ -64,7 +64,7 @@ fn main() -> ! {
         );
     }
 
-    rprintln!("y: {:?}", &y[..]);
+    rprintln!("y: {:?}", y);
 
     // signal to probe-run to exit
     loop {

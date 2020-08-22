@@ -49,7 +49,7 @@ fn main() -> ! {
         clocks,
     );
 
-    let mut chip_select = gpioe.pe3.into_push_pull_output();
+    let chip_select = gpioe.pe3.into_push_pull_output();
     let mut lis3dsh = Lis3dsh::new_spi(spi, chip_select);
     lis3dsh.init(&mut delay).unwrap();
     assert_eq!(lis3dsh.who_am_i().unwrap(), lis3dsh::EXPECTED_WHO_AM_I);

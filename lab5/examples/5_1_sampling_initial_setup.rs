@@ -51,7 +51,7 @@ fn main() -> ! {
         })
         .collect::<heapless::Vec<u16, N>>();
 
-    rprintln!("x: {:?}", &x[..]);
+    rprintln!("x: {:?}", x);
 
     // signal to probe-run to exit
     loop {

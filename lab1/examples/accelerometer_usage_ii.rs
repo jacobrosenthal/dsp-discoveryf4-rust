@@ -65,7 +65,7 @@ fn main() -> ! {
         *buffer_ref = lis3dsh.read_data().unwrap()[0];
     });
 
-    rprintln!("{:?}", &buffer[..]);
+    rprintln!("{:?}", buffer);
 
     // signal to probe-run to exit
     loop {

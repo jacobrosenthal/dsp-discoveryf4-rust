@@ -40,7 +40,7 @@ fn main() -> ! {
     // Collecting to have a clean iterator for our naive display fn
     let y = convolution_sum(x).collect::<heapless::Vec<f32, N>>();
 
-    rprintln!("y: {:?}", &y[..]);
+    rprintln!("y: {:?}", y);
 
     // signal to probe-run to exit
     loop {

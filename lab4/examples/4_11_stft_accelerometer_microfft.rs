@@ -114,7 +114,7 @@ fn main() -> ! {
         })
         .collect::<heapless::Vec<heapless::Vec<_, WINDOW>, NDIV2>>();
 
-    rprintln!("xst: {:?}", &xst[..]);
+    rprintln!("xst: {:?}", xst);
 
     // signal to probe-run to exit
     loop {
