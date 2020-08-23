@@ -1,19 +1,22 @@
 //! Basic BSP accelerometer functions and how they are used are given below.
 //!
-//! Requires `cargo install cargo-flash`
-//! `cargo flash --example accelerometer_usage_i --release`
+//! Requires `cargo install probe-run`
+//! `cargo run --example accelerometer_usage_i --release`
 
 #![no_std]
 #![no_main]
 
-use panic_halt as _;
+use panic_break as _;
 use stm32f4xx_hal as hal;
 
 use hal::{prelude::*, spi, stm32};
-use lis3dsh::Lis3dsh;
+use lis3dsh::{accelerometer::RawAccelerometer, Lis3dsh};
+use rtt_target::{rprintln, rtt_init_print};
 
 #[cortex_m_rt::entry]
 fn main() -> ! {
+    rtt_init_print!(BlockIfFull, 128);
+
     let dp = stm32::Peripherals::take().unwrap();
     let cp = cortex_m::peripheral::Peripherals::take().unwrap();
 
@@ -52,7 +55,6 @@ fn main() -> ! {
     let chip_select = gpioe.pe3.into_push_pull_output();
     let mut lis3dsh = Lis3dsh::new_spi(spi, chip_select);
     lis3dsh.init(&mut delay).unwrap();
-    assert_eq!(lis3dsh.who_am_i().unwrap(), lis3dsh::EXPECTED_WHO_AM_I);
 
     let mut top = gpiod.pd12.into_push_pull_output();
     let mut left = gpiod.pd13.into_push_pull_output();
@@ -61,11 +63,12 @@ fn main() -> ! {
 
     loop {
         while !lis3dsh.is_data_ready().unwrap() {}
-        let dat = lis3dsh.read_data().unwrap();
+        let dat = lis3dsh.accel_raw().unwrap();
+        rprintln!("{:?}", dat);
 
         //not entirely sure this represents the example exactly..
-        if dat[2] > 50 {
-            if dat[0] < 10 && dat[0] > -10 && dat[1] < 10 && dat[1] > -10 {
+        if dat[2] > 900 {
+            if dat[0] < 100 && dat[0] > -100 && dat[1] < 100 && dat[1] > -100 {
                 top.set_high().ok();
                 left.set_high().ok();
                 right.set_high().ok();
@@ -77,6 +80,5 @@ fn main() -> ! {
                 bottom.set_low().ok();
             }
         }
-        delay.delay_ms(10u8);
     }
 }

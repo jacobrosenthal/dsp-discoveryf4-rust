@@ -19,7 +19,7 @@ use cmsis_dsp_sys::{arm_cfft_f32, arm_cfft_sR_f32_len512, arm_cmplx_mag_f32};
 use cty::uint32_t;
 use hal::{prelude::*, spi, stm32};
 use itertools::Itertools;
-use lis3dsh::Lis3dsh;
+use lis3dsh::{accelerometer::RawAccelerometer, Lis3dsh};
 use micromath::F32Ext;
 use rtt_target::{rprintln, rtt_init_print};
 use typenum::{Sum, Unsigned};
@@ -70,12 +70,11 @@ fn main() -> ! {
     let chip_select = gpioe.pe3.into_push_pull_output();
     let mut lis3dsh = Lis3dsh::new_spi(spi, chip_select);
     lis3dsh.init(&mut delay).unwrap();
-    assert_eq!(lis3dsh.who_am_i().unwrap(), lis3dsh::EXPECTED_WHO_AM_I);
 
     // dont love the idea of delaying in an iterator ...
     let dtfsecoef = (0..N::to_usize()).map(|_| {
-        delay.delay_ms(10u8);
-        let dat = lis3dsh.read_data().unwrap();
+        while !lis3dsh.is_data_ready().unwrap() {}
+        let dat = lis3dsh.accel_raw().unwrap();
         dat[0] as f32
     });
 

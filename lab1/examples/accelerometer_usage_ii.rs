@@ -11,7 +11,7 @@ use panic_break as _;
 use stm32f4xx_hal as hal;
 
 use hal::{prelude::*, spi, stm32};
-use lis3dsh::Lis3dsh;
+use lis3dsh::{accelerometer::RawAccelerometer, Lis3dsh};
 use rtt_target::{rprintln, rtt_init_print};
 
 const N: usize = 1000;
@@ -57,12 +57,11 @@ fn main() -> ! {
     let chip_select = gpioe.pe3.into_push_pull_output();
     let mut lis3dsh = Lis3dsh::new_spi(spi, chip_select);
     lis3dsh.init(&mut delay).unwrap();
-    assert_eq!(lis3dsh.who_am_i().unwrap(), lis3dsh::EXPECTED_WHO_AM_I);
 
     let mut buffer = [0i16; N];
     buffer.iter_mut().for_each(|buffer_ref| {
-        delay.delay_ms(10u8);
-        *buffer_ref = lis3dsh.read_data().unwrap()[0];
+        while !lis3dsh.is_data_ready().unwrap() {}
+        *buffer_ref = lis3dsh.accel_raw().unwrap()[0];
     });
 
     rprintln!("{:?}", buffer);

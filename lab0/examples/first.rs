@@ -6,7 +6,7 @@
 //! which in combination with panic-rtt-target and rtt-target lets you send and
 //! receive debug data over long lasting sessions.
 //!
-//! `cargo embed --example roulette --release`
+//! `cargo embed --example first --release`
 
 #![no_std]
 #![no_main]
