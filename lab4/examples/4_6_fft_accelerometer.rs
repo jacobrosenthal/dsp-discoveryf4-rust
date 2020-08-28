@@ -52,15 +52,13 @@ fn main() -> ! {
     let miso = gpioa.pa6.into_alternate_af5().internal_pull_up(false);
     let mosi = gpioa.pa7.into_alternate_af5().internal_pull_up(false);
 
-    let spi_mode = spi::Mode {
-        polarity: spi::Polarity::IdleLow,
-        phase: spi::Phase::CaptureOnFirstTransition,
-    };
-
     let spi = spi::Spi::spi1(
         dp.SPI1,
         (sck, miso, mosi),
-        spi_mode,
+        spi::Mode {
+            polarity: spi::Polarity::IdleLow,
+            phase: spi::Phase::CaptureOnFirstTransition,
+        },
         10.mhz().into(),
         clocks,
     );
