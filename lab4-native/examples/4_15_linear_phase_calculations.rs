@@ -9,11 +9,11 @@
 //!
 //! `cargo run --example 4_15_linear_phase_calculations`
 
+use itertools::Itertools;
+use microfft::Complex32;
 use textplots::{Chart, Plot, Shape};
 
-use itertools::Itertools;
-use microfft::{complex::cfft_64, Complex32};
-
+use microfft::complex::cfft_64 as cfft;
 const N: usize = 64;
 
 fn main() {
@@ -24,7 +24,7 @@ fn main() {
         .map(|h| Complex32 { re: h, im: 0.0 })
         .collect::<heapless::Vec<Complex32, N>>();
 
-    let _ = cfft_64(&mut dtfsecoef[..]);
+    let _ = cfft(&mut dtfsecoef[..]);
 
     // Magnitude calculation
     let mag = dtfsecoef

@@ -11,9 +11,8 @@
 //!
 //! `cargo run --example 4_1_dft_calculations`
 
-use textplots::{Chart, Plot, Shape};
-
 use core::f32::consts::PI;
+use textplots::{Chart, Plot, Shape};
 
 const N: usize = 256;
 

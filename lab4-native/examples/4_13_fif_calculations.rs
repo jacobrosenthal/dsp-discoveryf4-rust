@@ -10,12 +10,12 @@
 //!
 //! `cargo run --example 4_10_stft_calculations`
 
+use core::f32::consts::PI;
+use microfft::Complex32;
 use textplots::{Chart, Plot, Shape};
 
-use core::f32::consts::PI;
-use microfft::{complex::cfft_512, Complex32};
-
 const N: usize = 512;
+use microfft::complex::cfft_512 as cfft;
 
 const W1: f32 = core::f32::consts::PI / 128.0;
 const W2: f32 = core::f32::consts::PI / 4.0;
@@ -42,10 +42,10 @@ fn main() {
         .collect::<heapless::Vec<Complex32, N>>();
 
     // Finding the FFT of the filter
-    let _ = cfft_512(&mut df_complex[..]);
+    let _ = cfft(&mut df_complex[..]);
 
     // Finding the FFT of the input signal
-    let _ = cfft_512(&mut s_complex[..]);
+    let _ = cfft(&mut s_complex[..]);
 
     // Filtering in the frequency domain
     let y_complex = s_complex

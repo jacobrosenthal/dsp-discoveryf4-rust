@@ -10,16 +10,16 @@
 //!
 //! `cargo run --example 4_10_stft_calculations`
 
-use textplots::{Chart, Plot, Shape};
-
 use core::f32::consts::PI;
 use itertools::Itertools;
-use microfft::{complex::cfft_16, Complex32};
+use microfft::Complex32;
 use plotly::HeatMap;
+use textplots::{Chart, Plot, Shape};
 
 const N: usize = 1024;
 const NDIV2: usize = N / 2;
 const WINDOW: usize = 16;
+use microfft::complex::cfft_16 as cfft;
 
 const W1: f32 = 0.0;
 const W2: f32 = core::f32::consts::PI;
@@ -50,7 +50,7 @@ fn main() {
                 .collect::<heapless::Vec<Complex32, WINDOW>>();
 
             // todo pick the right size based on WINDOW
-            let _ = cfft_16(&mut dtfsecoef[..]);
+            let _ = cfft(&mut dtfsecoef[..]);
 
             // Magnitude calculation
             dtfsecoef

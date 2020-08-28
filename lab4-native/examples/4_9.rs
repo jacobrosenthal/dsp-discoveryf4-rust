@@ -11,13 +11,13 @@
 //!
 //! `cargo run --example 4_9`
 
-use textplots::{Chart, Plot, Shape};
-
 use core::f32::consts::PI;
 use itertools::Itertools;
-use microfft::{complex::cfft_16, Complex32};
+use microfft::Complex32;
+use textplots::{Chart, Plot, Shape};
 
 const N: usize = 16;
+use microfft::complex::cfft_16 as cfft;
 
 const TRIANGLE_AMPLITUDE: f32 = 1.5;
 const TRIANGLE_PERIOD: usize = 16;
@@ -50,7 +50,7 @@ fn main() {
     // Coefficient calculation with CFFT function
     // arm_cfft_f32 uses a forward transform with enables bit reversal of output
     // well use microfft uses an in place Radix-2 FFT, for some reasons returns itself we dont need
-    let _ = cfft_16(&mut dtfsecoef[..]);
+    let _ = cfft(&mut dtfsecoef[..]);
     println!("dtfsecoef: {:?}", &dtfsecoef[..]);
 
     //dtfse to reclaim our original signal, note this is a bad approximation for our square wave
