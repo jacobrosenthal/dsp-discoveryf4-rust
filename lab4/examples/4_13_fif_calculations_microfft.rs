@@ -15,13 +15,13 @@ use stm32f4xx_hal as hal;
 
 use core::f32::consts::PI;
 use hal::{dwt::ClockDuration, dwt::DwtExt, prelude::*, stm32};
-use microfft::{complex::cfft_512, Complex32};
+use microfft::Complex32;
 use micromath::F32Ext;
 use rtt_target::{rprintln, rtt_init_print};
 use typenum::Unsigned;
 
+use microfft::complex::cfft_512 as cfft;
 type N = heapless::consts::U512;
-
 const W1: f32 = core::f32::consts::PI / 128.0;
 const W2: f32 = core::f32::consts::PI / 4.0;
 
@@ -64,11 +64,11 @@ fn main() -> ! {
         .collect::<heapless::Vec<Complex32, N>>();
 
     // Finding the FFT of the filter
-    let _ = cfft_512(&mut df_complex[..]);
+    let _ = cfft(&mut df_complex[..]);
 
     let time: ClockDuration = dwt.measure(|| {
         // Finding the FFT of the input signal
-        let _ = cfft_512(&mut s_complex[..]);
+        let _ = cfft(&mut s_complex[..]);
 
         // Filtering in the frequency domain
         let y_complex = s_complex

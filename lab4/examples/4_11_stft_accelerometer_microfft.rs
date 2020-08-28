@@ -19,11 +19,12 @@ use stm32f4xx_hal as hal;
 use core::f32::consts::PI;
 use hal::{prelude::*, spi, stm32};
 use lis3dsh::{accelerometer::RawAccelerometer, Lis3dsh};
-use microfft::{complex::cfft_16, Complex32};
+use microfft::Complex32;
 use micromath::F32Ext;
 use rtt_target::{rprintln, rtt_init_print};
 use typenum::Unsigned;
 
+use microfft::complex::cfft_16 as cfft;
 type N = heapless::consts::U1024;
 type WINDOW = heapless::consts::U16;
 type NDIV2 = heapless::consts::U512;
@@ -103,7 +104,7 @@ fn main() -> ! {
                 .collect::<heapless::Vec<Complex32, WINDOW>>();
 
             // todo pick the right size based on WINDOW
-            let _ = cfft_16(&mut dtfsecoef[..]);
+            let _ = cfft(&mut dtfsecoef[..]);
 
             // Magnitude calculation
             dtfsecoef

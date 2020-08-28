@@ -17,13 +17,13 @@ use panic_break as _;
 use stm32f4xx_hal as hal;
 
 use hal::{dwt::ClockDuration, dwt::DwtExt, prelude::*, stm32};
-use microfft::{complex::cfft_256, Complex32};
+use microfft::Complex32;
 use micromath::F32Ext;
 use rtt_target::{rprintln, rtt_init_print};
 use typenum::Unsigned;
 
+use microfft::complex::cfft_256 as cfft;
 type N = heapless::consts::U256;
-
 const W1: f32 = core::f32::consts::PI / 128.0;
 const W2: f32 = core::f32::consts::PI / 4.0;
 // const W2: f32 = core::f32::consts::PI / 5.0;
@@ -59,7 +59,7 @@ fn main() -> ! {
 
     let time: ClockDuration = dwt.measure(|| {
         //CFFT calculation
-        let _ = cfft_256(&mut dtfsecoef[..]);
+        let _ = cfft(&mut dtfsecoef[..]);
 
         // Magnitude calculation
         let _mag = dtfsecoef

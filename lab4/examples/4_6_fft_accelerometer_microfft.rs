@@ -17,11 +17,12 @@ use stm32f4xx_hal as hal;
 
 use hal::{prelude::*, spi, stm32};
 use lis3dsh::{accelerometer::RawAccelerometer, Lis3dsh};
-use microfft::{complex::cfft_512, Complex32};
+use microfft::Complex32;
 use micromath::F32Ext;
 use rtt_target::{rprintln, rtt_init_print};
 use typenum::Unsigned;
 
+use microfft::complex::cfft_512 as cfft;
 type N = heapless::consts::U512;
 
 #[cortex_m_rt::entry]
@@ -79,7 +80,7 @@ fn main() -> ! {
         })
         .collect::<heapless::Vec<Complex32, N>>();
 
-    let _ = cfft_512(&mut dtfsecoef[..]);
+    let _ = cfft(&mut dtfsecoef[..]);
 
     // Magnitude calculation
     let mag = dtfsecoef

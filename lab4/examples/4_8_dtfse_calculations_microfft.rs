@@ -16,11 +16,12 @@ use stm32f4xx_hal as hal;
 
 use core::f32::consts::PI;
 use hal::{dwt::ClockDuration, dwt::DwtExt, prelude::*, stm32};
-use microfft::{complex::cfft_16, Complex32};
+use microfft::Complex32;
 use micromath::F32Ext;
 use rtt_target::{rprintln, rtt_init_print};
 use typenum::Unsigned;
 
+use microfft::complex::cfft_16 as cfft;
 type N = heapless::consts::U16;
 
 #[cortex_m_rt::entry]
@@ -53,7 +54,7 @@ fn main() -> ! {
     // Coefficient calculation with CFFT function
     // arm_cfft_f32 uses a forward transform with enables bit reversal of output
     // well use microfft uses an in place Radix-2 FFT, for some reasons returns itself we dont need
-    let _ = cfft_16(&mut dtfsecoef[..]);
+    let _ = cfft(&mut dtfsecoef[..]);
 
     let time: ClockDuration = dwt.measure(|| {
         let _y_real =

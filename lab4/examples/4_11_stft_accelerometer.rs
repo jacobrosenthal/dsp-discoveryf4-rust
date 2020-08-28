@@ -16,7 +16,7 @@
 use panic_break as _;
 use stm32f4xx_hal as hal;
 
-use cmsis_dsp_sys::{arm_cfft_f32, arm_cfft_sR_f32_len16, arm_cmplx_mag_f32};
+use cmsis_dsp_sys::{arm_cfft_f32, arm_cmplx_mag_f32};
 use core::f32::consts::PI;
 use cty::uint32_t;
 use hal::{prelude::*, spi, stm32};
@@ -26,6 +26,7 @@ use micromath::F32Ext;
 use rtt_target::{rprintln, rtt_init_print};
 use typenum::{Sum, Unsigned};
 
+use cmsis_dsp_sys::arm_cfft_sR_f32_len16 as arm_cfft_sR_f32;
 type N = heapless::consts::U1024;
 type WINDOW = heapless::consts::U16;
 type WINDOWCOMPLEX = Sum<WINDOW, WINDOW>;
@@ -113,7 +114,7 @@ fn main() -> ! {
 
         unsafe {
             //Finding the FFT of window
-            arm_cfft_f32(&arm_cfft_sR_f32_len16, dtfsecoef.as_mut_ptr(), 0, 1);
+            arm_cfft_f32(&arm_cfft_sR_f32, dtfsecoef.as_mut_ptr(), 0, 1);
             arm_cmplx_mag_f32(
                 dtfsecoef.as_ptr(),
                 mag.as_mut_ptr(),

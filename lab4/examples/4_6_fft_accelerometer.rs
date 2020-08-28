@@ -15,7 +15,7 @@
 use panic_break as _;
 use stm32f4xx_hal as hal;
 
-use cmsis_dsp_sys::{arm_cfft_f32, arm_cfft_sR_f32_len512, arm_cmplx_mag_f32};
+use cmsis_dsp_sys::{arm_cfft_f32, arm_cmplx_mag_f32};
 use cty::uint32_t;
 use hal::{prelude::*, spi, stm32};
 use itertools::Itertools;
@@ -24,6 +24,7 @@ use micromath::F32Ext;
 use rtt_target::{rprintln, rtt_init_print};
 use typenum::{Sum, Unsigned};
 
+use cmsis_dsp_sys::arm_cfft_sR_f32_len512 as arm_cfft_sR_f32;
 type N = heapless::consts::U512;
 type NCOMPLEX = Sum<N, N>;
 //todo derive this from N
@@ -86,7 +87,7 @@ fn main() -> ! {
 
     unsafe {
         //CFFT calculation
-        arm_cfft_f32(&arm_cfft_sR_f32_len512, dtfsecoef.as_mut_ptr(), 0, 1);
+        arm_cfft_f32(&arm_cfft_sR_f32, dtfsecoef.as_mut_ptr(), 0, 1);
 
         // Magnitude calculation
         arm_cmplx_mag_f32(

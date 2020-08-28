@@ -13,7 +13,7 @@
 use panic_break as _;
 use stm32f4xx_hal as hal;
 
-use cmsis_dsp_sys::{arm_cfft_f32, arm_cfft_sR_f32_len512, arm_cmplx_mult_cmplx_f32};
+use cmsis_dsp_sys::{arm_cfft_f32, arm_cmplx_mult_cmplx_f32};
 use cty::uint32_t;
 use hal::{dwt::ClockDuration, dwt::DwtExt, prelude::*, stm32};
 use itertools::Itertools;
@@ -21,6 +21,7 @@ use micromath::F32Ext;
 use rtt_target::{rprintln, rtt_init_print};
 use typenum::{Sum, Unsigned};
 
+use cmsis_dsp_sys::arm_cfft_sR_f32_len512 as arm_cfft_sR_f32;
 type N = heapless::consts::U512;
 type NCOMPLEX = Sum<N, N>;
 //todo derive this from N
@@ -71,7 +72,7 @@ fn main() -> ! {
 
     // Finding the FFT of the filter
     unsafe {
-        arm_cfft_f32(&arm_cfft_sR_f32_len512, df_complex.as_mut_ptr(), 0, 1);
+        arm_cfft_f32(&arm_cfft_sR_f32, df_complex.as_mut_ptr(), 0, 1);
     }
 
     let mut y_complex = [0f32; N_CONST * 2];
@@ -79,7 +80,7 @@ fn main() -> ! {
     let time: ClockDuration = dwt.measure(|| {
         // Finding the FFT of the input signal
         unsafe {
-            arm_cfft_f32(&arm_cfft_sR_f32_len512, s_complex.as_mut_ptr(), 0, 1);
+            arm_cfft_f32(&arm_cfft_sR_f32, s_complex.as_mut_ptr(), 0, 1);
         }
 
         // Filtering in the frequency domain
@@ -94,7 +95,7 @@ fn main() -> ! {
 
         // Finding the complex result in time domain
         unsafe {
-            arm_cfft_f32(&arm_cfft_sR_f32_len512, y_complex.as_mut_ptr(), 1, 1);
+            arm_cfft_f32(&arm_cfft_sR_f32, y_complex.as_mut_ptr(), 1, 1);
         }
     });
     rprintln!("dft ticks: {:?}", time.as_ticks());

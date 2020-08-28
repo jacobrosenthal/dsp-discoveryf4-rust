@@ -14,7 +14,7 @@
 use panic_break as _;
 use stm32f4xx_hal as hal;
 
-use cmsis_dsp_sys::{arm_cfft_f32, arm_cfft_sR_f32_len16, arm_cos_f32};
+use cmsis_dsp_sys::{arm_cfft_f32, arm_cos_f32};
 use core::f32::consts::PI;
 use cty::c_float;
 use hal::{dwt::ClockDuration, dwt::DwtExt, prelude::*, stm32};
@@ -22,6 +22,7 @@ use micromath::F32Ext;
 use rtt_target::{rprintln, rtt_init_print};
 use typenum::Unsigned;
 
+use cmsis_dsp_sys::arm_cfft_sR_f32_len16 as arm_cfft_sR_f32;
 type N = heapless::consts::U16;
 
 #[cortex_m_rt::entry]
@@ -54,7 +55,7 @@ fn main() -> ! {
     //Coefficient calculation with CFFT function
     unsafe {
         arm_cfft_f32(
-            &arm_cfft_sR_f32_len16,
+            &arm_cfft_sR_f32,
             dtfsecoef.as_mut_ptr() as *mut c_float,
             0,
             1,
