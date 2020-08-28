@@ -7,6 +7,5 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [dependencies]
 textplots = "0.5.1"
-typenum = "1.12.0"
-heapless = "0.5.5"
+heapless = { version = "0.5.5", git = "https://github.com/perlindgren/heapless/", branch = "const_generics" }
 itertools = { version = "0.9.0", default-features = false }

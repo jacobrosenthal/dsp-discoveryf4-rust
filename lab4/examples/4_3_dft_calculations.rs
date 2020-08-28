@@ -24,11 +24,8 @@ use cty::{c_float, uint32_t};
 use hal::{dwt::ClockDuration, dwt::DwtExt, prelude::*, stm32};
 use micromath::F32Ext;
 use rtt_target::{rprintln, rtt_init_print};
-use typenum::Unsigned;
 
-type N = heapless::consts::U256;
-//todo derive this from N
-const N_CONST: usize = 256;
+const N: usize = 256;
 
 const W1: f32 = core::f32::consts::PI / 128.0;
 const W2: f32 = core::f32::consts::PI / 4.0;
@@ -54,8 +51,8 @@ fn main() -> ! {
     let dwt = cp.DWT.constrain(cp.DCB, clocks);
 
     // Complex sum of sinusoidal signals
-    let s1 = (0..N::to_usize()).map(|val| (W1 * val as f32).sin());
-    let s2 = (0..N::to_usize()).map(|val| (W2 * val as f32).sin());
+    let s1 = (0..N).map(|val| (W1 * val as f32).sin());
+    let s2 = (0..N).map(|val| (W2 * val as f32).sin());
     let s = s1.zip(s2).map(|(ess1, ess2)| ess1 + ess2);
 
     // map it to real, leave im blank well fill in with dft
@@ -63,10 +60,10 @@ fn main() -> ! {
         .map(|f| Complex32 { re: f, im: 0.0 })
         .collect::<heapless::Vec<Complex32, N>>();
 
-    let mut mag = [0f32; N_CONST];
+    let mut mag = [0f32; N];
 
     let time: ClockDuration = dwt.measure(|| unsafe {
-        let dft = dft::<N, _>(dtfsecoef.iter().cloned()).collect::<heapless::Vec<Complex32, N>>();
+        let dft = dft(dtfsecoef.iter().cloned()).collect::<heapless::Vec<Complex32, N>>();
 
         // Magnitude calculation
         // a union of two f32 are just two f32 side by side in memory? so this
@@ -75,7 +72,7 @@ fn main() -> ! {
         arm_cmplx_mag_f32(
             dft.as_ptr() as *const c_float,
             mag.as_mut_ptr(),
-            N::to_usize() as uint32_t,
+            N as uint32_t,
         );
     });
     rprintln!("ticks: {:?}", time.as_ticks());
@@ -92,11 +89,9 @@ struct Complex32 {
     im: f32,
 }
 
-fn dft<N: Unsigned, I: Iterator<Item = Complex32> + Clone>(
-    input: I,
-) -> impl Iterator<Item = Complex32> {
-    let size = N::to_usize() as f32;
-    (0..N::to_usize()).map(move |k| {
+fn dft<I: Iterator<Item = Complex32> + Clone>(input: I) -> impl Iterator<Item = Complex32> {
+    let size = N as f32;
+    (0..N).map(move |k| {
         let k = k as f32;
         let mut sum_re = 0.0;
         let mut sum_im = 0.0;

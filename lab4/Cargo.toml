@@ -15,8 +15,7 @@ rtt-target = { version = "0.2.2", features = ["cortex-m"] }
 micromath = "1.0.1"
 microfft = "0.3.0"
 itertools = { version = "0.9.0", default-features = false }
-heapless = "0.5.5"
-typenum = "1.12.0"
+heapless = { version = "0.5.5", git = "https://github.com/perlindgren/heapless/", branch = "const_generics" }
 lis3dsh = { git = "https://github.com/jacobrosenthal/lis3dsh-rs", branch = "bdu" }
 cty = "0.2.1"
 cmsis-dsp-sys = "0.2.0"

@@ -22,12 +22,11 @@ use lis3dsh::{accelerometer::RawAccelerometer, Lis3dsh};
 use microfft::Complex32;
 use micromath::F32Ext;
 use rtt_target::{rprintln, rtt_init_print};
-use typenum::Unsigned;
 
 use microfft::complex::cfft_16 as cfft;
-type N = heapless::consts::U1024;
-type WINDOW = heapless::consts::U16;
-type NDIV2 = heapless::consts::U512;
+const N: usize = 1024;
+const NDIV2: usize = N / 2;
+const WINDOW: usize = 16;
 
 #[cortex_m_rt::entry]
 fn main() -> ! {
@@ -74,7 +73,7 @@ fn main() -> ! {
     rprintln!("reading accel");
 
     // dont love the idea of delaying in an iterator ...
-    let accel = (0..N::to_usize())
+    let accel = (0..N)
         .map(|_| {
             while !lis3dsh.is_data_ready().unwrap() {}
             let dat = lis3dsh.accel_raw().unwrap();
@@ -84,15 +83,14 @@ fn main() -> ! {
 
     rprintln!("computing");
 
-    let hamming = (0..WINDOW::to_usize())
-        .map(|m| 0.54 - 0.46 * (2.0 * PI * m as f32 / WINDOW::to_usize() as f32).cos());
+    let hamming = (0..WINDOW).map(|m| 0.54 - 0.46 * (2.0 * PI * m as f32 / WINDOW as f32).cos());
 
     // get 64 input at a time, overlapping 32
     // windowing is easier to do on slices
     let overlapping_chirp_windows = Windows {
         v: &accel[..],
-        size: WINDOW::to_usize(),
-        inc: WINDOW::to_usize() / 2,
+        size: WINDOW,
+        inc: WINDOW / 2,
     };
 
     let xst = overlapping_chirp_windows

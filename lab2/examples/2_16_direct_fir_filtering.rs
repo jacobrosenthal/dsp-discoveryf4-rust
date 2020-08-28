@@ -18,9 +18,8 @@ use core::f32::consts::{FRAC_PI_4, PI};
 use hal::{dwt::ClockDuration, dwt::DwtExt, prelude::*, stm32};
 use micromath::F32Ext;
 use rtt_target::{rprintln, rtt_init_print};
-use typenum::Unsigned;
 
-type N = heapless::consts::U512;
+const N: usize = 512;
 
 #[cortex_m_rt::entry]
 fn main() -> ! {
@@ -41,8 +40,7 @@ fn main() -> ! {
     // Create a delay abstraction based on DWT cycle counter
     let dwt = cp.DWT.constrain(cp.DCB, clocks);
 
-    let x =
-        (0..N::to_usize()).map(|n| (PI * n as f32 / 128.0).sin() + (FRAC_PI_4 * n as f32).sin());
+    let x = (0..N).map(|n| (PI * n as f32 / 128.0).sin() + (FRAC_PI_4 * n as f32).sin());
 
     let time: ClockDuration = dwt.measure(|| {
         //dificult to smuggle result out of the closure so dont bother.

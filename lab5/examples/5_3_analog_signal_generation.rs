@@ -24,9 +24,8 @@ use hal::timer::Timer;
 use hal::{interrupt, prelude::*, stm32};
 use micromath::F32Ext;
 use nb::block;
-use typenum::Unsigned;
 
-type N = heapless::consts::U160;
+const N: usize = 160;
 
 static BUTTON: Mutex<RefCell<Option<PA0<Input<PullDown>>>>> = Mutex::new(RefCell::new(None));
 static FLAG: AtomicBool = AtomicBool::new(true);
@@ -68,12 +67,12 @@ fn main() -> ! {
 
     dac.enable();
 
-    let sq_lookup = (0..N::to_usize())
-        .map(|n| if n < N::to_usize() / 2 { 4095 } else { 0 })
+    let sq_lookup = (0..N)
+        .map(|n| if n < N / 2 { 4095 } else { 0 })
         .collect::<heapless::Vec<u16, N>>();
 
     // period 160
-    let sin_lookup = (0..N::to_usize())
+    let sin_lookup = (0..N)
         .map(|n| {
             let sindummy = (2.0 * PI * n as f32 / N::to_u16() as f32).sin();
             ((sindummy * 2047.0) + 2048.0) as u16
@@ -89,13 +88,13 @@ fn main() -> ! {
         // little wiggly because not an interrupt..
         let sin = FLAG.load(Ordering::Relaxed);
         if sin {
-            for n in 0..N::to_usize() {
+            for n in 0..N {
                 dac.set_value(sin_lookup[n]);
                 timer.start(16.khz());
                 block!(timer.wait()).unwrap();
             }
         } else {
-            for n in 0..N::to_usize() {
+            for n in 0..N {
                 dac.set_value(sq_lookup[n]);
                 timer.start(16.khz());
                 block!(timer.wait()).unwrap();

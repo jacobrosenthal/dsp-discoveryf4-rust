@@ -14,9 +14,8 @@ use core::f32::consts::{FRAC_PI_4, PI};
 use hal::{prelude::*, stm32};
 use micromath::F32Ext;
 use rtt_target::{rprintln, rtt_init_print};
-use typenum::Unsigned;
 
-type N = heapless::consts::U512;
+const N: usize = 512;
 
 #[cortex_m_rt::entry]
 fn main() -> ! {
@@ -34,8 +33,7 @@ fn main() -> ! {
         .sysclk(168.mhz())
         .freeze();
 
-    let x =
-        (0..N::to_usize()).map(|n| (PI * n as f32 / 128.0).sin() + (FRAC_PI_4 * n as f32).sin());
+    let x = (0..N).map(|n| (PI * n as f32 / 128.0).sin() + (FRAC_PI_4 * n as f32).sin());
 
     // Collecting to have a clean iterator for our naive display fn
     let y = convolution_sum(x).collect::<heapless::Vec<f32, N>>();

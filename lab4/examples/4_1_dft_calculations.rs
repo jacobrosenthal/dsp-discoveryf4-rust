@@ -18,9 +18,8 @@ use core::f32::consts::PI;
 use hal::{dwt::ClockDuration, dwt::DwtExt, prelude::*, stm32};
 use micromath::F32Ext;
 use rtt_target::{rprintln, rtt_init_print};
-use typenum::Unsigned;
 
-type N = heapless::consts::U256;
+const N: usize = 256;
 
 const W1: f32 = core::f32::consts::PI / 128.0;
 const W2: f32 = core::f32::consts::PI / 4.0;
@@ -46,15 +45,15 @@ fn main() -> ! {
     let dwt = cp.DWT.constrain(cp.DCB, clocks);
 
     // Complex sum of sinusoidal signals
-    let s1 = (0..N::to_usize()).map(|val| (W1 * val as f32).sin());
-    let s2 = (0..N::to_usize()).map(|val| (W2 * val as f32).sin());
+    let s1 = (0..N).map(|val| (W1 * val as f32).sin());
+    let s2 = (0..N).map(|val| (W2 * val as f32).sin());
     let s = s1.zip(s2).map(|(ess1, ess2)| ess1 + ess2);
 
     // map it to real, leave im blank well fill in with dft
     let dtfsecoef = s.map(|f| Complex32 { re: f, im: 0.0 });
 
     let time: ClockDuration = dwt.measure(|| {
-        let dft = dft::<N, _>(dtfsecoef.clone());
+        let dft = dft(dtfsecoef.clone());
 
         //Magnitude calculation
         let _mag = dft
@@ -74,11 +73,9 @@ struct Complex32 {
     im: f32,
 }
 
-fn dft<N: Unsigned, I: Iterator<Item = Complex32> + Clone>(
-    input: I,
-) -> impl Iterator<Item = Complex32> {
-    let size = N::to_usize() as f32;
-    (0..N::to_usize()).map(move |k| {
+fn dft<I: Iterator<Item = Complex32> + Clone>(input: I) -> impl Iterator<Item = Complex32> {
+    let size = N as f32;
+    (0..N).map(move |k| {
         let k = k as f32;
         let mut sum_re = 0.0;
         let mut sum_im = 0.0;

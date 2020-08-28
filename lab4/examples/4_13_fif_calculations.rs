@@ -19,13 +19,10 @@ use hal::{dwt::ClockDuration, dwt::DwtExt, prelude::*, stm32};
 use itertools::Itertools;
 use micromath::F32Ext;
 use rtt_target::{rprintln, rtt_init_print};
-use typenum::{Sum, Unsigned};
 
 use cmsis_dsp_sys::arm_cfft_sR_f32_len512 as arm_cfft_sR_f32;
-type N = heapless::consts::U512;
-type NCOMPLEX = Sum<N, N>;
-//todo derive this from N
-const N_CONST: usize = 512;
+const N: usize = 512;
+const NCOMPLEX: usize = N * 2;
 
 const W1: f32 = core::f32::consts::PI / 128.0;
 const W2: f32 = core::f32::consts::PI / 4.0;
@@ -50,8 +47,8 @@ fn main() -> ! {
     let dwt = cp.DWT.constrain(cp.DCB, clocks);
 
     // Complex sum of sinusoidal signals
-    let s1 = (0..N::to_usize()).map(|val| (W1 * val as f32).sin());
-    let s2 = (0..N::to_usize()).map(|val| (W2 * val as f32).sin());
+    let s1 = (0..N).map(|val| (W1 * val as f32).sin());
+    let s2 = (0..N).map(|val| (W2 * val as f32).sin());
 
     //we wont use complex this time since, but just interleave the zeros for the imaginary part
     let mut s_complex = s1
@@ -67,7 +64,7 @@ fn main() -> ! {
         .interleave_shortest(core::iter::repeat(0.0))
         .chain(core::iter::repeat(0.0))
         //fill rest with zeros up to N*2
-        .take(NCOMPLEX::to_usize())
+        .take(NCOMPLEX)
         .collect::<heapless::Vec<f32, NCOMPLEX>>();
 
     // Finding the FFT of the filter
@@ -75,7 +72,7 @@ fn main() -> ! {
         arm_cfft_f32(&arm_cfft_sR_f32, df_complex.as_mut_ptr(), 0, 1);
     }
 
-    let mut y_complex = [0f32; N_CONST * 2];
+    let mut y_complex = [0f32; N * 2];
 
     let time: ClockDuration = dwt.measure(|| {
         // Finding the FFT of the input signal
@@ -89,7 +86,7 @@ fn main() -> ! {
                 s_complex.as_ptr(),
                 df_complex.as_ptr(),
                 y_complex.as_mut_ptr(),
-                N_CONST as uint32_t,
+                N as uint32_t,
             );
         }
 

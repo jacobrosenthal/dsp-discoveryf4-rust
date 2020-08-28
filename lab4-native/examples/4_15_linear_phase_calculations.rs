@@ -13,9 +13,8 @@ use textplots::{Chart, Plot, Shape};
 
 use itertools::Itertools;
 use microfft::{complex::cfft_64, Complex32};
-use typenum::Unsigned;
 
-type N = heapless::consts::U64;
+const N: usize = 64;
 
 fn main() {
     // Complex impulse response of filter
@@ -32,23 +31,22 @@ fn main() {
         .iter()
         .map(|complex| (complex.re * complex.re + complex.im * complex.im).sqrt())
         .collect::<heapless::Vec<f32, N>>();
-    display::<N, _>("mag", mag.iter().cloned());
+    display("mag", mag.iter().cloned());
 
     let phase = dtfsecoef
         .iter()
         .cloned()
         .map(|complex| complex.re.atan2(complex.im));
 
-    display::<N, _>("phase", phase.clone());
+    display("phase", phase.clone());
 }
 
 // Points isn't a great representation as you can lose the line in the graph,
 // however while Lines occasionally looks good it also can be terrible.
 // Continuous requires to be in a fn pointer closure which cant capture any
 // external data so not useful without lots of code duplication.
-fn display<N, I>(name: &str, input: I)
+fn display<I>(name: &str, input: I)
 where
-    N: Unsigned,
     I: Iterator<Item = f32> + core::clone::Clone + std::fmt::Debug,
 {
     println!("{:?}: {:.4?}", name, input.clone().format(", "));
@@ -56,7 +54,7 @@ where
         .enumerate()
         .map(|(n, y)| (n as f32, y))
         .collect::<Vec<(f32, f32)>>();
-    Chart::new(120, 60, 0.0, N::to_usize() as f32)
+    Chart::new(120, 60, 0.0, N as f32)
         .lineplot(Shape::Lines(&display[..]))
         .display();
 }

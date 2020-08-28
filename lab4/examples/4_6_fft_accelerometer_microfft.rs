@@ -20,10 +20,9 @@ use lis3dsh::{accelerometer::RawAccelerometer, Lis3dsh};
 use microfft::Complex32;
 use micromath::F32Ext;
 use rtt_target::{rprintln, rtt_init_print};
-use typenum::Unsigned;
 
 use microfft::complex::cfft_512 as cfft;
-type N = heapless::consts::U512;
+const N: usize = 512;
 
 #[cortex_m_rt::entry]
 fn main() -> ! {
@@ -68,7 +67,7 @@ fn main() -> ! {
     lis3dsh.init(&mut delay).unwrap();
 
     // dont love the idea of delaying in an iterator ...
-    let mut dtfsecoef = (0..N::to_usize())
+    let mut dtfsecoef = (0..N)
         .map(|_| {
             while !lis3dsh.is_data_ready().unwrap() {}
             let dat = lis3dsh.accel_raw().unwrap();

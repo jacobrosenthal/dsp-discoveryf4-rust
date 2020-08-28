@@ -24,14 +24,11 @@ use itertools::Itertools;
 use lis3dsh::{accelerometer::RawAccelerometer, Lis3dsh};
 use micromath::F32Ext;
 use rtt_target::{rprintln, rtt_init_print};
-use typenum::{Sum, Unsigned};
 
 use cmsis_dsp_sys::arm_cfft_sR_f32_len16 as arm_cfft_sR_f32;
-type N = heapless::consts::U1024;
-type WINDOW = heapless::consts::U16;
-type WINDOWCOMPLEX = Sum<WINDOW, WINDOW>;
-//todo derive this from WINDOW
-const WINDOW_CONST: usize = 16;
+const N: usize = 1024;
+const WINDOW: usize = 16;
+const WINDOWCOMPLEX: usize = WINDOW * 2;
 
 #[cortex_m_rt::entry]
 fn main() -> ! {
@@ -78,7 +75,7 @@ fn main() -> ! {
     rprintln!("reading accel");
 
     // dont love the idea of delaying in an iterator ...
-    let accel = (0..N::to_usize())
+    let accel = (0..N)
         .map(|_| {
             while !lis3dsh.is_data_ready().unwrap() {}
             let dat = lis3dsh.accel_raw().unwrap();
@@ -88,20 +85,19 @@ fn main() -> ! {
 
     rprintln!("computing");
 
-    let hamming = (0..WINDOW::to_usize())
-        .map(|m| 0.54 - 0.46 * (2.0 * PI * m as f32 / WINDOW::to_usize() as f32).cos());
+    let hamming = (0..WINDOW).map(|m| 0.54 - 0.46 * (2.0 * PI * m as f32 / WINDOW as f32).cos());
 
     // get 64 input at a time, overlapping 32
     // windowing is easier to do on slices
     let overlapping_chirp_windows = Windows {
         v: &accel[..],
-        size: WINDOW::to_usize(),
-        inc: WINDOW::to_usize() / 2,
+        size: WINDOW,
+        inc: WINDOW / 2,
     };
 
-    let mut xst: heapless::Vec<[f32; WINDOW_CONST], N> = heapless::Vec::new();
+    let mut xst: heapless::Vec<[f32; WINDOW], N> = heapless::Vec::new();
 
-    let mut mag = [0f32; WINDOW_CONST];
+    let mut mag = [0f32; WINDOW];
 
     for chirp_win in overlapping_chirp_windows {
         // 64-0=64 of input to 64-64=0, so input * chirp.rev
@@ -115,11 +111,7 @@ fn main() -> ! {
         unsafe {
             //Finding the FFT of window
             arm_cfft_f32(&arm_cfft_sR_f32, dtfsecoef.as_mut_ptr(), 0, 1);
-            arm_cmplx_mag_f32(
-                dtfsecoef.as_ptr(),
-                mag.as_mut_ptr(),
-                WINDOW_CONST as uint32_t,
-            );
+            arm_cmplx_mag_f32(dtfsecoef.as_ptr(), mag.as_mut_ptr(), WINDOW as uint32_t);
         }
 
         xst.push(mag).ok();

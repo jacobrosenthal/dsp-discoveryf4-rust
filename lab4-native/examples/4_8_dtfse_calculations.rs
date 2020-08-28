@@ -16,14 +16,13 @@ use textplots::{Chart, Plot, Shape};
 use core::f32::consts::PI;
 use itertools::Itertools;
 use microfft::{complex::cfft_16, Complex32};
-use typenum::Unsigned;
 
-type N = heapless::consts::U16;
+const N: usize = 16;
 
 fn main() {
     //square signal
-    let square = (0..N::to_usize()).map(|idx| if idx < N::to_usize() / 2 { 1.0 } else { 0.0 });
-    display::<N, _>("square", square.clone());
+    let square = (0..N).map(|idx| if idx < N / 2 { 1.0 } else { 0.0 });
+    display("square", square.clone());
 
     //map it to real, leave im blank well fill in with cfft
     let mut dtfsecoef = square
@@ -37,24 +36,24 @@ fn main() {
     println!("dtfsecoef: {:?}", &dtfsecoef[..]);
 
     //dtfse to reclaim our original signal, note this is a bad approximation for our square wave
-    let y_real = dtfse::<N, _>(dtfsecoef.iter().cloned(), 1).collect::<heapless::Vec<f32, N>>();
-    display::<N, _>("y_real 1", y_real.iter().cloned());
+    let y_real = dtfse(dtfsecoef.iter().cloned(), 1).collect::<heapless::Vec<f32, N>>();
+    display("y_real 1", y_real.iter().cloned());
 
     //a bit better
-    let y_real = dtfse::<N, _>(dtfsecoef.iter().cloned(), 5).collect::<heapless::Vec<f32, N>>();
-    display::<N, _>("y_real 5", y_real.iter().cloned());
+    let y_real = dtfse(dtfsecoef.iter().cloned(), 5).collect::<heapless::Vec<f32, N>>();
+    display("y_real 5", y_real.iter().cloned());
 
     //good
-    let y_real = dtfse::<N, _>(dtfsecoef.iter().cloned(), 15).collect::<heapless::Vec<f32, N>>();
-    display::<N, _>("y_real 15", y_real.iter().cloned());
+    let y_real = dtfse(dtfsecoef.iter().cloned(), 15).collect::<heapless::Vec<f32, N>>();
+    display("y_real 15", y_real.iter().cloned());
 }
 
-fn dtfse<N: Unsigned, I: Iterator<Item = Complex32> + Clone>(
+fn dtfse<I: Iterator<Item = Complex32> + Clone>(
     coeff: I,
     k_var: usize,
 ) -> impl Iterator<Item = f32> {
-    let size = N::to_usize() as f32;
-    (0..N::to_usize()).map(move |n| {
+    let size = N as f32;
+    (0..N).map(move |n| {
         coeff
             .clone()
             .take(k_var + 1)
@@ -72,9 +71,8 @@ fn dtfse<N: Unsigned, I: Iterator<Item = Complex32> + Clone>(
 // however while Lines occasionally looks good it also can be terrible.
 // Continuous requires to be in a fn pointer closure which cant capture any
 // external data so not useful without lots of code duplication.
-fn display<N, I>(name: &str, input: I)
+fn display<I>(name: &str, input: I)
 where
-    N: Unsigned,
     I: Iterator<Item = f32> + core::clone::Clone + std::fmt::Debug,
 {
     println!("{:?}: {:.4?}", name, input.clone().format(", "));
@@ -82,7 +80,7 @@ where
         .enumerate()
         .map(|(idx, y)| (idx as f32, y))
         .collect::<Vec<(f32, f32)>>();
-    Chart::new(120, 60, 0.0, N::to_usize() as f32)
+    Chart::new(120, 60, 0.0, N as f32)
         .lineplot(Shape::Points(&display[..]))
         .display();
 }

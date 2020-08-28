@@ -14,17 +14,16 @@ use textplots::{Chart, Plot, Shape};
 
 use core::f32::consts::PI;
 use microfft::{complex::cfft_512, Complex32};
-use typenum::Unsigned;
 
-type N = heapless::consts::U512;
+const N: usize = 512;
 
 const W1: f32 = core::f32::consts::PI / 128.0;
 const W2: f32 = core::f32::consts::PI / 4.0;
 
 fn main() {
     // Complex sum of sinusoidal signals
-    let s1 = (0..N::to_usize()).map(|val| (W1 * val as f32).sin());
-    let s2 = (0..N::to_usize()).map(|val| (W2 * val as f32).sin());
+    let s1 = (0..N).map(|val| (W1 * val as f32).sin());
+    let s2 = (0..N).map(|val| (W2 * val as f32).sin());
     let s = s1.zip(s2).map(|(ess1, ess2)| ess1 + ess2);
 
     let mut s_complex = s
@@ -39,7 +38,7 @@ fn main() {
         .map(|f| Complex32 { re: f, im: 0.0 })
         .chain(core::iter::repeat(Complex32 { re: 0.0, im: 0.0 }))
         //fill rest with zeros up to N
-        .take(N::to_usize())
+        .take(N)
         .collect::<heapless::Vec<Complex32, N>>();
 
     // Finding the FFT of the filter
@@ -64,12 +63,12 @@ fn main() {
     // opposite sign in the exponent and a 1/N factor, any FFT algorithm can
     // easily be adapted for it.
     // just dtfse approx instead for now
-    let y_freq = dtfse::<N, _>(y_complex.clone(), 15).collect::<heapless::Vec<f32, N>>();
-    display::<N, _>("freq", y_freq.iter().cloned());
+    let y_freq = dtfse(y_complex.clone(), 15).collect::<heapless::Vec<f32, N>>();
+    display("freq", y_freq.iter().cloned());
 
     //y_time via convolution_sum developed in 2.14 to compare
     let y_time = convolution_sum(s).collect::<heapless::Vec<f32, N>>();
-    display::<N, _>("time", y_time.iter().cloned());
+    display("time", y_time.iter().cloned());
 }
 
 static H: &[f32] = &[
@@ -83,12 +82,12 @@ static H: &[f32] = &[
     0.001448,
 ];
 
-fn dtfse<N: Unsigned, I: Iterator<Item = Complex32> + Clone>(
+fn dtfse<I: Iterator<Item = Complex32> + Clone>(
     coeff: I,
     k_var: usize,
 ) -> impl Iterator<Item = f32> {
-    let size = N::to_usize() as f32;
-    (0..N::to_usize()).map(move |n| {
+    let size = N as f32;
+    (0..N).map(move |n| {
         coeff
             .clone()
             .take(k_var + 1)
@@ -123,9 +122,8 @@ where
 // however while Lines occasionally looks good it also can be terrible.
 // Continuous requires to be in a fn pointer closure which cant capture any
 // external data so not useful without lots of code duplication.
-fn display<N, I>(name: &str, input: I)
+fn display<I>(name: &str, input: I)
 where
-    N: Unsigned,
     I: Iterator<Item = f32> + core::clone::Clone + std::fmt::Debug,
 {
     println!("{:?}:", name);
@@ -133,7 +131,7 @@ where
         .enumerate()
         .map(|(n, y)| (n as f32, y))
         .collect::<Vec<(f32, f32)>>();
-    Chart::new(120, 60, 0.0, N::to_usize() as f32)
+    Chart::new(120, 60, 0.0, N as f32)
         .lineplot(Shape::Lines(&display[..]))
         .display();
 }

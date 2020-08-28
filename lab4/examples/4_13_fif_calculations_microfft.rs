@@ -18,10 +18,10 @@ use hal::{dwt::ClockDuration, dwt::DwtExt, prelude::*, stm32};
 use microfft::Complex32;
 use micromath::F32Ext;
 use rtt_target::{rprintln, rtt_init_print};
-use typenum::Unsigned;
 
 use microfft::complex::cfft_512 as cfft;
-type N = heapless::consts::U512;
+const N: usize = 512;
+
 const W1: f32 = core::f32::consts::PI / 128.0;
 const W2: f32 = core::f32::consts::PI / 4.0;
 
@@ -45,8 +45,8 @@ fn main() -> ! {
     let dwt = cp.DWT.constrain(cp.DCB, clocks);
 
     // Complex sum of sinusoidal signals
-    let s1 = (0..N::to_usize()).map(|val| (W1 * val as f32).sin());
-    let s2 = (0..N::to_usize()).map(|val| (W2 * val as f32).sin());
+    let s1 = (0..N).map(|val| (W1 * val as f32).sin());
+    let s2 = (0..N).map(|val| (W2 * val as f32).sin());
     let s = s1.zip(s2).map(|(ess1, ess2)| ess1 + ess2);
 
     let mut s_complex = s
@@ -60,7 +60,7 @@ fn main() -> ! {
         .map(|f| Complex32 { re: f, im: 0.0 })
         .chain(core::iter::repeat(Complex32 { re: 0.0, im: 0.0 }))
         //fill rest with zeros up to N
-        .take(N::to_usize())
+        .take(N)
         .collect::<heapless::Vec<Complex32, N>>();
 
     // Finding the FFT of the filter
@@ -86,7 +86,7 @@ fn main() -> ! {
         // opposite sign in the exponent and a 1/N factor, any FFT algorithm can
         // easily be adapted for it.
         // just dtfse approx instead for now
-        let _y_freq = dtfse::<N, _>(y_complex.clone(), 15).collect::<heapless::Vec<f32, N>>();
+        let _y_freq = dtfse(y_complex.clone(), 15).collect::<heapless::Vec<f32, N>>();
     });
     rprintln!("dft ticks: {:?}", time.as_ticks());
 
@@ -107,12 +107,12 @@ static H: &[f32] = &[
     0.001448,
 ];
 
-fn dtfse<N: Unsigned, I: Iterator<Item = Complex32> + Clone>(
+fn dtfse<I: Iterator<Item = Complex32> + Clone>(
     coeff: I,
     k_var: usize,
 ) -> impl Iterator<Item = f32> {
-    let size = N::to_usize() as f32;
-    (0..N::to_usize()).map(move |n| {
+    let size = N as f32;
+    (0..N).map(move |n| {
         coeff
             .clone()
             .take(k_var + 1)

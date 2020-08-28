@@ -18,11 +18,8 @@ use core::f32::consts::{FRAC_PI_4, PI};
 use hal::{dwt::ClockDuration, dwt::DwtExt, prelude::*, stm32};
 use micromath::F32Ext;
 use rtt_target::{rprintln, rtt_init_print};
-use typenum::Unsigned;
 
-type N = heapless::consts::U512;
-//todo derive this from N
-const N_CONST: usize = 512;
+const N: usize = 512;
 
 // high pass filter coefficients
 static B: &[f32] = &[0.002044, 0.004088, 0.002044];
@@ -51,14 +48,14 @@ fn main() -> ! {
     // Create a delay abstraction based on DWT cycle counter
     let dwt = cp.DWT.constrain(cp.DCB, clocks);
 
-    let x = (0..N::to_usize())
+    let x = (0..N)
         .map(|n| (PI * n as f32 / 128.0).sin() + (FRAC_PI_4 * n as f32).sin())
         .collect::<heapless::Vec<f32, N>>();
 
     let time: ClockDuration = dwt.measure(|| {
         //random access of &mut y were iterating over.. so no iterators unless
-        let mut y = [0.0; N_CONST];
-        for y_n in 0..N_CONST {
+        let mut y = [0.0; N];
+        for y_n in 0..N {
             y[y_n] = B
                 .iter()
                 .enumerate()

@@ -22,13 +22,10 @@ use itertools::Itertools;
 use lis3dsh::{accelerometer::RawAccelerometer, Lis3dsh};
 use micromath::F32Ext;
 use rtt_target::{rprintln, rtt_init_print};
-use typenum::{Sum, Unsigned};
 
 use cmsis_dsp_sys::arm_cfft_sR_f32_len512 as arm_cfft_sR_f32;
-type N = heapless::consts::U512;
-type NCOMPLEX = Sum<N, N>;
-//todo derive this from N
-const N_CONST: usize = 512;
+const N: usize = 512;
+const NCOMPLEX: usize = N * 2;
 
 #[cortex_m_rt::entry]
 fn main() -> ! {
@@ -73,7 +70,7 @@ fn main() -> ! {
     lis3dsh.init(&mut delay).unwrap();
 
     // dont love the idea of delaying in an iterator ...
-    let dtfsecoef = (0..N::to_usize()).map(|_| {
+    let dtfsecoef = (0..N).map(|_| {
         while !lis3dsh.is_data_ready().unwrap() {}
         let dat = lis3dsh.accel_raw().unwrap();
         dat[0] as f32
@@ -83,18 +80,14 @@ fn main() -> ! {
         .interleave_shortest(core::iter::repeat(0.0))
         .collect::<heapless::Vec<f32, NCOMPLEX>>();
 
-    let mut mag = [0f32; N_CONST];
+    let mut mag = [0f32; N];
 
     unsafe {
         //CFFT calculation
         arm_cfft_f32(&arm_cfft_sR_f32, dtfsecoef.as_mut_ptr(), 0, 1);
 
         // Magnitude calculation
-        arm_cmplx_mag_f32(
-            dtfsecoef.as_ptr(),
-            mag.as_mut_ptr(),
-            N::to_usize() as uint32_t,
-        );
+        arm_cmplx_mag_f32(dtfsecoef.as_ptr(), mag.as_mut_ptr(), N as uint32_t);
     }
 
     rprintln!("mag: {:?}", mag);

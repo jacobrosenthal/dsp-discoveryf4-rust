@@ -20,18 +20,14 @@
 use panic_break as _;
 use stm32f4xx_hal as hal;
 
-use core::{
-    f32::consts::{FRAC_PI_4, PI},
-    mem::MaybeUninit,
-};
+use core::f32::consts::{FRAC_PI_4, PI};
+use core::mem::MaybeUninit;
 use cty::{c_float, c_void, uint16_t, uint32_t};
 use hal::{prelude::*, stm32};
 use rtt_target::{rprintln, rtt_init_print};
 
-type N = heapless::consts::U512;
-//todo derive this from N
-const N_CONST: usize = 512;
-const K_CONST: usize = 64;
+const N: usize = 512;
+const K: usize = 64;
 
 #[cortex_m_rt::entry]
 fn main() -> ! {
@@ -49,10 +45,10 @@ fn main() -> ! {
         .sysclk(168.mhz())
         .freeze();
 
-    let mut fir_state_f32 = [0f32; N_CONST + K_CONST - 1];
+    let mut fir_state_f32 = [0f32; N + K - 1];
 
     let x = unsafe {
-        (0..N_CONST)
+        (0..N)
             .map(|n| arm_sin_f32(PI * n as f32 / 128.0) + arm_sin_f32(FRAC_PI_4 * n as f32))
             .collect::<heapless::Vec<f32, N>>()
     };
@@ -64,19 +60,19 @@ fn main() -> ! {
 
         arm_fir_init_f32(
             s.as_mut_ptr(),
-            K_CONST as uint16_t,
+            K as uint16_t,
             h.as_ptr(),
             fir_state_f32.as_mut_ptr(),
-            N_CONST as uint32_t,
+            N as uint32_t,
         );
 
         s.assume_init()
     };
 
-    let mut y = [0f32; N_CONST];
+    let mut y = [0f32; N];
 
     unsafe {
-        arm_fir_f32(&s, x.as_ptr(), y.as_mut_ptr(), N_CONST as uint32_t);
+        arm_fir_f32(&s, x.as_ptr(), y.as_mut_ptr(), N as uint32_t);
     }
 
     rprintln!("y: {:?}", y);

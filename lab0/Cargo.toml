@@ -13,7 +13,7 @@ panic-halt = "0.2.0"
 panic_break = { path = "../panic_break" }
 panic-rtt-target = { version = "0.1.1", features = ["cortex-m"] }
 rtt-target = { version = "0.2.2", features = ["cortex-m"] }
-heapless = "0.5.5"
+heapless = { version = "0.5.5", git = "https://github.com/perlindgren/heapless/", branch = "const_generics" }
 
 [dependencies.embedded-hal]
 features = ["unproven"]

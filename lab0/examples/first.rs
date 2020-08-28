@@ -15,11 +15,12 @@ use panic_rtt_target as _;
 use stm32f4xx_hal as hal;
 
 use hal::{prelude::*, stm32};
-use heapless::{consts::*, Vec};
+use heapless::Vec;
 use rtt_target::{rprintln, rtt_init_print};
 
 static A: &[i32] = &[1, 2, 3, 4, 5];
 static B: &[i32] = &[1, 2, 3, 4, 5];
+const LEN: usize = 5;
 
 #[cortex_m_rt::entry]
 fn main() -> ! {
@@ -42,7 +43,7 @@ fn main() -> ! {
         .iter()
         .zip(B.iter())
         .map(|(a, b)| a + b)
-        .collect::<Vec<_, U5>>();
+        .collect::<Vec<_, LEN>>();
 
     rprintln!("{:?}", c);
 

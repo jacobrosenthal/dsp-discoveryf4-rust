@@ -12,8 +12,7 @@ panic_break = { path = "../panic_break" }
 panic-rtt-target = { version = "0.1.1", features = ["cortex-m"] }
 rtt-target = { version = "0.2.2", features = ["cortex-m"] }
 micromath = "1.0.1"
-heapless = "0.5.5"
-typenum = "1.12.0"
+heapless = { version = "0.5.5", git = "https://github.com/perlindgren/heapless/", branch = "const_generics" }
 nb = "0.1.2"
 
 [dependencies.stm32f4xx-hal]
