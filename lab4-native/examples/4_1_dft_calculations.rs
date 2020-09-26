@@ -51,30 +51,37 @@ fn main() {
     display("mag", mag.iter().cloned());
 }
 
+fn dft<I: Iterator<Item = Complex32> + Clone>(input: I) -> impl Iterator<Item = Complex32> {
+    let size = N as f32;
+    (0..N).map(move |k| {
+        input
+            .clone()
+            .enumerate()
+            .fold((0f32, 0f32), |(mut sum_re, mut sum_im), (n, complex)| {
+                let n = n as f32;
+                sum_re += complex.re * (2.0 * PI * k as f32 * n / size).cos()
+                    + complex.im * (2.0 * PI * k as f32 * n / size).sin();
+                sum_im += -complex.im * (2.0 * PI * k as f32 * n / size).cos()
+                    + complex.re * (2.0 * PI * k as f32 * n / size).sin();
+
+                (sum_re, sum_im)
+            })
+            .into()
+    })
+}
+
 struct Complex32 {
     re: f32,
     im: f32,
 }
 
-fn dft<I: Iterator<Item = Complex32> + Clone>(input: I) -> impl Iterator<Item = Complex32> {
-    let size = N as f32;
-    (0..N).map(move |k| {
-        let k = k as f32;
-        let mut sum_re = 0.0;
-        let mut sum_im = 0.0;
-        for (n, complex) in input.clone().enumerate() {
-            let n = n as f32;
-            sum_re += complex.re * (2.0 * PI * k * n / size).cos()
-                + complex.im * (2.0 * PI * k * n / size).sin();
-            sum_im += -complex.im * (2.0 * PI * k * n / size).cos()
-                + complex.re * (2.0 * PI * k * n / size).sin();
-        }
-
+impl From<(f32, f32)> for Complex32 {
+    fn from(incoming: (f32, f32)) -> Self {
         Complex32 {
-            re: sum_re,
-            im: -sum_im,
+            re: incoming.0,
+            im: incoming.1,
         }
-    })
+    }
 }
 
 // Points isn't a great representation as you can lose the line in the graph,
@@ -85,7 +92,7 @@ fn display<I>(name: &str, input: I)
 where
     I: Iterator<Item = f32> + core::clone::Clone + std::fmt::Debug,
 {
-    println!("{:?}:", name);
+    println!("{:?}: {:.4?}", name, input.clone());
     let display = input
         .enumerate()
         .map(|(idx, y)| (idx as f32, y))
