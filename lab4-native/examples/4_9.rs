@@ -7,7 +7,7 @@
 //!
 //! Runs entirely locally without hardware. Rounding might be different than on
 //! device. Except for when printing you must be vigilent to not become reliant
-//! on any std tools that can't otherwise port over no no_std without alloc.
+//! on any std tools that can't otherwise port over to no_std without alloc.
 //!
 //! `cargo run --example 4_9`
 
@@ -50,8 +50,8 @@ fn main() {
     // Coefficient calculation with CFFT function
     // arm_cfft_f32 uses a forward transform with enables bit reversal of output
     // well use microfft uses an in place Radix-2 FFT, for some reasons returns itself we dont need
-    let _ = cfft(&mut dtfsecoef[..]);
-    println!("dtfsecoef: {:?}", &dtfsecoef[..]);
+    let _ = cfft(&mut dtfsecoef);
+    println!("dtfsecoef: {:?}", &dtfsecoef);
 
     //dtfse to reclaim our original signal, note this is a bad approximation for our square wave
     let y_real = dtfse(dtfsecoef.iter().cloned(), 2).collect::<heapless::Vec<f32, N>>();
@@ -103,6 +103,6 @@ where
         .map(|(idx, y)| (idx as f32, y))
         .collect::<Vec<(f32, f32)>>();
     Chart::new(120, 60, 0.0, N as f32)
-        .lineplot(Shape::Points(&display[..]))
+        .lineplot(&Shape::Points(&display))
         .display();
 }

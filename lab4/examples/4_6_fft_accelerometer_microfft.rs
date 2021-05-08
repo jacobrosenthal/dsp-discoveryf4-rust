@@ -77,7 +77,7 @@ fn main() -> ! {
         })
         .collect::<heapless::Vec<Complex32, N>>();
 
-    let _ = cfft(&mut dtfsecoef[..]);
+    let _ = cfft(&mut dtfsecoef);
 
     // Magnitude calculation
     let mag = dtfsecoef

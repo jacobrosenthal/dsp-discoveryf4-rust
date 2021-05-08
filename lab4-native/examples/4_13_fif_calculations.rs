@@ -6,7 +6,7 @@
 //!
 //! Runs entirely locally without hardware. Rounding might be different than on
 //! device. Except for when printing you must be vigilent to not become reliant
-//! on any std tools that can't otherwise port over no no_std without alloc.
+//! on any std tools that can't otherwise port over to no_std without alloc.
 //!
 //! `cargo run --example 4_10_stft_calculations`
 
@@ -42,10 +42,10 @@ fn main() {
         .collect::<heapless::Vec<Complex32, N>>();
 
     // Finding the FFT of the filter
-    let _ = cfft(&mut df_complex[..]);
+    let _ = cfft(&mut df_complex);
 
     // Finding the FFT of the input signal
-    let _ = cfft(&mut s_complex[..]);
+    let _ = cfft(&mut s_complex);
 
     // Filtering in the frequency domain
     let y_complex = s_complex
@@ -132,6 +132,6 @@ where
         .map(|(n, y)| (n as f32, y))
         .collect::<Vec<(f32, f32)>>();
     Chart::new(120, 60, 0.0, N as f32)
-        .lineplot(Shape::Lines(&display[..]))
+        .lineplot(&Shape::Lines(&display))
         .display();
 }

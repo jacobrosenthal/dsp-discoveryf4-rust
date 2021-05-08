@@ -6,7 +6,7 @@
 //!
 //! Runs entirely locally without hardware. Rounding might be different than on
 //! device. Except for when printing you must be vigilent to not become reliant
-//! on any std tools that can't otherwise port over no no_std without alloc.
+//! on any std tools that can't otherwise port over to no_std without alloc.
 //!
 //! `cargo run --example 4_10_stft_calculations`
 
@@ -36,7 +36,7 @@ fn main() {
     display("hamming", hamming.clone());
 
     let overlapping_chirp_windows = Windows {
-        v: &chirp[..],
+        v: &chirp,
         size: WINDOW,
         inc: WINDOW / 2,
     };
@@ -50,7 +50,7 @@ fn main() {
                 .collect::<heapless::Vec<Complex32, WINDOW>>();
 
             // todo pick the right size based on WINDOW
-            let _ = cfft(&mut dtfsecoef[..]);
+            let _ = cfft(&mut dtfsecoef);
 
             // Magnitude calculation
             dtfsecoef
@@ -62,7 +62,7 @@ fn main() {
 
     // // the answer key data for M=16
     // let z: Vec<Vec<f32>> = Windows {
-    //     v: &ZZ[..],
+    //     v: &ZZ,
     //     size: WINDOW,
     //     inc: WINDOW,
     // }
@@ -151,7 +151,7 @@ where
         .map(|(n, y)| (n as f32, y))
         .collect::<Vec<(f32, f32)>>();
     Chart::new(120, 60, 0.0, WINDOW as f32)
-        .lineplot(Shape::Lines(&display[..]))
+        .lineplot(&Shape::Lines(&display))
         .display();
 }
 

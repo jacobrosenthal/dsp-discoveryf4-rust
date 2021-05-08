@@ -24,6 +24,7 @@ use hal::timer::Timer;
 use hal::{interrupt, prelude::*, stm32};
 use micromath::F32Ext;
 use nb::block;
+use rtt_target::rtt_init_print;
 
 const N: usize = 160;
 
@@ -47,9 +48,10 @@ fn main() -> ! {
         .freeze();
 
     let gpioa = dp.GPIOA.split();
+    let mut syscfg = dp.SYSCFG.constrain();
 
     let mut board_btn = gpioa.pa0.into_pull_down_input();
-    board_btn.make_interrupt_source(&mut dp.SYSCFG);
+    board_btn.make_interrupt_source(&mut syscfg);
     board_btn.enable_interrupt(&mut dp.EXTI);
     board_btn.trigger_on_edge(&mut dp.EXTI, Edge::FALLING);
 
@@ -74,7 +76,7 @@ fn main() -> ! {
     // period 160
     let sin_lookup = (0..N)
         .map(|n| {
-            let sindummy = (2.0 * PI * n as f32 / N::to_u16() as f32).sin();
+            let sindummy = (2.0 * PI * n as f32 / N as f32).sin();
             ((sindummy * 2047.0) + 2048.0) as u16
         })
         .collect::<heapless::Vec<u16, N>>();

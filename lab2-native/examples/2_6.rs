@@ -3,7 +3,7 @@
 //!
 //! Runs entirely locally without hardware. Rounding might be different than on
 //! device. Except for when printing you must be vigilent to not become reliant
-//! on any std tools that can't otherwise port over no no_std without alloc.
+//! on any std tools that can't otherwise port over to no_std without alloc.
 //!
 //! `cargo run --example 2_6`
 
@@ -36,6 +36,6 @@ where
         .map(|(n, y)| (n as f32, y))
         .collect::<Vec<(f32, f32)>>();
     Chart::new(120, 60, 0.0, N as f32)
-        .lineplot(Shape::Points(&display[..]))
+        .lineplot(&Shape::Points(&display))
         .display();
 }

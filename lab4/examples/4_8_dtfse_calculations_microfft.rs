@@ -53,7 +53,7 @@ fn main() -> ! {
     // Coefficient calculation with CFFT function
     // arm_cfft_f32 uses a forward transform with enables bit reversal of output
     // well use microfft uses an in place Radix-2 FFT, for some reasons returns itself we dont need
-    let _ = cfft(&mut dtfsecoef[..]);
+    let _ = cfft(&mut dtfsecoef);
 
     let time: ClockDuration = dwt.measure(|| {
         let _y_real = dtfse(dtfsecoef.iter().cloned(), 15).collect::<heapless::Vec<f32, N>>();

@@ -5,7 +5,7 @@
 //!
 //! Runs entirely locally without hardware. Rounding might be different than on
 //! device. Except for when printing you must be vigilent to not become reliant
-//! on any std tools that can't otherwise port over no no_std without alloc.
+//! on any std tools that can't otherwise port over to no_std without alloc.
 //!
 //! `cargo run --example 4_14_linear_phase_calculations`
 
@@ -25,7 +25,7 @@ fn main() {
         .map(|h| Complex32 { re: h, im: 0.0 })
         .collect::<heapless::Vec<Complex32, N>>();
 
-    let _ = cfft(&mut dtfsecoef[..]);
+    let _ = cfft(&mut dtfsecoef);
 
     // Magnitude calculation
     let mag = dtfsecoef
@@ -62,7 +62,7 @@ where
         .map(|(n, y)| (n as f32, y))
         .collect::<Vec<(f32, f32)>>();
     Chart::new(120, 60, 0.0, N as f32)
-        .lineplot(Shape::Lines(&display[..]))
+        .lineplot(&Shape::Lines(&display))
         .display();
 }
 

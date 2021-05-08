@@ -18,7 +18,7 @@
 use panic_break as _;
 use stm32f4xx_hal as hal;
 
-use cmsis_dsp_sys::{arm_cmplx_mag_f32, arm_cos_f32, arm_sin_f32};
+use cmsis_dsp_sys::arm_cmplx_mag_f32;
 use core::f32::consts::PI;
 use cty::{c_float, uint32_t};
 use hal::{dwt::ClockDuration, dwt::DwtExt, prelude::*, stm32};
@@ -63,7 +63,7 @@ fn main() -> ! {
     let mut mag = [0f32; N];
 
     let time: ClockDuration = dwt.measure(|| unsafe {
-        let dft = dft(dtfsecoef.iter().cloned()).collect::<heapless::Vec<Complex32, N>>();
+        let dft = dft(dtfsecoef.into_iter()).collect::<heapless::Vec<Complex32, N>>();
 
         // Magnitude calculation
         // a union of two f32 are just two f32 side by side in memory? so this
@@ -102,6 +102,7 @@ fn dft<I: Iterator<Item = Complex32> + Clone>(input: I) -> impl Iterator<Item = 
     })
 }
 
+#[derive(Clone)]
 struct Complex32 {
     re: f32,
     im: f32,

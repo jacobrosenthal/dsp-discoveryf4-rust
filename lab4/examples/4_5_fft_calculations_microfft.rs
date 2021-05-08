@@ -59,7 +59,7 @@ fn main() -> ! {
 
     let time: ClockDuration = dwt.measure(|| {
         //CFFT calculation
-        let _ = cfft(&mut dtfsecoef[..]);
+        let _ = cfft(&mut dtfsecoef);
 
         // Magnitude calculation
         let _mag = dtfsecoef

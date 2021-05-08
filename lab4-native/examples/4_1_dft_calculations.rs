@@ -7,7 +7,7 @@
 //!
 //! Runs entirely locally without hardware. Rounding might be different than on
 //! device. Except for when printing you must be vigilent to not become reliant
-//! on any std tools that can't otherwise port over no no_std without alloc.
+//! on any std tools that can't otherwise port over to no_std without alloc.
 //!
 //! `cargo run --example 4_1_dft_calculations`
 
@@ -92,12 +92,12 @@ fn display<I>(name: &str, input: I)
 where
     I: Iterator<Item = f32> + core::clone::Clone + std::fmt::Debug,
 {
-    println!("{:?}: {:.4?}", name, input.clone());
+    println!("{:?}: {:.4?}", name, input);
     let display = input
         .enumerate()
         .map(|(idx, y)| (idx as f32, y))
         .collect::<Vec<(f32, f32)>>();
     Chart::new(120, 60, 0.0, N as f32)
-        .lineplot(Shape::Lines(&display[..]))
+        .lineplot(&Shape::Lines(&display))
         .display();
 }

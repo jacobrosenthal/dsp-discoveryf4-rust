@@ -88,7 +88,7 @@ fn main() -> ! {
     // get 64 input at a time, overlapping 32
     // windowing is easier to do on slices
     let overlapping_chirp_windows = Windows {
-        v: &accel[..],
+        v: &accel,
         size: WINDOW,
         inc: WINDOW / 2,
     };

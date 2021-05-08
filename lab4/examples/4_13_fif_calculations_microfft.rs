@@ -64,11 +64,11 @@ fn main() -> ! {
         .collect::<heapless::Vec<Complex32, N>>();
 
     // Finding the FFT of the filter
-    let _ = cfft(&mut df_complex[..]);
+    let _ = cfft(&mut df_complex);
 
     let time: ClockDuration = dwt.measure(|| {
         // Finding the FFT of the input signal
-        let _ = cfft(&mut s_complex[..]);
+        let _ = cfft(&mut s_complex);
 
         // Filtering in the frequency domain
         let y_complex = s_complex
