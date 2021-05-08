@@ -6,41 +6,39 @@
 //!
 //! Runs entirely locally without hardware. Rounding might be different than on
 //! device. Except for when printing you must be vigilent to not become reliant
-//! on any std tools that can't otherwise port over no no_std without alloc.
+//! on any std tools that can't otherwise port over to no_std without alloc.
 //!
 //! `cargo run --example 4_10_stft_calculations`
 
-use textplots::{Chart, Plot, Shape};
-
 use core::f32::consts::PI;
 use itertools::Itertools;
-use microfft::{complex::cfft_16, Complex32};
+use microfft::Complex32;
 use plotly::HeatMap;
-use typenum::Unsigned;
+use textplots::{Chart, Plot, Shape};
 
-type N = heapless::consts::U1024;
-type NDIV2 = heapless::consts::U512;
-type WINDOW = heapless::consts::U16;
+const N: usize = 1024;
+const NDIV2: usize = N / 2;
+const WINDOW: usize = 16;
+use microfft::complex::cfft_16 as cfft;
 
 const W1: f32 = 0.0;
 const W2: f32 = core::f32::consts::PI;
 
 fn main() {
-    let chirp = (0..N::to_usize())
+    let chirp = (0..N)
         .map(|n| {
             let n = n as f32;
-            (W1 * n + (W2 - W1) * n * n / (2.0 * (N::to_usize() as f32 - 1.0))).cos()
+            (W1 * n + (W2 - W1) * n * n / (2.0 * (N as f32 - 1.0))).cos()
         })
         .collect::<heapless::Vec<f32, N>>();
 
-    let hamming = (0..WINDOW::to_usize())
-        .map(|m| 0.54 - 0.46 * (2.0 * PI * m as f32 / WINDOW::to_usize() as f32).cos());
-    display::<WINDOW, _>("hamming", hamming.clone());
+    let hamming = (0..WINDOW).map(|m| 0.54 - 0.46 * (2.0 * PI * m as f32 / WINDOW as f32).cos());
+    display("hamming", hamming.clone());
 
     let overlapping_chirp_windows = Windows {
-        v: &chirp[..],
-        size: WINDOW::to_usize(),
-        inc: WINDOW::to_usize() / 2,
+        v: &chirp,
+        size: WINDOW,
+        inc: WINDOW / 2,
     };
 
     let xst = overlapping_chirp_windows
@@ -52,7 +50,7 @@ fn main() {
                 .collect::<heapless::Vec<Complex32, WINDOW>>();
 
             // todo pick the right size based on WINDOW
-            let _ = cfft_16(&mut dtfsecoef[..]);
+            let _ = cfft(&mut dtfsecoef);
 
             // Magnitude calculation
             dtfsecoef
@@ -64,9 +62,9 @@ fn main() {
 
     // // the answer key data for M=16
     // let z: Vec<Vec<f32>> = Windows {
-    //     v: &ZZ[..],
-    //     size: WINDOW::to_usize(),
-    //     inc: WINDOW::to_usize(),
+    //     v: &ZZ,
+    //     size: WINDOW,
+    //     inc: WINDOW,
     // }
     // .map(|slice| slice.to_vec())
     // .collect();
@@ -143,9 +141,8 @@ fn clean(zzzz: Vec<Vec<f32>>) -> Vec<Vec<f32>> {
 // however while Lines occasionally looks good it also can be terrible.
 // Continuous requires to be in a fn pointer closure which cant capture any
 // external data so not useful without lots of code duplication.
-fn display<N, I>(name: &str, input: I)
+fn display<I>(name: &str, input: I)
 where
-    N: Unsigned,
     I: Iterator<Item = f32> + core::clone::Clone + std::fmt::Debug,
 {
     println!("{:?}: {:.4?}", name, input.clone().format(", "));
@@ -153,8 +150,8 @@ where
         .enumerate()
         .map(|(n, y)| (n as f32, y))
         .collect::<Vec<(f32, f32)>>();
-    Chart::new(120, 60, 0.0, N::to_usize() as f32)
-        .lineplot(Shape::Lines(&display[..]))
+    Chart::new(120, 60, 0.0, WINDOW as f32)
+        .lineplot(&Shape::Lines(&display))
         .display();
 }
 

@@ -17,12 +17,12 @@ use stm32f4xx_hal as hal;
 
 use hal::{prelude::*, spi, stm32};
 use lis3dsh::{accelerometer::RawAccelerometer, Lis3dsh};
-use microfft::{complex::cfft_512, Complex32};
+use microfft::Complex32;
 use micromath::F32Ext;
 use rtt_target::{rprintln, rtt_init_print};
-use typenum::Unsigned;
 
-type N = heapless::consts::U512;
+use microfft::complex::cfft_512 as cfft;
+const N: usize = 512;
 
 #[cortex_m_rt::entry]
 fn main() -> ! {
@@ -49,15 +49,13 @@ fn main() -> ! {
     let miso = gpioa.pa6.into_alternate_af5().internal_pull_up(false);
     let mosi = gpioa.pa7.into_alternate_af5().internal_pull_up(false);
 
-    let spi_mode = spi::Mode {
-        polarity: spi::Polarity::IdleLow,
-        phase: spi::Phase::CaptureOnFirstTransition,
-    };
-
     let spi = spi::Spi::spi1(
         dp.SPI1,
         (sck, miso, mosi),
-        spi_mode,
+        spi::Mode {
+            polarity: spi::Polarity::IdleLow,
+            phase: spi::Phase::CaptureOnFirstTransition,
+        },
         10.mhz().into(),
         clocks,
     );
@@ -67,7 +65,7 @@ fn main() -> ! {
     lis3dsh.init(&mut delay).unwrap();
 
     // dont love the idea of delaying in an iterator ...
-    let mut dtfsecoef = (0..N::to_usize())
+    let mut dtfsecoef = (0..N)
         .map(|_| {
             while !lis3dsh.is_data_ready().unwrap() {}
             let dat = lis3dsh.accel_raw().unwrap();
@@ -79,7 +77,7 @@ fn main() -> ! {
         })
         .collect::<heapless::Vec<Complex32, N>>();
 
-    let _ = cfft_512(&mut dtfsecoef[..]);
+    let _ = cfft(&mut dtfsecoef);
 
     // Magnitude calculation
     let mag = dtfsecoef

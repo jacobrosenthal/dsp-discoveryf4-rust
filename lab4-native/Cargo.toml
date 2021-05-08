@@ -6,11 +6,10 @@ edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [dependencies]
-textplots = "0.5.1"
-typenum = "1.12.0"
-heapless = "0.5.5"
-itertools = { version = "0.9.0", default-features = false }
-microfft = "0.3.0"
+textplots = "0.6.0"
+heapless = { version = "0.7.0" }
+itertools = { version = "0.10.0", default-features = false }
+microfft = "0.3.1"
 image = "0.23.5"
 smart-leds = "0.3.0"
-plotly = "0.4.1"
+plotly = "0.6.0"

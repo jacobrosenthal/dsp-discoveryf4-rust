@@ -16,18 +16,16 @@
 use panic_break as _;
 use stm32f4xx_hal as hal;
 
-use cmsis_dsp_sys::{arm_cfft_f32, arm_cfft_sR_f32_len256, arm_cmplx_mag_f32};
+use cmsis_dsp_sys::{arm_cfft_f32, arm_cmplx_mag_f32};
 use cty::uint32_t;
 use hal::{dwt::ClockDuration, dwt::DwtExt, prelude::*, stm32};
 use itertools::Itertools;
 use micromath::F32Ext;
 use rtt_target::{rprintln, rtt_init_print};
-use typenum::{Sum, Unsigned};
 
-type N = heapless::consts::U256;
-type NCOMPLEX = Sum<N, N>;
-///todo derive this from N
-const N_CONST: usize = 256;
+use cmsis_dsp_sys::arm_cfft_sR_f32_len256 as arm_cfft_sR_f32;
+const N: usize = 256;
+const NCOMPLEX: usize = N * 2;
 
 const W1: f32 = core::f32::consts::PI / 128.0;
 const W2: f32 = core::f32::consts::PI / 4.0;
@@ -53,8 +51,8 @@ fn main() -> ! {
     let dwt = cp.DWT.constrain(cp.DCB, clocks);
 
     // Complex sum of sinusoidal signals
-    let s1 = (0..N::to_usize()).map(|val| (W1 * val as f32).sin());
-    let s2 = (0..N::to_usize()).map(|val| (W2 * val as f32).sin());
+    let s1 = (0..N).map(|val| (W1 * val as f32).sin());
+    let s2 = (0..N).map(|val| (W2 * val as f32).sin());
 
     //we wont use complex this time since, but just interleave the zeros for the imaginary part
     let mut s = s1
@@ -63,14 +61,14 @@ fn main() -> ! {
         .interleave_shortest(core::iter::repeat(0.0))
         .collect::<heapless::Vec<f32, NCOMPLEX>>();
 
-    let mut mag = [0f32; N_CONST];
+    let mut mag = [0f32; N];
 
     let time: ClockDuration = dwt.measure(|| unsafe {
         //CFFT calculation
-        arm_cfft_f32(&arm_cfft_sR_f32_len256, s.as_mut_ptr(), 0, 1);
+        arm_cfft_f32(&arm_cfft_sR_f32, s.as_mut_ptr(), 0, 1);
 
         // Magnitude calculation
-        arm_cmplx_mag_f32(s.as_ptr(), mag.as_mut_ptr(), N::to_usize() as uint32_t);
+        arm_cmplx_mag_f32(s.as_ptr(), mag.as_mut_ptr(), N as uint32_t);
     });
     rprintln!("ticks: {:?}", time.as_ticks());
 

@@ -18,17 +18,14 @@
 use panic_break as _;
 use stm32f4xx_hal as hal;
 
-use cmsis_dsp_sys::{arm_cmplx_mag_f32, arm_cos_f32, arm_sin_f32};
+use cmsis_dsp_sys::arm_cmplx_mag_f32;
 use core::f32::consts::PI;
 use cty::{c_float, uint32_t};
 use hal::{dwt::ClockDuration, dwt::DwtExt, prelude::*, stm32};
 use micromath::F32Ext;
 use rtt_target::{rprintln, rtt_init_print};
-use typenum::Unsigned;
 
-type N = heapless::consts::U256;
-//todo derive this from N
-const N_CONST: usize = 256;
+const N: usize = 256;
 
 const W1: f32 = core::f32::consts::PI / 128.0;
 const W2: f32 = core::f32::consts::PI / 4.0;
@@ -54,8 +51,8 @@ fn main() -> ! {
     let dwt = cp.DWT.constrain(cp.DCB, clocks);
 
     // Complex sum of sinusoidal signals
-    let s1 = (0..N::to_usize()).map(|val| (W1 * val as f32).sin());
-    let s2 = (0..N::to_usize()).map(|val| (W2 * val as f32).sin());
+    let s1 = (0..N).map(|val| (W1 * val as f32).sin());
+    let s2 = (0..N).map(|val| (W2 * val as f32).sin());
     let s = s1.zip(s2).map(|(ess1, ess2)| ess1 + ess2);
 
     // map it to real, leave im blank well fill in with dft
@@ -63,10 +60,10 @@ fn main() -> ! {
         .map(|f| Complex32 { re: f, im: 0.0 })
         .collect::<heapless::Vec<Complex32, N>>();
 
-    let mut mag = [0f32; N_CONST];
+    let mut mag = [0f32; N];
 
     let time: ClockDuration = dwt.measure(|| unsafe {
-        let dft = dft::<N, _>(dtfsecoef.iter().cloned()).collect::<heapless::Vec<Complex32, N>>();
+        let dft = dft(dtfsecoef.into_iter()).collect::<heapless::Vec<Complex32, N>>();
 
         // Magnitude calculation
         // a union of two f32 are just two f32 side by side in memory? so this
@@ -75,7 +72,7 @@ fn main() -> ! {
         arm_cmplx_mag_f32(
             dft.as_ptr() as *const c_float,
             mag.as_mut_ptr(),
-            N::to_usize() as uint32_t,
+            N as uint32_t,
         );
     });
     rprintln!("ticks: {:?}", time.as_ticks());
@@ -86,37 +83,38 @@ fn main() -> ! {
     }
 }
 
+fn dft<I: Iterator<Item = Complex32> + Clone>(input: I) -> impl Iterator<Item = Complex32> {
+    let size = N as f32;
+    (0..N).map(move |k| {
+        input
+            .clone()
+            .enumerate()
+            .fold((0f32, 0f32), |(mut sum_re, mut sum_im), (n, complex)| {
+                let n = n as f32;
+                sum_re += complex.re * (2.0 * PI * k as f32 * n / size).cos()
+                    + complex.im * (2.0 * PI * k as f32 * n / size).sin();
+                sum_im += -complex.im * (2.0 * PI * k as f32 * n / size).cos()
+                    + complex.re * (2.0 * PI * k as f32 * n / size).sin();
+
+                (sum_re, sum_im)
+            })
+            .into()
+    })
+}
+
 #[derive(Clone)]
 struct Complex32 {
     re: f32,
     im: f32,
 }
 
-fn dft<N: Unsigned, I: Iterator<Item = Complex32> + Clone>(
-    input: I,
-) -> impl Iterator<Item = Complex32> {
-    let size = N::to_usize() as f32;
-    (0..N::to_usize()).map(move |k| {
-        let k = k as f32;
-        let mut sum_re = 0.0;
-        let mut sum_im = 0.0;
-        for (n, complex) in input.clone().enumerate() {
-            let n = n as f32;
-            sum_re += unsafe {
-                complex.re * arm_cos_f32(2.0 * PI * k * n / size)
-                    + complex.im * arm_sin_f32(2.0 * PI * k * n / size)
-            };
-            sum_im += unsafe {
-                -complex.im * arm_cos_f32(2.0 * PI * k * n / size)
-                    + complex.re * arm_sin_f32(2.0 * PI * k * n / size)
-            };
-        }
-
+impl From<(f32, f32)> for Complex32 {
+    fn from(incoming: (f32, f32)) -> Self {
         Complex32 {
-            re: sum_re,
-            im: -sum_im,
+            re: incoming.0,
+            im: incoming.1,
         }
-    })
+    }
 }
 
 //C needs access to a sqrt fn, lets use micromath

@@ -19,14 +19,14 @@ use stm32f4xx_hal as hal;
 use core::f32::consts::PI;
 use hal::{prelude::*, spi, stm32};
 use lis3dsh::{accelerometer::RawAccelerometer, Lis3dsh};
-use microfft::{complex::cfft_16, Complex32};
+use microfft::Complex32;
 use micromath::F32Ext;
 use rtt_target::{rprintln, rtt_init_print};
-use typenum::Unsigned;
 
-type N = heapless::consts::U1024;
-type WINDOW = heapless::consts::U16;
-type NDIV2 = heapless::consts::U512;
+use microfft::complex::cfft_16 as cfft;
+const N: usize = 1024;
+const NDIV2: usize = N / 2;
+const WINDOW: usize = 16;
 
 #[cortex_m_rt::entry]
 fn main() -> ! {
@@ -53,15 +53,13 @@ fn main() -> ! {
     let miso = gpioa.pa6.into_alternate_af5().internal_pull_up(false);
     let mosi = gpioa.pa7.into_alternate_af5().internal_pull_up(false);
 
-    let spi_mode = spi::Mode {
-        polarity: spi::Polarity::IdleLow,
-        phase: spi::Phase::CaptureOnFirstTransition,
-    };
-
     let spi = spi::Spi::spi1(
         dp.SPI1,
         (sck, miso, mosi),
-        spi_mode,
+        spi::Mode {
+            polarity: spi::Polarity::IdleLow,
+            phase: spi::Phase::CaptureOnFirstTransition,
+        },
         10.mhz().into(),
         clocks,
     );
@@ -73,7 +71,7 @@ fn main() -> ! {
     rprintln!("reading accel");
 
     // dont love the idea of delaying in an iterator ...
-    let accel = (0..N::to_usize())
+    let accel = (0..N)
         .map(|_| {
             while !lis3dsh.is_data_ready().unwrap() {}
             let dat = lis3dsh.accel_raw().unwrap();
@@ -83,15 +81,14 @@ fn main() -> ! {
 
     rprintln!("computing");
 
-    let hamming = (0..WINDOW::to_usize())
-        .map(|m| 0.54 - 0.46 * (2.0 * PI * m as f32 / WINDOW::to_usize() as f32).cos());
+    let hamming = (0..WINDOW).map(|m| 0.54 - 0.46 * (2.0 * PI * m as f32 / WINDOW as f32).cos());
 
     // get 64 input at a time, overlapping 32
     // windowing is easier to do on slices
     let overlapping_chirp_windows = Windows {
-        v: &accel[..],
-        size: WINDOW::to_usize(),
-        inc: WINDOW::to_usize() / 2,
+        v: &accel,
+        size: WINDOW,
+        inc: WINDOW / 2,
     };
 
     let xst = overlapping_chirp_windows
@@ -103,7 +100,7 @@ fn main() -> ! {
                 .collect::<heapless::Vec<Complex32, WINDOW>>();
 
             // todo pick the right size based on WINDOW
-            let _ = cfft_16(&mut dtfsecoef[..]);
+            let _ = cfft(&mut dtfsecoef);
 
             // Magnitude calculation
             dtfsecoef

@@ -5,18 +5,17 @@
 //!
 //! Runs entirely locally without hardware. Rounding might be different than on
 //! device. Except for when printing you must be vigilent to not become reliant
-//! on any std tools that can't otherwise port over no no_std without alloc.
+//! on any std tools that can't otherwise port over to no_std without alloc.
 //!
 //! `cargo run --example 4_14_linear_phase_calculations`
 
-use textplots::{Chart, Plot, Shape};
-
 use core::f32::consts::PI;
 use itertools::Itertools;
-use microfft::{complex::cfft_64, Complex32};
-use typenum::Unsigned;
+use microfft::Complex32;
+use textplots::{Chart, Plot, Shape};
 
-type N = heapless::consts::U64;
+const N: usize = 64;
+use microfft::complex::cfft_64 as cfft;
 
 fn main() {
     // Complex impulse response of filter
@@ -26,14 +25,14 @@ fn main() {
         .map(|h| Complex32 { re: h, im: 0.0 })
         .collect::<heapless::Vec<Complex32, N>>();
 
-    let _ = cfft_64(&mut dtfsecoef[..]);
+    let _ = cfft(&mut dtfsecoef);
 
     // Magnitude calculation
     let mag = dtfsecoef
         .iter()
         .map(|complex| (complex.re * complex.re + complex.im * complex.im).sqrt())
         .collect::<heapless::Vec<f32, N>>();
-    display::<N, _>("mag", mag.iter().cloned());
+    display("mag", mag.iter().cloned());
 
     let phase = dtfsecoef
         .iter()
@@ -46,16 +45,15 @@ fn main() {
         .enumerate()
         .map(|(i, phase)| if i < 33 { phase } else { phase - PI });
 
-    display::<N, _>("phase", phase_graph.clone());
+    display("phase", phase_graph.clone());
 }
 
 // Points isn't a great representation as you can lose the line in the graph,
 // however while Lines occasionally looks good it also can be terrible.
 // Continuous requires to be in a fn pointer closure which cant capture any
 // external data so not useful without lots of code duplication.
-fn display<N, I>(name: &str, input: I)
+fn display<I>(name: &str, input: I)
 where
-    N: Unsigned,
     I: Iterator<Item = f32> + core::clone::Clone + std::fmt::Debug,
 {
     println!("{:?}: {:.4?}", name, input.clone().format(", "));
@@ -63,8 +61,8 @@ where
         .enumerate()
         .map(|(n, y)| (n as f32, y))
         .collect::<Vec<(f32, f32)>>();
-    Chart::new(120, 60, 0.0, N::to_usize() as f32)
-        .lineplot(Shape::Lines(&display[..]))
+    Chart::new(120, 60, 0.0, N as f32)
+        .lineplot(&Shape::Lines(&display))
         .display();
 }
 

@@ -3,41 +3,38 @@
 //!
 //! Runs entirely locally without hardware. Rounding might be different than on
 //! device. Except for when printing you must be vigilent to not become reliant
-//! on any std tools that can't otherwise port over no no_std without alloc.
+//! on any std tools that can't otherwise port over to no_std without alloc.
 //!
 //! `cargo run --example 2_12`
 
+use itertools::Itertools;
 use textplots::{Chart, Plot, Shape};
 
-use itertools::Itertools;
-use typenum::Unsigned;
-
-type N = heapless::consts::U10;
-
+const N: usize = 10;
 const A: f32 = 0.8;
 
 fn main() {
     // e[n]
-    let exponential = (0..(N::to_usize())).map(|val| A.powf(val as f32));
+    let exponential = (0..N).map(|val| A.powf(val as f32));
 
     // r[n]
-    let unit_ramp = (0..(N::to_usize())).map(|n| n as f32);
+    let unit_ramp = (0..N).map(|n| n as f32);
 
     // y1[n]=x1[n]+x2[n], where x1[n]=r[n] and x2[n]=e[n]
     let y1 = unit_ramp.clone().zip(exponential).map(|(r, e)| r + e);
-    display::<N, _>("y1", y1.clone());
+    display("y1", y1.clone());
 
     // y2[n]=x3[n], where x3[n]=r^2[n]
     let y2 = unit_ramp.clone().zip(unit_ramp).map(|(r, rr)| r * rr);
-    display::<N, _>("y2", y2.clone());
+    display("y2", y2.clone());
 
     // y3[n]=2.2y1[n]-1.1y1[n-1]+.7y3[n-1]
     let y3 = DigitalSystem5::new(y1);
-    display::<N, _>("y3", y3);
+    display("y3", y3);
 
     // y4[n]=2.2y2[n+1]-1.1y2[n]
     let y4 = y2.tuple_windows().map(|(y2, y2_1)| 2.2 * y2_1 - 1.1 * y2);
-    display::<N, _>("y4", y4);
+    display("y4", y4);
 }
 
 // y3[n]=2.2y1[n]-1.1y1[n-1]+.7y3[n-1]
@@ -92,9 +89,8 @@ where
 // however while Lines occasionally looks good it also can be terrible.
 // Continuous requires to be in a fn pointer closure which cant capture any
 // external data so not useful without lots of code duplication.
-fn display<N, I>(name: &str, input: I)
+fn display<I>(name: &str, input: I)
 where
-    N: Unsigned,
     I: Iterator<Item = f32> + core::clone::Clone + std::fmt::Debug,
 {
     println!("{:?}: {:.4?}", name, input.clone().format(", "));
@@ -102,7 +98,7 @@ where
         .enumerate()
         .map(|(n, y)| (n as f32, y))
         .collect::<Vec<(f32, f32)>>();
-    Chart::new(120, 60, 0.0, N::to_usize() as f32)
-        .lineplot(Shape::Lines(&display[..]))
+    Chart::new(120, 60, 0.0, N as f32)
+        .lineplot(&Shape::Lines(&display))
         .display();
 }

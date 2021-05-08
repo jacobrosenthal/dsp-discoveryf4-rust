@@ -3,27 +3,27 @@ name = "lab4"
 version = "0.1.0"
 authors = ["Jacob Rosenthal <jacobrosenthal@gmail.com>"]
 edition = "2018"
+resolver = "2"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [dependencies]
-cortex-m = "0.6.3"
+cortex-m = "0.7.2"
 cortex-m-rt = "0.6.12"
-stm32f4xx-hal = { version = "0.8.1", features = ["stm32f407", "rt"] }
+stm32f4xx-hal = { version = "0.9.0", features = ["stm32f407", "rt"] }
 panic_break = { path = "../panic_break" }
 panic-halt = "0.2.0"
-rtt-target = { version = "0.2.2", features = ["cortex-m"] }
+rtt-target = { version = "0.3.1", features = ["cortex-m"] }
 micromath = "1.0.1"
-microfft = "0.3.0"
-itertools = { version = "0.9.0", default-features = false }
-heapless = "0.5.5"
-typenum = "1.12.0"
+microfft = "0.3.1"
+itertools = { version = "0.10.0", default-features = false }
+heapless = { version = "0.7.0" }
 lis3dsh = { git = "https://github.com/jacobrosenthal/lis3dsh-rs", branch = "bdu" }
 cty = "0.2.1"
-cmsis-dsp-sys = "0.2.0"
+cmsis-dsp-sys = "0.3.1"
 
 [dependencies.embedded-hal]
 features = ["unproven"]
-version = "=0.2.3"
+version = "0.2.5"
 
 # for cargo flash
 [package.metadata]

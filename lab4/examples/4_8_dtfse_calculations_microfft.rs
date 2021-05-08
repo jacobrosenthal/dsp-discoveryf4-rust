@@ -16,12 +16,12 @@ use stm32f4xx_hal as hal;
 
 use core::f32::consts::PI;
 use hal::{dwt::ClockDuration, dwt::DwtExt, prelude::*, stm32};
-use microfft::{complex::cfft_16, Complex32};
+use microfft::Complex32;
 use micromath::F32Ext;
 use rtt_target::{rprintln, rtt_init_print};
-use typenum::Unsigned;
 
-type N = heapless::consts::U16;
+use microfft::complex::cfft_16 as cfft;
+const N: usize = 16;
 
 #[cortex_m_rt::entry]
 fn main() -> ! {
@@ -43,7 +43,7 @@ fn main() -> ! {
     let dwt = cp.DWT.constrain(cp.DCB, clocks);
 
     // square signal
-    let square = (0..N::to_usize()).map(|n| if n < N::to_usize() / 2 { 1.0 } else { 0.0 });
+    let square = (0..N).map(|n| if n < N / 2 { 1.0 } else { 0.0 });
 
     // map it to real, leave im blank well fill in with cfft
     let mut dtfsecoef = square
@@ -53,11 +53,10 @@ fn main() -> ! {
     // Coefficient calculation with CFFT function
     // arm_cfft_f32 uses a forward transform with enables bit reversal of output
     // well use microfft uses an in place Radix-2 FFT, for some reasons returns itself we dont need
-    let _ = cfft_16(&mut dtfsecoef[..]);
+    let _ = cfft(&mut dtfsecoef);
 
     let time: ClockDuration = dwt.measure(|| {
-        let _y_real =
-            dtfse::<N, _>(dtfsecoef.iter().cloned(), 15).collect::<heapless::Vec<f32, N>>();
+        let _y_real = dtfse(dtfsecoef.iter().cloned(), 15).collect::<heapless::Vec<f32, N>>();
     });
     rprintln!("ticks: {:?}", time.as_ticks());
 
@@ -67,12 +66,12 @@ fn main() -> ! {
     }
 }
 
-fn dtfse<N: Unsigned, I: Iterator<Item = Complex32> + Clone>(
+fn dtfse<I: Iterator<Item = Complex32> + Clone>(
     coeff: I,
     k_var: usize,
 ) -> impl Iterator<Item = f32> {
-    let size = N::to_usize() as f32;
-    (0..N::to_usize()).map(move |n| {
+    let size = N as f32;
+    (0..N).map(move |n| {
         coeff
             .clone()
             .take(k_var + 1)

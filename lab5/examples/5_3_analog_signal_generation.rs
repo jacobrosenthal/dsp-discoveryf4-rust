@@ -24,9 +24,9 @@ use hal::timer::Timer;
 use hal::{interrupt, prelude::*, stm32};
 use micromath::F32Ext;
 use nb::block;
-use typenum::Unsigned;
+use rtt_target::rtt_init_print;
 
-type N = heapless::consts::U160;
+const N: usize = 160;
 
 static BUTTON: Mutex<RefCell<Option<PA0<Input<PullDown>>>>> = Mutex::new(RefCell::new(None));
 static FLAG: AtomicBool = AtomicBool::new(true);
@@ -48,9 +48,10 @@ fn main() -> ! {
         .freeze();
 
     let gpioa = dp.GPIOA.split();
+    let mut syscfg = dp.SYSCFG.constrain();
 
     let mut board_btn = gpioa.pa0.into_pull_down_input();
-    board_btn.make_interrupt_source(&mut dp.SYSCFG);
+    board_btn.make_interrupt_source(&mut syscfg);
     board_btn.enable_interrupt(&mut dp.EXTI);
     board_btn.trigger_on_edge(&mut dp.EXTI, Edge::FALLING);
 
@@ -68,14 +69,14 @@ fn main() -> ! {
 
     dac.enable();
 
-    let sq_lookup = (0..N::to_usize())
-        .map(|n| if n < N::to_usize() / 2 { 4095 } else { 0 })
+    let sq_lookup = (0..N)
+        .map(|n| if n < N / 2 { 4095 } else { 0 })
         .collect::<heapless::Vec<u16, N>>();
 
     // period 160
-    let sin_lookup = (0..N::to_usize())
+    let sin_lookup = (0..N)
         .map(|n| {
-            let sindummy = (2.0 * PI * n as f32 / N::to_u16() as f32).sin();
+            let sindummy = (2.0 * PI * n as f32 / N as f32).sin();
             ((sindummy * 2047.0) + 2048.0) as u16
         })
         .collect::<heapless::Vec<u16, N>>();
@@ -89,13 +90,13 @@ fn main() -> ! {
         // little wiggly because not an interrupt..
         let sin = FLAG.load(Ordering::Relaxed);
         if sin {
-            for n in 0..N::to_usize() {
+            for n in 0..N {
                 dac.set_value(sin_lookup[n]);
                 timer.start(16.khz());
                 block!(timer.wait()).unwrap();
             }
         } else {
-            for n in 0..N::to_usize() {
+            for n in 0..N {
                 dac.set_value(sq_lookup[n]);
                 timer.start(16.khz());
                 block!(timer.wait()).unwrap();

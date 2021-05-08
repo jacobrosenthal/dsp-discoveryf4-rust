@@ -14,15 +14,15 @@
 use panic_break as _;
 use stm32f4xx_hal as hal;
 
-use cmsis_dsp_sys::{arm_cfft_f32, arm_cfft_sR_f32_len16, arm_cos_f32};
+use cmsis_dsp_sys::{arm_cfft_f32, arm_cos_f32};
 use core::f32::consts::PI;
 use cty::c_float;
 use hal::{dwt::ClockDuration, dwt::DwtExt, prelude::*, stm32};
 use micromath::F32Ext;
 use rtt_target::{rprintln, rtt_init_print};
-use typenum::Unsigned;
 
-type N = heapless::consts::U16;
+use cmsis_dsp_sys::arm_cfft_sR_f32_len16 as arm_cfft_sR_f32;
+const N: usize = 16;
 
 #[cortex_m_rt::entry]
 fn main() -> ! {
@@ -44,7 +44,7 @@ fn main() -> ! {
     let dwt = cp.DWT.constrain(cp.DCB, clocks);
 
     // square signal
-    let square = (0..N::to_usize()).map(|n| if n < N::to_usize() / 2 { 1.0 } else { 0.0 });
+    let square = (0..N).map(|n| if n < N / 2 { 1.0 } else { 0.0 });
 
     // map it to real, leave im blank well fill in with cfft
     let mut dtfsecoef = square
@@ -54,7 +54,7 @@ fn main() -> ! {
     //Coefficient calculation with CFFT function
     unsafe {
         arm_cfft_f32(
-            &arm_cfft_sR_f32_len16,
+            &arm_cfft_sR_f32,
             dtfsecoef.as_mut_ptr() as *mut c_float,
             0,
             1,
@@ -62,8 +62,7 @@ fn main() -> ! {
     }
 
     let time: ClockDuration = dwt.measure(|| {
-        let _y_real =
-            dtfse::<N, _>(dtfsecoef.iter().cloned(), 15).collect::<heapless::Vec<f32, N>>();
+        let _y_real = dtfse(dtfsecoef.iter().cloned(), 15).collect::<heapless::Vec<f32, N>>();
     });
     rprintln!("ticks: {:?}", time.as_ticks());
 
@@ -73,12 +72,12 @@ fn main() -> ! {
     }
 }
 
-fn dtfse<N: Unsigned, I: Iterator<Item = Complex32> + Clone>(
+fn dtfse<I: Iterator<Item = Complex32> + Clone>(
     coeff: I,
     k_var: usize,
 ) -> impl Iterator<Item = f32> {
-    let size = N::to_usize() as f32;
-    (0..N::to_usize()).map(move |n| {
+    let size = N as f32;
+    (0..N).map(move |n| {
         coeff
             .clone()
             .take(k_var + 1)

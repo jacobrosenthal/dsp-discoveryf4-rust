@@ -15,9 +15,8 @@ use stm32f4xx_hal as hal;
 use hal::adc::{config::AdcConfig, config::SampleTime, Adc};
 use hal::{prelude::*, stm32};
 use rtt_target::{rprintln, rtt_init_print};
-use typenum::Unsigned;
 
-type N = heapless::consts::U100;
+const N: usize = 100;
 
 #[cortex_m_rt::entry]
 fn main() -> ! {
@@ -44,7 +43,7 @@ fn main() -> ! {
     let mut adc = Adc::adc1(dp.ADC1, true, AdcConfig::default());
 
     // doing blocking reads instead of interrupt driven
-    let x = (0..N::to_usize())
+    let x = (0..N)
         .map(|_| {
             delay.delay_us(62u16); //0.0000625 s is  62.5us? 16.khz()
             adc.convert(&pa1, SampleTime::Cycles_84)

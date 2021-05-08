@@ -11,32 +11,31 @@
 //!
 //! Runs entirely locally without hardware. Rounding might be different than on
 //! device. Except for when printing you must be vigilent to not become reliant
-//! on any std tools that can't otherwise port over no no_std without alloc.
+//! on any std tools that can't otherwise port over to no_std without alloc.
 //!
 //! `cargo run --example 2_11_iterator_based_systems`
 
 use itertools::Itertools;
 use textplots::{Chart, Plot, Shape};
-use typenum::Unsigned;
 
-type N = heapless::consts::U10;
+const N: usize = 10;
 
 const W0: f32 = core::f32::consts::PI / 5.0;
 
 fn main() {
     // d[n]
-    let unit_pulse = (0..(N::to_usize())).map(|val| if val == 0 { 1.0 } else { 0.0 });
+    let unit_pulse = (0..N).map(|val| if val == 0 { 1.0 } else { 0.0 });
 
     // u[n]
-    let unit_step = (0..(N::to_usize())).map(|_| 1.0);
+    let unit_step = (0..N).map(|_| 1.0);
 
     // s[n]
-    let sinusoidal = (0..(N::to_usize())).map(|val| (W0 * val as f32).sin());
+    let sinusoidal = (0..N).map(|val| (W0 * val as f32).sin());
 
     // multiplier
     // y[n] = b*x[n]
     let y1 = unit_step.clone().map(|u| 2.2 * u);
-    display::<N, _>("digital_system1", y1);
+    display("digital_system1", y1);
 
     // adder accumulator
     // y[n] = x1[n] + x2[n]
@@ -44,12 +43,12 @@ fn main() {
         .clone()
         .zip(unit_step.clone())
         .map(|(inny1, inny2)| inny1 + inny2);
-    display::<N, _>("digital_system2", y2);
+    display("digital_system2", y2);
 
     // squaring device
     // y[n] = x^2[n]
     let y3 = sinusoidal.clone().map(|inny| inny * inny);
-    display::<N, _>("digital_system3", y3);
+    display("digital_system3", y3);
 
     // multiplier and accumulator
     // y[n] = b0*x[n] + b1*x[n-1]
@@ -59,12 +58,12 @@ fn main() {
         .map(|s| 2.2 * s)
         .zip(delay_sin.map(|ds| ds * -1.1))
         .map(|(a, b)| a + b);
-    display::<N, _>("digital_system4", y4);
+    display("digital_system4", y4);
 
     // multiplier and accumulator with feedback
     // y[n] = b0*x[n] + b1*x[n-1] + a*y[n-1]
     let y5 = DigitalSystem5::new(sinusoidal.clone());
-    display::<N, _>("digital_system5", y5);
+    display("digital_system5", y5);
 
     // multiplier and accumulator with future input
     // y[n] = b0*x[n+1] + b1*x[n]
@@ -72,17 +71,17 @@ fn main() {
     let y6 = unit_step
         .tuple_windows()
         .map(|(u0, u1)| 2.2 * u1 + -1.1 * u0);
-    display::<N, _>("digital_system6", y6);
+    display("digital_system6", y6);
 
     // multiplier and accumulator with unbounded output
     // y[n] = b0*x[n] + b1*y[n-1]
     let y7 = DigitalSystem7::new(unit_pulse);
-    display::<N, _>("digital_system7", y7);
+    display("digital_system7", y7);
 
     // multiplier with a time based coefficient
     // y[n]=n*x[n]
     let y8 = sinusoidal.enumerate().map(|(n, inny)| n as f32 * inny);
-    display::<N, _>("digital_system8", y8);
+    display("digital_system8", y8);
 }
 
 #[derive(Clone, Debug)]
@@ -218,9 +217,8 @@ where
 // however while Lines occasionally looks good it also can be terrible.
 // Continuous requires to be in a fn pointer closure which cant capture any
 // external data so not useful without lots of code duplication.
-fn display<N, I>(name: &str, input: I)
+fn display<I>(name: &str, input: I)
 where
-    N: Unsigned,
     I: Iterator<Item = f32> + core::clone::Clone + std::fmt::Debug,
 {
     println!("{:?}: {:.4?}", name, input.clone().format(", "));
@@ -228,7 +226,7 @@ where
         .enumerate()
         .map(|(n, y)| (n as f32, y))
         .collect::<Vec<(f32, f32)>>();
-    Chart::new(120, 60, 0.0, N::to_usize() as f32)
-        .lineplot(Shape::Points(&display[..]))
+    Chart::new(120, 60, 0.0, N as f32)
+        .lineplot(&Shape::Points(&display))
         .display();
 }

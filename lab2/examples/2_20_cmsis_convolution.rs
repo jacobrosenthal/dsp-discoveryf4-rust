@@ -25,9 +25,8 @@ use core::f32::consts::{FRAC_PI_4, PI};
 use cty::{c_float, c_void, uint32_t};
 use hal::{prelude::*, stm32};
 use rtt_target::{rprintln, rtt_init_print};
-use typenum::Unsigned;
 
-type N = heapless::consts::U512;
+const N: usize = 512;
 
 #[cortex_m_rt::entry]
 fn main() -> ! {
@@ -46,7 +45,7 @@ fn main() -> ! {
         .freeze();
 
     let x = unsafe {
-        (0..N::to_usize())
+        (0..N)
             .map(|n| arm_sin_f32(PI * n as f32 / 128.0) + arm_sin_f32(FRAC_PI_4 * n as f32))
             .collect::<heapless::Vec<f32, N>>()
     };
@@ -57,7 +56,7 @@ fn main() -> ! {
     unsafe {
         arm_conv_f32(
             x.as_ptr(),
-            N::to_usize() as uint32_t,
+            N as uint32_t,
             H.as_ptr(),
             H.len() as uint32_t,
             y.as_mut_ptr(),

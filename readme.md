@@ -1,14 +1,14 @@
 # Digital Signal Processing using Arm Cortex-M based Microcontrollers
 
+Translating the book from C to Rust. No relation to the author.
+
 ## Requires
 
-* Rust
+* Rust 1.5.1
 * `rustup target add thumbv7em-none-eabihf`
-* openocd from source
-* `apt-get install binutils-arm-none-eabi`
 * STM32F407G-DISC1 board
 * Possibly updated stlink firmware
-* udev rules /etc/udev/rules.d/49-stinkv2-1.rules and a reboot
+* (linux) udev rules /etc/udev/rules.d/49-stinkv2-1.rules and a reboot
 
 ```bash
 SUBSYSTEMS=="usb", ATTRS{idVendor}=="0483", ATTRS{idProduct}=="374a", \
@@ -21,5 +21,9 @@ SUBSYSTEMS=="usb", ATTRS{idVendor}=="0483", ATTRS{idProduct}=="374b", \
 ```
 
 ## GDB debugging
+
+Requires:
+
+* OpenOCD 0.11.0
 
 For desperate cases, swap your runner in .cargo/config for the openocd configuration, start an open ocd server with `openocd -f interface/stlink-v2-1.cfg -f target/stm32f4x.cfg`, and `cargo run`.
