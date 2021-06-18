@@ -56,6 +56,7 @@ fn main() -> ! {
     let h: heapless::Vec<f32, N> = H.iter().cloned().rev().collect();
 
     let s = unsafe {
+        // skips zeroing
         let mut s = MaybeUninit::uninit();
 
         arm_fir_init_f32(
