@@ -36,7 +36,7 @@ fn main() -> ! {
     let x = (0..N).map(|n| (PI * n as f32 / 128.0).sin() + (FRAC_PI_4 * n as f32).sin());
 
     // Collecting to have a clean iterator for our naive display fn
-    let y = convolution_sum(x).collect::<heapless::Vec<f32, N>>();
+    let y: heapless::Vec<f32, N> = convolution_sum(x).collect();
 
     rprintln!("y: {:?}", y);
 

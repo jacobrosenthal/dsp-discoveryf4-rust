@@ -74,9 +74,9 @@ fn main() -> ! {
         dat[0] as f32
     });
 
-    let mut dtfsecoef = dtfsecoef
+    let mut dtfsecoef: heapless::Vec<f32, NCOMPLEX> = dtfsecoef
         .interleave_shortest(core::iter::repeat(0.0))
-        .collect::<heapless::Vec<f32, NCOMPLEX>>();
+        .collect();
 
     let mut mag = [0f32; N];
 

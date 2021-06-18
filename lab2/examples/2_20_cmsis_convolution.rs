@@ -44,10 +44,10 @@ fn main() -> ! {
         .sysclk(168.mhz())
         .freeze();
 
-    let x = unsafe {
+    let x: heapless::Vec<f32, N> = unsafe {
         (0..N)
             .map(|n| arm_sin_f32(PI * n as f32 / 128.0) + arm_sin_f32(FRAC_PI_4 * n as f32))
-            .collect::<heapless::Vec<f32, N>>()
+            .collect()
     };
 
     // todo compute this. Length srcALen+srcBLen-1

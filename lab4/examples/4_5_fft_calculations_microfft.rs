@@ -53,19 +53,18 @@ fn main() -> ! {
     let s = s1.zip(s2).map(|(ess1, ess2)| ess1 + ess2);
 
     // map it to real, leave im blank well fill in with dft
-    let mut dtfsecoef = s
-        .map(|f| Complex32 { re: f, im: 0.0 })
-        .collect::<heapless::Vec<Complex32, N>>();
+    let mut dtfsecoef: heapless::Vec<Complex32, N> =
+        s.map(|f| Complex32 { re: f, im: 0.0 }).collect();
 
     let time: ClockDuration = dwt.measure(|| {
         //CFFT calculation
         let _ = cfft(&mut dtfsecoef);
 
         // Magnitude calculation
-        let _mag = dtfsecoef
+        let _mag: heapless::Vec<f32, N> = dtfsecoef
             .iter()
             .map(|complex| (complex.re * complex.re + complex.im * complex.im).sqrt())
-            .collect::<heapless::Vec<f32, N>>();
+            .collect();
     });
     rprintln!("ticks: {:?}", time.as_ticks());
 

@@ -49,19 +49,18 @@ fn main() -> ! {
     let s2 = (0..N).map(|val| (W2 * val as f32).sin());
     let s = s1.zip(s2).map(|(ess1, ess2)| ess1 + ess2);
 
-    let mut s_complex = s
-        .map(|f| Complex32 { re: f, im: 0.0 })
-        .collect::<heapless::Vec<Complex32, N>>();
+    let mut s_complex: heapless::Vec<Complex32, N> =
+        s.map(|f| Complex32 { re: f, im: 0.0 }).collect();
 
     // Complex impulse response of filter
-    let mut df_complex = H
+    let mut df_complex: heapless::Vec<Complex32, N> = H
         .iter()
         .cloned()
         .map(|f| Complex32 { re: f, im: 0.0 })
         .chain(core::iter::repeat(Complex32 { re: 0.0, im: 0.0 }))
         //fill rest with zeros up to N
         .take(N)
-        .collect::<heapless::Vec<Complex32, N>>();
+        .collect();
 
     // Finding the FFT of the filter
     let _ = cfft(&mut df_complex);
@@ -86,7 +85,7 @@ fn main() -> ! {
         // opposite sign in the exponent and a 1/N factor, any FFT algorithm can
         // easily be adapted for it.
         // just dtfse approx instead for now
-        let _y_freq = dtfse(y_complex.clone(), 15).collect::<heapless::Vec<f32, N>>();
+        let _y_freq: heapless::Vec<f32, N> = dtfse(y_complex.clone(), 15).collect();
     });
     rprintln!("dft ticks: {:?}", time.as_ticks());
 

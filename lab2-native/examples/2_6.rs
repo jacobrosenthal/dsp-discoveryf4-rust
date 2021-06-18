@@ -31,10 +31,7 @@ where
     I: Iterator<Item = f32> + core::clone::Clone + std::fmt::Debug,
 {
     println!("{:?}: ", name);
-    let display = input
-        .enumerate()
-        .map(|(n, y)| (n as f32, y))
-        .collect::<Vec<(f32, f32)>>();
+    let display: Vec<(f32, f32)> = input.enumerate().map(|(n, y)| (n as f32, y)).collect();
     Chart::new(120, 60, 0.0, N as f32)
         .lineplot(&Shape::Points(&display))
         .display();

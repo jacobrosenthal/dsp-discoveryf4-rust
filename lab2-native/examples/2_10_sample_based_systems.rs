@@ -166,11 +166,11 @@ fn main() {
 // external data so not useful without lots of code duplication.
 fn display(name: &str, input: &[f32]) {
     println!("{:?}: {:.4?}", name, &input);
-    let display = input
+    let display: Vec<(f32, f32)> = input
         .iter()
         .enumerate()
         .map(|(n, y)| (n as f32, *y))
-        .collect::<Vec<(f32, f32)>>();
+        .collect();
     Chart::new(120, 60, 0.0, input.len() as f32)
         .lineplot(&Shape::Points(&display))
         .display();

@@ -56,14 +56,12 @@ fn main() -> ! {
     let s = s1.zip(s2).map(|(ess1, ess2)| ess1 + ess2);
 
     // map it to real, leave im blank well fill in with dft
-    let dtfsecoef = s
-        .map(|f| Complex32 { re: f, im: 0.0 })
-        .collect::<heapless::Vec<Complex32, N>>();
+    let dtfsecoef: heapless::Vec<Complex32, N> = s.map(|f| Complex32 { re: f, im: 0.0 }).collect();
 
     let mut mag = [0f32; N];
 
     let time: ClockDuration = dwt.measure(|| unsafe {
-        let dft = dft(dtfsecoef.into_iter()).collect::<heapless::Vec<Complex32, N>>();
+        let dft: heapless::Vec<Complex32, N> = dft(dtfsecoef.into_iter()).collect();
 
         // Magnitude calculation
         // a union of two f32 are just two f32 side by side in memory? so this

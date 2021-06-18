@@ -25,12 +25,12 @@ const W1: f32 = 0.0;
 const W2: f32 = core::f32::consts::PI;
 
 fn main() {
-    let chirp = (0..N)
+    let chirp: heapless::Vec<f32, N> = (0..N)
         .map(|n| {
             let n = n as f32;
             (W1 * n + (W2 - W1) * n * n / (2.0 * (N as f32 - 1.0))).cos()
         })
-        .collect::<heapless::Vec<f32, N>>();
+        .collect();
 
     let hamming = (0..WINDOW).map(|m| 0.54 - 0.46 * (2.0 * PI * m as f32 / WINDOW as f32).cos());
     display("hamming", hamming.clone());
@@ -41,24 +41,25 @@ fn main() {
         inc: WINDOW / 2,
     };
 
-    let xst = overlapping_chirp_windows
+    let xst: heapless::Vec<_, NDIV2> = overlapping_chirp_windows
         .map(|chirp_win| {
-            let mut dtfsecoef = hamming
+            let mut dtfsecoef: heapless::Vec<Complex32, WINDOW> = hamming
                 .clone()
                 .zip(chirp_win.iter().rev())
                 .map(|(v, x)| Complex32 { re: v * x, im: 0.0 })
-                .collect::<heapless::Vec<Complex32, WINDOW>>();
+                .collect();
 
             // todo pick the right size based on WINDOW
             let _ = cfft(&mut dtfsecoef);
 
             // Magnitude calculation
-            dtfsecoef
+            let mag: heapless::Vec<_, WINDOW> = dtfsecoef
                 .iter()
                 .map(|complex| (complex.re * complex.re + complex.im * complex.im).sqrt())
-                .collect::<heapless::Vec<f32, WINDOW>>()
+                .collect();
+            mag
         })
-        .collect::<heapless::Vec<heapless::Vec<_, WINDOW>, NDIV2>>();
+        .collect();
 
     // // the answer key data for M=16
     // let z: Vec<Vec<f32>> = Windows {
@@ -146,10 +147,7 @@ where
     I: Iterator<Item = f32> + core::clone::Clone + std::fmt::Debug,
 {
     println!("{:?}: {:.4?}", name, input.clone().format(", "));
-    let display = input
-        .enumerate()
-        .map(|(n, y)| (n as f32, y))
-        .collect::<Vec<(f32, f32)>>();
+    let display: Vec<(f32, f32)> = input.enumerate().map(|(n, y)| (n as f32, y)).collect();
     Chart::new(120, 60, 0.0, WINDOW as f32)
         .lineplot(&Shape::Lines(&display))
         .display();

@@ -43,12 +43,12 @@ fn main() -> ! {
     let mut adc = Adc::adc1(dp.ADC1, true, AdcConfig::default());
 
     // doing blocking reads instead of interrupt driven
-    let x = (0..N)
+    let x: heapless::Vec<u16, N> = (0..N)
         .map(|_| {
             delay.delay_us(62u16); //0.0000625 s is  62.5us? 16.khz()
             adc.convert(&pa1, SampleTime::Cycles_84)
         })
-        .collect::<heapless::Vec<u16, N>>();
+        .collect();
 
     rprintln!("x: {:?}", x);
 

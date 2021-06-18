@@ -26,20 +26,18 @@ fn main() {
     let s2 = (0..N).map(|val| (W2 * val as f32).sin());
     let s = s1.zip(s2).map(|(ess1, ess2)| ess1 + ess2);
 
-    let mut s_complex = s
-        .clone()
-        .map(|f| Complex32 { re: f, im: 0.0 })
-        .collect::<heapless::Vec<Complex32, N>>();
+    let mut s_complex: heapless::Vec<Complex32, N> =
+        s.clone().map(|f| Complex32 { re: f, im: 0.0 }).collect();
 
     // Complex impulse response of filter
-    let mut df_complex = H
+    let mut df_complex: heapless::Vec<Complex32, N> = H
         .iter()
         .cloned()
         .map(|f| Complex32 { re: f, im: 0.0 })
         .chain(core::iter::repeat(Complex32 { re: 0.0, im: 0.0 }))
         //fill rest with zeros up to N
         .take(N)
-        .collect::<heapless::Vec<Complex32, N>>();
+        .collect();
 
     // Finding the FFT of the filter
     let _ = cfft(&mut df_complex);
@@ -63,11 +61,11 @@ fn main() {
     // opposite sign in the exponent and a 1/N factor, any FFT algorithm can
     // easily be adapted for it.
     // just dtfse approx instead for now
-    let y_freq = dtfse(y_complex.clone(), 15).collect::<heapless::Vec<f32, N>>();
+    let y_freq: heapless::Vec<f32, N> = dtfse(y_complex.clone(), 15).collect();
     display("freq", y_freq.iter().cloned());
 
     //y_time via convolution_sum developed in 2.14 to compare
-    let y_time = convolution_sum(s).collect::<heapless::Vec<f32, N>>();
+    let y_time: heapless::Vec<f32, N> = convolution_sum(s).collect();
     display("time", y_time.iter().cloned());
 }
 
@@ -127,10 +125,7 @@ where
     I: Iterator<Item = f32> + core::clone::Clone + std::fmt::Debug,
 {
     println!("{:?}:", name);
-    let display = input
-        .enumerate()
-        .map(|(n, y)| (n as f32, y))
-        .collect::<Vec<(f32, f32)>>();
+    let display: Vec<(f32, f32)> = input.enumerate().map(|(n, y)| (n as f32, y)).collect();
     Chart::new(120, 60, 0.0, N as f32)
         .lineplot(&Shape::Lines(&display))
         .display();

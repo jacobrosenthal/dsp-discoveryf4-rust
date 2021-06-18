@@ -65,7 +65,7 @@ fn main() -> ! {
     lis3dsh.init(&mut delay).unwrap();
 
     // dont love the idea of delaying in an iterator ...
-    let mut dtfsecoef = (0..N)
+    let mut dtfsecoef: heapless::Vec<Complex32, N> = (0..N)
         .map(|_| {
             while !lis3dsh.is_data_ready().unwrap() {}
             let dat = lis3dsh.accel_raw().unwrap();
@@ -75,15 +75,15 @@ fn main() -> ! {
                 im: 0.0,
             }
         })
-        .collect::<heapless::Vec<Complex32, N>>();
+        .collect();
 
     let _ = cfft(&mut dtfsecoef);
 
     // Magnitude calculation
-    let mag = dtfsecoef
+    let mag: heapless::Vec<f32, N> = dtfsecoef
         .iter()
         .map(|complex| (complex.re * complex.re + complex.im * complex.im).sqrt())
-        .collect::<heapless::Vec<f32, N>>();
+        .collect();
 
     rprintln!("mag: {:?}", mag);
 

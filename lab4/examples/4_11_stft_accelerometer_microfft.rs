@@ -71,13 +71,13 @@ fn main() -> ! {
     rprintln!("reading accel");
 
     // dont love the idea of delaying in an iterator ...
-    let accel = (0..N)
+    let accel: heapless::Vec<f32, N> = (0..N)
         .map(|_| {
             while !lis3dsh.is_data_ready().unwrap() {}
             let dat = lis3dsh.accel_raw().unwrap();
             dat[0] as f32
         })
-        .collect::<heapless::Vec<f32, N>>();
+        .collect();
 
     rprintln!("computing");
 
@@ -91,24 +91,25 @@ fn main() -> ! {
         inc: WINDOW / 2,
     };
 
-    let xst = overlapping_chirp_windows
+    let xst: heapless::Vec<_, NDIV2> = overlapping_chirp_windows
         .map(|chirp_win| {
-            let mut dtfsecoef = hamming
+            let mut dtfsecoef: heapless::Vec<Complex32, WINDOW> = hamming
                 .clone()
                 .zip(chirp_win.iter().rev())
                 .map(|(v, x)| Complex32 { re: v * x, im: 0.0 })
-                .collect::<heapless::Vec<Complex32, WINDOW>>();
+                .collect();
 
             // todo pick the right size based on WINDOW
             let _ = cfft(&mut dtfsecoef);
 
             // Magnitude calculation
-            dtfsecoef
+            let mag: heapless::Vec<_, WINDOW> = dtfsecoef
                 .iter()
                 .map(|complex| (complex.re * complex.re + complex.im * complex.im).sqrt())
-                .collect::<heapless::Vec<f32, WINDOW>>()
+                .collect();
+            mag
         })
-        .collect::<heapless::Vec<heapless::Vec<_, WINDOW>, NDIV2>>();
+        .collect();
 
     rprintln!("xst: {:?}", xst);
 

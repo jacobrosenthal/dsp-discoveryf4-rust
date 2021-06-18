@@ -25,9 +25,8 @@ fn main() {
     display("square", square.clone());
 
     //map it to real, leave im blank well fill in with cfft
-    let mut dtfsecoef = square
-        .map(|f| Complex32 { re: f, im: 0.0 })
-        .collect::<heapless::Vec<Complex32, N>>();
+    let mut dtfsecoef: heapless::Vec<Complex32, N> =
+        square.map(|f| Complex32 { re: f, im: 0.0 }).collect();
 
     // Coefficient calculation with CFFT function
     // arm_cfft_f32 uses a forward transform with enables bit reversal of output
@@ -37,15 +36,15 @@ fn main() {
     println!("dtfsecoef: {:?}", &dtfsecoef);
 
     //dtfse to reclaim our original signal, note this is a bad approximation for our square wave
-    let y_real = dtfse(dtfsecoef.iter().cloned(), 1).collect::<heapless::Vec<f32, N>>();
+    let y_real: heapless::Vec<f32, N> = dtfse(dtfsecoef.iter().cloned(), 1).collect();
     display("y_real 1", y_real.iter().cloned());
 
     //a bit better
-    let y_real = dtfse(dtfsecoef.iter().cloned(), 5).collect::<heapless::Vec<f32, N>>();
+    let y_real: heapless::Vec<f32, N> = dtfse(dtfsecoef.iter().cloned(), 5).collect();
     display("y_real 5", y_real.iter().cloned());
 
     //good
-    let y_real = dtfse(dtfsecoef.iter().cloned(), 15).collect::<heapless::Vec<f32, N>>();
+    let y_real: heapless::Vec<f32, N> = dtfse(dtfsecoef.iter().cloned(), 15).collect();
     display("y_real 15", y_real.iter().cloned());
 }
 
@@ -77,10 +76,7 @@ where
     I: Iterator<Item = f32> + core::clone::Clone + std::fmt::Debug,
 {
     println!("{:?}: {:.4?}", name, input.clone().format(", "));
-    let display = input
-        .enumerate()
-        .map(|(idx, y)| (idx as f32, y))
-        .collect::<Vec<(f32, f32)>>();
+    let display: Vec<(f32, f32)> = input.enumerate().map(|(idx, y)| (idx as f32, y)).collect();
     Chart::new(120, 60, 0.0, N as f32)
         .lineplot(&Shape::Points(&display))
         .display();

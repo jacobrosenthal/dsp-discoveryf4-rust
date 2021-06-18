@@ -46,9 +46,8 @@ fn main() -> ! {
     let square = (0..N).map(|n| if n < N / 2 { 1.0 } else { 0.0 });
 
     // map it to real, leave im blank well fill in with cfft
-    let mut dtfsecoef = square
-        .map(|f| Complex32 { re: f, im: 0.0 })
-        .collect::<heapless::Vec<Complex32, N>>();
+    let mut dtfsecoef: heapless::Vec<Complex32, N> =
+        square.map(|f| Complex32 { re: f, im: 0.0 }).collect();
 
     // Coefficient calculation with CFFT function
     // arm_cfft_f32 uses a forward transform with enables bit reversal of output
@@ -56,7 +55,7 @@ fn main() -> ! {
     let _ = cfft(&mut dtfsecoef);
 
     let time: ClockDuration = dwt.measure(|| {
-        let _y_real = dtfse(dtfsecoef.iter().cloned(), 15).collect::<heapless::Vec<f32, N>>();
+        let _y_real: heapless::Vec<_, N> = dtfse(dtfsecoef.iter().cloned(), 15).collect();
     });
     rprintln!("ticks: {:?}", time.as_ticks());
 

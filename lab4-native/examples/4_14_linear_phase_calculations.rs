@@ -19,19 +19,19 @@ use microfft::complex::cfft_64 as cfft;
 
 fn main() {
     // Complex impulse response of filter
-    let mut dtfsecoef = H
+    let mut dtfsecoef: heapless::Vec<Complex32, N> = H
         .iter()
         .cloned()
         .map(|h| Complex32 { re: h, im: 0.0 })
-        .collect::<heapless::Vec<Complex32, N>>();
+        .collect();
 
     let _ = cfft(&mut dtfsecoef);
 
     // Magnitude calculation
-    let mag = dtfsecoef
+    let mag: heapless::Vec<f32, N> = dtfsecoef
         .iter()
         .map(|complex| (complex.re * complex.re + complex.im * complex.im).sqrt())
-        .collect::<heapless::Vec<f32, N>>();
+        .collect();
     display("mag", mag.iter().cloned());
 
     let phase = dtfsecoef
@@ -57,10 +57,7 @@ where
     I: Iterator<Item = f32> + core::clone::Clone + std::fmt::Debug,
 {
     println!("{:?}: {:.4?}", name, input.clone().format(", "));
-    let display = input
-        .enumerate()
-        .map(|(n, y)| (n as f32, y))
-        .collect::<Vec<(f32, f32)>>();
+    let display: Vec<(f32, f32)> = input.enumerate().map(|(n, y)| (n as f32, y)).collect();
     Chart::new(120, 60, 0.0, N as f32)
         .lineplot(&Shape::Lines(&display))
         .display();

@@ -24,7 +24,7 @@ const TRIANGLE_PERIOD: usize = 16;
 
 fn main() {
     // Collecting to turn the Cycle into a clean iterator for our naive display fn
-    let triangle = (0..TRIANGLE_PERIOD)
+    let triangle: heapless::Vec<f32, N> = (0..TRIANGLE_PERIOD)
         .map(|n| {
             let period = TRIANGLE_PERIOD as f32;
 
@@ -37,15 +37,15 @@ fn main() {
         })
         .cycle()
         .take(N)
-        .collect::<heapless::Vec<f32, N>>();
+        .collect();
     display("triangle signal", triangle.iter().cloned());
 
     //map it to real, leave im blank well fill in with cfft
-    let mut dtfsecoef = triangle
+    let mut dtfsecoef: heapless::Vec<Complex32, N> = triangle
         .iter()
         .cloned()
         .map(|f| Complex32 { re: f, im: 0.0 })
-        .collect::<heapless::Vec<Complex32, N>>();
+        .collect();
 
     // Coefficient calculation with CFFT function
     // arm_cfft_f32 uses a forward transform with enables bit reversal of output
@@ -54,19 +54,19 @@ fn main() {
     println!("dtfsecoef: {:?}", &dtfsecoef);
 
     //dtfse to reclaim our original signal, note this is a bad approximation for our square wave
-    let y_real = dtfse(dtfsecoef.iter().cloned(), 2).collect::<heapless::Vec<f32, N>>();
+    let y_real: heapless::Vec<f32, N> = dtfse(dtfsecoef.iter().cloned(), 2).collect();
     display("y_real 2", y_real.iter().cloned());
 
     //a bit better
-    let y_real = dtfse(dtfsecoef.iter().cloned(), 5).collect::<heapless::Vec<f32, N>>();
+    let y_real: heapless::Vec<f32, N> = dtfse(dtfsecoef.iter().cloned(), 5).collect();
     display("y_real 5", y_real.iter().cloned());
 
     //good
-    let y_real = dtfse(dtfsecoef.iter().cloned(), 8).collect::<heapless::Vec<f32, N>>();
+    let y_real: heapless::Vec<f32, N> = dtfse(dtfsecoef.iter().cloned(), 8).collect();
     display("y_real 8", y_real.iter().cloned());
 
     //good
-    let y_real = dtfse(dtfsecoef.iter().cloned(), 15).collect::<heapless::Vec<f32, N>>();
+    let y_real: heapless::Vec<f32, N> = dtfse(dtfsecoef.iter().cloned(), 15).collect();
     display("y_real 15", y_real.iter().cloned());
 }
 
@@ -98,10 +98,7 @@ where
     I: Iterator<Item = f32> + core::clone::Clone + std::fmt::Debug,
 {
     println!("{:?}: {:.4?}", name, input.clone().format(", "));
-    let display = input
-        .enumerate()
-        .map(|(idx, y)| (idx as f32, y))
-        .collect::<Vec<(f32, f32)>>();
+    let display: Vec<(f32, f32)> = input.enumerate().map(|(idx, y)| (idx as f32, y)).collect();
     Chart::new(120, 60, 0.0, N as f32)
         .lineplot(&Shape::Points(&display))
         .display();
