@@ -65,8 +65,8 @@ fn main() -> ! {
         rprintln!("{:?}", dat);
 
         //not entirely sure this represents the example exactly..
-        if dat[2] > 900 {
-            if dat[0] < 100 && dat[0] > -100 && dat[1] < 100 && dat[1] > -100 {
+        if dat.z > 900 {
+            if dat.x < 100 && dat.x > -100 && dat.y < 100 && dat.y > -100 {
                 top.set_high().ok();
                 left.set_high().ok();
                 right.set_high().ok();

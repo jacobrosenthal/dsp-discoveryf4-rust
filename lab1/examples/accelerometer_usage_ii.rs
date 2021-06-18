@@ -58,7 +58,7 @@ fn main() -> ! {
 
     let buffer = (0..N).map(|_i| {
         while !lis3dsh.is_data_ready().unwrap() {}
-        lis3dsh.accel_raw().unwrap()[0]
+        lis3dsh.accel_raw().unwrap().x
     });
 
     rprintln!("{:?}", buffer);
