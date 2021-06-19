@@ -62,12 +62,27 @@ fn main() -> ! {
         .take(N)
         .collect();
 
-    // Finding the FFT of the filter
-    let _ = cfft(&mut df_complex);
+    // SAFETY microfft now only accepts arrays instead of slices to avoid runtime errors
+    // Thats not great for us. However we can cheat since our slice into an array because
+    // "The layout of a slice [T] of length N is the same as that of a [T; N] array."
+    // https://rust-lang.github.io/unsafe-code-guidelines/layout/arrays-and-slices.html
+    // this goes away when something like heapless vec is in standard library
+    // https://github.com/rust-lang/rfcs/pull/2990
+    unsafe {
+        let ptr = &mut *(df_complex.as_mut_ptr() as *mut [Complex32; N]);
+
+        // Finding the FFT of the filter
+        let _ = cfft(ptr);
+    }
 
     let time: ClockDuration = dwt.measure(|| {
-        // Finding the FFT of the input signal
-        let _ = cfft(&mut s_complex);
+        // SAFETY same as above
+        unsafe {
+            let ptr = &mut *(s_complex.as_mut_ptr() as *mut [Complex32; N]);
+
+            // Finding the FFT of the input signal
+            let _ = cfft(ptr);
+        }
 
         // Filtering in the frequency domain
         let y_complex = s_complex

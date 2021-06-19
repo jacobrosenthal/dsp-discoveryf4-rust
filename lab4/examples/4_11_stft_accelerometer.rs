@@ -26,9 +26,10 @@ use micromath::F32Ext;
 use rtt_target::{rprintln, rtt_init_print};
 
 use cmsis_dsp_sys::arm_cfft_sR_f32_len16 as arm_cfft_sR_f32;
-const N: usize = 1024;
 const WINDOW: usize = 16;
 const WINDOWCOMPLEX: usize = WINDOW * 2;
+
+const N: usize = 1024;
 
 #[cortex_m_rt::entry]
 fn main() -> ! {

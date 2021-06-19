@@ -9,7 +9,7 @@ edition = "2018"
 textplots = "0.6.0"
 heapless = { version = "0.7.0" }
 itertools = { version = "0.10.0", default-features = false }
-microfft = "0.3.1"
+microfft = "0.4.0"
 image = "0.23.5"
 smart-leds = "0.3.0"
 plotly = "0.6.0"

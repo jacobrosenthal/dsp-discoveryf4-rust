@@ -16,10 +16,11 @@ use microfft::Complex32;
 use plotly::HeatMap;
 use textplots::{Chart, Plot, Shape};
 
+use microfft::complex::cfft_16 as cfft;
+const WINDOW: usize = 16;
+
 const N: usize = 1024;
 const NDIV2: usize = N / 2;
-const WINDOW: usize = 16;
-use microfft::complex::cfft_16 as cfft;
 
 const W1: f32 = 0.0;
 const W2: f32 = core::f32::consts::PI;
@@ -49,8 +50,20 @@ fn main() {
                 .map(|(v, x)| Complex32 { re: v * x, im: 0.0 })
                 .collect();
 
-            // todo pick the right size based on WINDOW
-            let _ = cfft(&mut dtfsecoef);
+            // SAFETY microfft now only accepts arrays instead of slices to avoid runtime errors
+            // Thats not great for us. However we can cheat since our slice into an array because
+            // "The layout of a slice [T] of length N is the same as that of a [T; N] array."
+            // https://rust-lang.github.io/unsafe-code-guidelines/layout/arrays-and-slices.html
+            // this goes away when something like heapless vec is in standard library
+            // https://github.com/rust-lang/rfcs/pull/2990
+            unsafe {
+                let ptr = &mut *(dtfsecoef.as_mut_ptr() as *mut [Complex32; WINDOW]);
+
+                // Coefficient calculation with CFFT function
+                // well use microfft uses an in place Radix-2 FFT
+                // it re-returns our array in case we were going to chain calls, throw it away
+                let _ = cfft(ptr);
+            }
 
             // Magnitude calculation
             let mag: heapless::Vec<_, WINDOW> = dtfsecoef

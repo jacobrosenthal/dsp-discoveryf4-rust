@@ -16,8 +16,8 @@ use itertools::Itertools;
 use microfft::Complex32;
 use textplots::{Chart, Plot, Shape};
 
-const N: usize = 16;
 use microfft::complex::cfft_16 as cfft;
+const N: usize = 16;
 
 fn main() {
     //square signal
@@ -28,10 +28,20 @@ fn main() {
     let mut dtfsecoef: heapless::Vec<Complex32, N> =
         square.map(|f| Complex32 { re: f, im: 0.0 }).collect();
 
-    // Coefficient calculation with CFFT function
-    // arm_cfft_f32 uses a forward transform with enables bit reversal of output
-    // well use microfft uses an in place Radix-2 FFT, for some reasons returns itself we dont need
-    let _ = cfft(&mut dtfsecoef);
+    // SAFETY microfft now only accepts arrays instead of slices to avoid runtime errors
+    // Thats not great for us. However we can cheat since our slice into an array because
+    // "The layout of a slice [T] of length N is the same as that of a [T; N] array."
+    // https://rust-lang.github.io/unsafe-code-guidelines/layout/arrays-and-slices.html
+    // this goes away when something like heapless vec is in standard library
+    // https://github.com/rust-lang/rfcs/pull/2990
+    unsafe {
+        let ptr = &mut *(dtfsecoef.as_mut_ptr() as *mut [Complex32; N]);
+
+        // Coefficient calculation with CFFT function
+        // well use microfft uses an in place Radix-2 FFT
+        // it re-returns our array in case we were going to chain calls, throw it away
+        let _ = cfft(ptr);
+    }
 
     println!("dtfsecoef: {:?}", &dtfsecoef);
 

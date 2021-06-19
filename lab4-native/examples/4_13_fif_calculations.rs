@@ -14,8 +14,8 @@ use core::f32::consts::PI;
 use microfft::Complex32;
 use textplots::{Chart, Plot, Shape};
 
-const N: usize = 512;
 use microfft::complex::cfft_512 as cfft;
+const N: usize = 512;
 
 const W1: f32 = core::f32::consts::PI / 128.0;
 const W2: f32 = core::f32::consts::PI / 4.0;
@@ -39,11 +39,26 @@ fn main() {
         .take(N)
         .collect();
 
-    // Finding the FFT of the filter
-    let _ = cfft(&mut df_complex);
+    // SAFETY microfft now only accepts arrays instead of slices to avoid runtime errors
+    // Thats not great for us. However we can cheat since our slice into an array because
+    // "The layout of a slice [T] of length N is the same as that of a [T; N] array."
+    // https://rust-lang.github.io/unsafe-code-guidelines/layout/arrays-and-slices.html
+    // this goes away when something like heapless vec is in standard library
+    // https://github.com/rust-lang/rfcs/pull/2990
+    unsafe {
+        let ptr = &mut *(df_complex.as_mut_ptr() as *mut [Complex32; N]);
 
-    // Finding the FFT of the input signal
-    let _ = cfft(&mut s_complex);
+        // Finding the FFT of the filter
+        let _ = cfft(ptr);
+    }
+
+    // SAFETY same as above
+    unsafe {
+        let ptr = &mut *(s_complex.as_mut_ptr() as *mut [Complex32; N]);
+
+        // Finding the FFT of the input signal
+        let _ = cfft(ptr);
+    }
 
     // Filtering in the frequency domain
     let y_complex = s_complex

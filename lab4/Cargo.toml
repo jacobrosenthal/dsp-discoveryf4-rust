@@ -14,9 +14,9 @@ panic_break = { path = "../panic_break" }
 panic-halt = "0.2.0"
 rtt-target = { version = "0.3.1", features = ["cortex-m"] }
 micromath = "2.0.0"
-microfft = "0.3.1"
+microfft = "0.4.0"
 itertools = { version = "0.10.0", default-features = false }
-heapless = { version = "0.7.0" }
+heapless = { version = "0.7.1" }
 lis3dsh = { git = "https://github.com/jacobrosenthal/lis3dsh-rs", branch = "bdu" }
 cty = "0.2.1"
 cmsis-dsp-sys = "0.3.1"
