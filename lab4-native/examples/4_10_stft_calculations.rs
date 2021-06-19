@@ -11,10 +11,9 @@
 //! `cargo run --example 4_10_stft_calculations`
 
 use core::f32::consts::PI;
-use itertools::Itertools;
+use lab4::display;
 use microfft::Complex32;
 use plotly::HeatMap;
-use textplots::{Chart, Plot, Shape};
 
 use microfft::complex::cfft_16 as cfft;
 const WINDOW: usize = 16;
@@ -149,21 +148,6 @@ fn clean(zzzz: Vec<Vec<f32>>) -> Vec<Vec<f32>> {
     // z.drain(0..1);
 
     z
-}
-
-// Points isn't a great representation as you can lose the line in the graph,
-// however while Lines occasionally looks good it also can be terrible.
-// Continuous requires to be in a fn pointer closure which cant capture any
-// external data so not useful without lots of code duplication.
-fn display<I>(name: &str, input: I)
-where
-    I: Iterator<Item = f32> + core::clone::Clone + std::fmt::Debug,
-{
-    println!("{:?}: {:.4?}", name, input.clone().format(", "));
-    let display: Vec<(f32, f32)> = input.enumerate().map(|(n, y)| (n as f32, y)).collect();
-    Chart::new(120, 60, 0.0, WINDOW as f32)
-        .lineplot(&Shape::Lines(&display))
-        .display();
 }
 
 /// copied from std::slice::Window but expose the increment amount instead of using 1

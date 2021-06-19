@@ -6,11 +6,9 @@
 //!
 //! `cargo run --example 2_9`
 
-use itertools::Itertools;
-use textplots::{Chart, Plot, Shape};
+use lab2::display;
 
 const N: usize = 100;
-
 const SAW_AMPLITUDE: f32 = 0.75;
 const SAW_PERIOD: usize = 20;
 
@@ -23,19 +21,4 @@ fn main() {
         .collect();
 
     display("sawtooth signal", sawtooth.iter().cloned());
-}
-
-// Points isn't a great representation as you can lose the line in the graph,
-// however while Lines occasionally looks good it also can be terrible.
-// Continuous requires to be in a fn pointer closure which cant capture any
-// external data so not useful without lots of code duplication.
-fn display<I>(name: &str, input: I)
-where
-    I: Iterator<Item = f32> + core::clone::Clone + std::fmt::Debug,
-{
-    println!("{:?}: {:.4?}", name, input.clone().format(", "));
-    let display: Vec<(f32, f32)> = input.enumerate().map(|(n, y)| (n as f32, y)).collect();
-    Chart::new(120, 60, 0.0, N as f32)
-        .lineplot(&Shape::Lines(&display))
-        .display();
 }
