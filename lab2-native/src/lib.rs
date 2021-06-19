@@ -1,7 +1,13 @@
 use itertools::Itertools;
-use textplots::{Chart, Plot, Shape};
+use textplots::{Chart, Plot};
 
-pub fn display<I>(name: &str, input: I)
+#[non_exhaustive]
+pub enum Shape {
+    Line,
+    Points,
+}
+
+pub fn display<I>(name: &str, shape: Shape, input: I)
 where
     I: IntoIterator,
     <I as IntoIterator>::IntoIter: Clone,
@@ -15,10 +21,18 @@ where
         .collect();
     println!("{:?}: {:.4?}", name, i.format(", "));
 
+    let data = match shape {
+        Shape::Line => textplots::Shape::Lines(&display),
+        Shape::Points => textplots::Shape::Points(&display),
+    };
+
+    let n = display.len();
+    let width = 256;
+
     // Continuous requires to be in a fn pointer closure which cant capture any
     // external data so not useful without lots of code duplication.
     // Lines occasionally looks good.. but mostly bad
-    Chart::new(120, 60, 0.0, display.len() as f32)
-        .lineplot(&Shape::Points(&display))
+    Chart::new(width as u32, 60, 0.0, n as f32)
+        .lineplot(&data)
         .display();
 }

@@ -8,7 +8,7 @@
 //!
 //! `cargo run --example 2_8`
 
-use lab2::display;
+use lab2::{display, Shape};
 
 const N: usize = 100;
 const SQUARE_AMPLITUDE: f32 = 2.4;
@@ -29,7 +29,7 @@ fn main() {
         .cycle()
         .take(N)
         .collect();
-    display("square signal", square.iter().cloned());
+    display("square signal", Shape::Line, square.iter().cloned());
 
     // Collecting to turn the Cycle into a clean iterator for our naive display fn
     let triangle: heapless::Vec<f32, N> = (0..TRIANGLE_PERIOD)
@@ -47,5 +47,5 @@ fn main() {
         .take(N)
         .collect();
 
-    display("triangle signal", triangle.iter().cloned());
+    display("triangle signal", Shape::Line, triangle.iter().cloned());
 }

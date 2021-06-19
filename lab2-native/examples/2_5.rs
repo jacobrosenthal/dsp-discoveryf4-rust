@@ -10,7 +10,7 @@
 //!
 //! `cargo run --example 2_5`
 
-use lab2::display;
+use lab2::{display, Shape};
 
 const N: usize = 10;
 const A: f32 = 0.8;
@@ -38,30 +38,30 @@ fn main() {
         .take(4)
         .chain(unit_ramp)
         .map(|dr| dr * 0.6);
-    display("x1", x1);
+    display("x1", Shape::Line, x1);
 
     // x2[n] = u[n-3]-u[n-8]
     let d3u = Delay::new(unit_step.clone(), 3);
     let d8u = Delay::new(unit_step.clone(), 8);
     let x2 = d3u.clone().zip(d8u.clone()).map(|(d3u, d8u)| d3u - d8u);
-    display("x2", x2.clone());
+    display("x2", Shape::Line, x2.clone());
 
     // x3[n] = u[n]-u[n-3]+u[n-8]
     let x3 = unit_step
         .zip(d3u)
         .zip(d8u)
         .map(|((u, d3u), d8u)| u - d3u + d8u);
-    display("x3", x3);
+    display("x3", Shape::Line, x3);
 
     // x4[n] = x2[n]s[n]+d[n]
     let x4 = x2
         .zip(sinusoidal.clone().zip(unit_pulse))
         .map(|(x2, (s, d))| x2 * s + d);
-    display("x4", x4);
+    display("x4", Shape::Line, x4);
 
     // x5[n] = -2.4e[n]s[n]
     let x5 = exponential.zip(sinusoidal).map(|(e, s)| -2.4 * e * s);
-    display("x5", x5);
+    display("x5", Shape::Line, x5);
 }
 
 #[derive(Clone, Debug)]

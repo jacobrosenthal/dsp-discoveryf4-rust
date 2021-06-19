@@ -12,7 +12,7 @@
 //! `cargo run --example 4_9`
 
 use core::f32::consts::PI;
-use lab4::display;
+use lab4::{display, Shape};
 use microfft::Complex32;
 
 use microfft::complex::cfft_16 as cfft;
@@ -37,7 +37,7 @@ fn main() {
         .cycle()
         .take(N)
         .collect();
-    display("triangle signal", triangle.iter().cloned());
+    display("triangle signal", Shape::Line, triangle.iter().cloned());
 
     //map it to real, leave im blank well fill in with cfft
     let mut dtfsecoef: heapless::Vec<Complex32, N> = triangle
@@ -64,19 +64,19 @@ fn main() {
 
     //dtfse to reclaim our original signal, note this is a bad approximation for our square wave
     let y_real: heapless::Vec<f32, N> = dtfse(dtfsecoef.iter().cloned(), 2).collect();
-    display("y_real 2", y_real.iter().cloned());
+    display("y_real 2", Shape::Line, y_real.iter().cloned());
 
     //a bit better
     let y_real: heapless::Vec<f32, N> = dtfse(dtfsecoef.iter().cloned(), 5).collect();
-    display("y_real 5", y_real.iter().cloned());
+    display("y_real 5", Shape::Line, y_real.iter().cloned());
 
     //good
     let y_real: heapless::Vec<f32, N> = dtfse(dtfsecoef.iter().cloned(), 8).collect();
-    display("y_real 8", y_real.iter().cloned());
+    display("y_real 8", Shape::Line, y_real.iter().cloned());
 
     //good
     let y_real: heapless::Vec<f32, N> = dtfse(dtfsecoef.iter().cloned(), 15).collect();
-    display("y_real 15", y_real.iter().cloned());
+    display("y_real 15", Shape::Line, y_real.iter().cloned());
 }
 
 fn dtfse<I: Iterator<Item = Complex32> + Clone>(

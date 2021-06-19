@@ -11,7 +11,7 @@
 //! `cargo run --example 4_10_stft_calculations`
 
 use core::f32::consts::PI;
-use lab4::display;
+use lab4::{display, Shape};
 use microfft::Complex32;
 use plotly::HeatMap;
 
@@ -33,7 +33,7 @@ fn main() {
         .collect();
 
     let hamming = (0..WINDOW).map(|m| 0.54 - 0.46 * (2.0 * PI * m as f32 / WINDOW as f32).cos());
-    display("hamming", hamming.clone());
+    display("hamming", Shape::Line, hamming.clone());
 
     let overlapping_chirp_windows = Windows {
         v: &chirp,

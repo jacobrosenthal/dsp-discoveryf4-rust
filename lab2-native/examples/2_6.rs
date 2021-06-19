@@ -8,7 +8,7 @@
 //! `cargo run --example 2_6`
 
 use core::f32::consts::{FRAC_PI_4, PI};
-use lab2::display;
+use lab2::{display, Shape};
 
 const N: usize = 512;
 
@@ -19,5 +19,5 @@ fn main() {
 
     let y = w0.zip(w1).map(|(inny1, inny2)| inny1 + inny2);
 
-    display("w1:", y);
+    display("w1:", Shape::Line, y);
 }

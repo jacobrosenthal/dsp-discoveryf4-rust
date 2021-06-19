@@ -10,7 +10,7 @@
 //! `cargo run --example 4_14_linear_phase_calculations`
 
 use core::f32::consts::PI;
-use lab4::display;
+use lab4::{display, Shape};
 use microfft::Complex32;
 
 use microfft::complex::cfft_64 as cfft;
@@ -44,7 +44,7 @@ fn main() {
         .iter()
         .map(|complex| (complex.re * complex.re + complex.im * complex.im).sqrt())
         .collect();
-    display("mag", mag.iter().cloned());
+    display("mag", Shape::Line, mag.iter().cloned());
 
     let phase = dtfsecoef
         .iter()
@@ -57,7 +57,7 @@ fn main() {
         .enumerate()
         .map(|(i, phase)| if i < 33 { phase } else { phase - PI });
 
-    display("phase", phase_graph.clone());
+    display("phase", Shape::Line, phase_graph.clone());
 }
 
 // linear_phase_FIR_coefficients

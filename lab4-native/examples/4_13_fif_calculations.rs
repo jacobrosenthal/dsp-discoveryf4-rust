@@ -11,7 +11,7 @@
 //! `cargo run --example 4_10_stft_calculations`
 
 use core::f32::consts::PI;
-use lab4::display;
+use lab4::{display, Shape};
 use microfft::Complex32;
 
 use microfft::complex::cfft_512 as cfft;
@@ -77,11 +77,11 @@ fn main() {
     // easily be adapted for it.
     // just dtfse approx instead for now
     let y_freq: heapless::Vec<f32, N> = dtfse(y_complex.clone(), 15).collect();
-    display("freq", y_freq.iter().cloned());
+    display("freq", Shape::Line, y_freq.iter().cloned());
 
     //y_time via convolution_sum developed in 2.14 to compare
     let y_time: heapless::Vec<f32, N> = convolution_sum(s).collect();
-    display("time", y_time.iter().cloned());
+    display("time", Shape::Line, y_time.iter().cloned());
 }
 
 static H: &[f32] = &[

@@ -12,7 +12,7 @@
 //! `cargo run --example 4_1_dft_calculations`
 
 use core::f32::consts::PI;
-use lab4::display;
+use lab4::{display, Shape};
 
 const N: usize = 256;
 
@@ -32,17 +32,17 @@ fn main() {
     let dft: heapless::Vec<Complex32, N> = dft(dtfsecoef).collect();
 
     let re: heapless::Vec<f32, N> = dft.iter().map(|complex| complex.re).collect();
-    display("re", re.iter().cloned());
+    display("re", Shape::Line, re.iter().cloned());
 
     let im: heapless::Vec<f32, N> = dft.iter().map(|complex| complex.im).collect();
-    display("im", im.iter().cloned());
+    display("im", Shape::Line, im.iter().cloned());
 
     //Magnitude calculation
     let mag: heapless::Vec<f32, N> = dft
         .iter()
         .map(|complex| (complex.re * complex.re + complex.im * complex.im).sqrt())
         .collect();
-    display("mag", mag.iter().cloned());
+    display("mag", Shape::Line, mag.iter().cloned());
 }
 
 fn dft<I: Iterator<Item = Complex32> + Clone>(input: I) -> impl Iterator<Item = Complex32> {

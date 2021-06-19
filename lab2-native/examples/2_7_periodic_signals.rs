@@ -8,7 +8,7 @@
 //!
 //! `cargo run --example 2_7_periodic_signals`
 
-use lab2::display;
+use lab2::{display, Shape};
 
 const N: usize = 100;
 const W1: f32 = core::f32::consts::PI / 10.0;
@@ -16,8 +16,8 @@ const W2: f32 = 3.0 / 10.0;
 
 fn main() {
     let sinusoidal1 = (0..N).map(|n| (W1 * (n as f32)).cos());
-    display("sinusoidal1", sinusoidal1);
+    display("sinusoidal1", Shape::Line, sinusoidal1);
 
     let sinusoidal2 = (0..N).map(|n| (W2 * (n as f32)).cos());
-    display("sinusoidal2", sinusoidal2);
+    display("sinusoidal2", Shape::Line, sinusoidal2);
 }

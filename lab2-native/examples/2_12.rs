@@ -8,7 +8,7 @@
 //! `cargo run --example 2_12`
 
 use itertools::Itertools;
-use lab2::display;
+use lab2::{display, Shape};
 
 const N: usize = 10;
 const A: f32 = 0.8;
@@ -22,19 +22,19 @@ fn main() {
 
     // y1[n]=x1[n]+x2[n], where x1[n]=r[n] and x2[n]=e[n]
     let y1 = unit_ramp.clone().zip(exponential).map(|(r, e)| r + e);
-    display("y1", y1.clone());
+    display("y1", Shape::Line, y1.clone());
 
     // y2[n]=x3[n], where x3[n]=r^2[n]
     let y2 = unit_ramp.clone().zip(unit_ramp).map(|(r, rr)| r * rr);
-    display("y2", y2.clone());
+    display("y2", Shape::Line, y2.clone());
 
     // y3[n]=2.2y1[n]-1.1y1[n-1]+.7y3[n-1]
     let y3 = DigitalSystem5::new(y1);
-    display("y3", y3);
+    display("y3", Shape::Line, y3);
 
     // y4[n]=2.2y2[n+1]-1.1y2[n]
     let y4 = y2.tuple_windows().map(|(y2, y2_1)| 2.2 * y2_1 - 1.1 * y2);
-    display("y4", y4);
+    display("y4", Shape::Line, y4);
 }
 
 // y3[n]=2.2y1[n]-1.1y1[n-1]+.7y3[n-1]

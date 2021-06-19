@@ -9,7 +9,7 @@
 //!
 //! `cargo run --example 4_15_linear_phase_calculations`
 
-use lab4::display;
+use lab4::{display, Shape};
 use microfft::Complex32;
 
 use microfft::complex::cfft_64 as cfft;
@@ -43,14 +43,14 @@ fn main() {
         .iter()
         .map(|complex| (complex.re * complex.re + complex.im * complex.im).sqrt())
         .collect();
-    display("mag", mag.iter().cloned());
+    display("mag", Shape::Line, mag.iter().cloned());
 
     let phase = dtfsecoef
         .iter()
         .cloned()
         .map(|complex| complex.re.atan2(complex.im));
 
-    display("phase", phase.clone());
+    display("phase", Shape::Line, phase.clone());
 }
 
 // FIR_lpf_coefficients for 4_15

@@ -6,7 +6,7 @@
 //!
 //! `cargo run --example 2_9`
 
-use lab2::display;
+use lab2::{display, Shape};
 
 const N: usize = 100;
 const SAW_AMPLITUDE: f32 = 0.75;
@@ -20,5 +20,5 @@ fn main() {
         .take(N)
         .collect();
 
-    display("sawtooth signal", sawtooth.iter().cloned());
+    display("sawtooth signal", Shape::Line, sawtooth.iter().cloned());
 }

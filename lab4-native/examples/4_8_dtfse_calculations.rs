@@ -12,7 +12,7 @@
 //! `cargo run --example 4_8_dtfse_calculations`
 
 use core::f32::consts::PI;
-use lab4::display;
+use lab4::{display, Shape};
 use microfft::Complex32;
 
 use microfft::complex::cfft_16 as cfft;
@@ -21,7 +21,7 @@ const N: usize = 16;
 fn main() {
     //square signal
     let square = (0..N).map(|idx| if idx < N / 2 { 1.0 } else { 0.0 });
-    display("square", square.clone());
+    display("square", Shape::Line, square.clone());
 
     //map it to real, leave im blank well fill in with cfft
     let mut dtfsecoef: heapless::Vec<Complex32, N> =
@@ -46,15 +46,15 @@ fn main() {
 
     //dtfse to reclaim our original signal, note this is a bad approximation for our square wave
     let y_real: heapless::Vec<f32, N> = dtfse(dtfsecoef.iter().cloned(), 1).collect();
-    display("y_real 1", y_real.iter().cloned());
+    display("y_real 1", Shape::Line, y_real.iter().cloned());
 
     //a bit better
     let y_real: heapless::Vec<f32, N> = dtfse(dtfsecoef.iter().cloned(), 5).collect();
-    display("y_real 5", y_real.iter().cloned());
+    display("y_real 5", Shape::Line, y_real.iter().cloned());
 
     //good
     let y_real: heapless::Vec<f32, N> = dtfse(dtfsecoef.iter().cloned(), 15).collect();
-    display("y_real 15", y_real.iter().cloned());
+    display("y_real 15", Shape::Line, y_real.iter().cloned());
 }
 
 fn dtfse<I: Iterator<Item = Complex32> + Clone>(
