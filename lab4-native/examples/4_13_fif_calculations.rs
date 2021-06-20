@@ -11,11 +11,11 @@
 //! `cargo run --example 4_10_stft_calculations`
 
 use core::f32::consts::PI;
+use lab4::{display, Shape};
 use microfft::Complex32;
-use textplots::{Chart, Plot, Shape};
 
-const N: usize = 512;
 use microfft::complex::cfft_512 as cfft;
+const N: usize = 512;
 
 const W1: f32 = core::f32::consts::PI / 128.0;
 const W2: f32 = core::f32::consts::PI / 4.0;
@@ -26,26 +26,39 @@ fn main() {
     let s2 = (0..N).map(|val| (W2 * val as f32).sin());
     let s = s1.zip(s2).map(|(ess1, ess2)| ess1 + ess2);
 
-    let mut s_complex = s
-        .clone()
-        .map(|f| Complex32 { re: f, im: 0.0 })
-        .collect::<heapless::Vec<Complex32, N>>();
+    let mut s_complex: heapless::Vec<Complex32, N> =
+        s.clone().map(|f| Complex32 { re: f, im: 0.0 }).collect();
 
     // Complex impulse response of filter
-    let mut df_complex = H
+    let mut df_complex: heapless::Vec<Complex32, N> = H
         .iter()
         .cloned()
         .map(|f| Complex32 { re: f, im: 0.0 })
         .chain(core::iter::repeat(Complex32 { re: 0.0, im: 0.0 }))
         //fill rest with zeros up to N
         .take(N)
-        .collect::<heapless::Vec<Complex32, N>>();
+        .collect();
 
-    // Finding the FFT of the filter
-    let _ = cfft(&mut df_complex);
+    // SAFETY microfft now only accepts arrays instead of slices to avoid runtime errors
+    // Thats not great for us. However we can cheat since our slice into an array because
+    // "The layout of a slice [T] of length N is the same as that of a [T; N] array."
+    // https://rust-lang.github.io/unsafe-code-guidelines/layout/arrays-and-slices.html
+    // this goes away when something like heapless vec is in standard library
+    // https://github.com/rust-lang/rfcs/pull/2990
+    unsafe {
+        let ptr = &mut *(df_complex.as_mut_ptr() as *mut [Complex32; N]);
 
-    // Finding the FFT of the input signal
-    let _ = cfft(&mut s_complex);
+        // Finding the FFT of the filter
+        let _ = cfft(ptr);
+    }
+
+    // SAFETY same as above
+    unsafe {
+        let ptr = &mut *(s_complex.as_mut_ptr() as *mut [Complex32; N]);
+
+        // Finding the FFT of the input signal
+        let _ = cfft(ptr);
+    }
 
     // Filtering in the frequency domain
     let y_complex = s_complex
@@ -63,12 +76,12 @@ fn main() {
     // opposite sign in the exponent and a 1/N factor, any FFT algorithm can
     // easily be adapted for it.
     // just dtfse approx instead for now
-    let y_freq = dtfse(y_complex.clone(), 15).collect::<heapless::Vec<f32, N>>();
-    display("freq", y_freq.iter().cloned());
+    let y_freq: heapless::Vec<f32, N> = dtfse(y_complex.clone(), 15).collect();
+    display("freq", Shape::Line, y_freq.iter().cloned());
 
     //y_time via convolution_sum developed in 2.14 to compare
-    let y_time = convolution_sum(s).collect::<heapless::Vec<f32, N>>();
-    display("time", y_time.iter().cloned());
+    let y_time: heapless::Vec<f32, N> = convolution_sum(s).collect();
+    display("time", Shape::Line, y_time.iter().cloned());
 }
 
 static H: &[f32] = &[
@@ -116,22 +129,4 @@ where
             .map(|(exx, h)| h * exx)
             .sum()
     })
-}
-
-// Points isn't a great representation as you can lose the line in the graph,
-// however while Lines occasionally looks good it also can be terrible.
-// Continuous requires to be in a fn pointer closure which cant capture any
-// external data so not useful without lots of code duplication.
-fn display<I>(name: &str, input: I)
-where
-    I: Iterator<Item = f32> + core::clone::Clone + std::fmt::Debug,
-{
-    println!("{:?}:", name);
-    let display = input
-        .enumerate()
-        .map(|(n, y)| (n as f32, y))
-        .collect::<Vec<(f32, f32)>>();
-    Chart::new(120, 60, 0.0, N as f32)
-        .lineplot(&Shape::Lines(&display))
-        .display();
 }

@@ -8,7 +8,7 @@
 //! `cargo run --example 2_6`
 
 use core::f32::consts::{FRAC_PI_4, PI};
-use textplots::{Chart, Plot, Shape};
+use lab2::{display, Shape};
 
 const N: usize = 512;
 
@@ -19,23 +19,5 @@ fn main() {
 
     let y = w0.zip(w1).map(|(inny1, inny2)| inny1 + inny2);
 
-    display("w1:", y);
-}
-
-// Points isn't a great representation as you can lose the line in the graph,
-// however while Lines occasionally looks good it also can be terrible.
-// Continuous requires to be in a fn pointer closure which cant capture any
-// external data so not useful without lots of code duplication.
-fn display<I>(name: &str, input: I)
-where
-    I: Iterator<Item = f32> + core::clone::Clone + std::fmt::Debug,
-{
-    println!("{:?}: ", name);
-    let display = input
-        .enumerate()
-        .map(|(n, y)| (n as f32, y))
-        .collect::<Vec<(f32, f32)>>();
-    Chart::new(120, 60, 0.0, N as f32)
-        .lineplot(&Shape::Points(&display))
-        .display();
+    display("w1:", Shape::Line, y);
 }

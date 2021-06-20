@@ -12,7 +12,7 @@
 //! `cargo run --example 4_1_dft_calculations`
 
 use core::f32::consts::PI;
-use textplots::{Chart, Plot, Shape};
+use lab4::{display, Shape};
 
 const N: usize = 256;
 
@@ -29,26 +29,20 @@ fn main() {
     // map it to real, leave im blank well fill in with dft
     let dtfsecoef = s.map(|f| Complex32 { re: f, im: 0.0 });
 
-    let dft = dft(dtfsecoef).collect::<heapless::Vec<Complex32, N>>();
+    let dft: heapless::Vec<Complex32, N> = dft(dtfsecoef).collect();
 
-    let re = dft
-        .iter()
-        .map(|complex| complex.re)
-        .collect::<heapless::Vec<f32, N>>();
-    display("re", re.iter().cloned());
+    let re: heapless::Vec<f32, N> = dft.iter().map(|complex| complex.re).collect();
+    display("re", Shape::Line, re.iter().cloned());
 
-    let im = dft
-        .iter()
-        .map(|complex| complex.im)
-        .collect::<heapless::Vec<f32, N>>();
-    display("im", im.iter().cloned());
+    let im: heapless::Vec<f32, N> = dft.iter().map(|complex| complex.im).collect();
+    display("im", Shape::Line, im.iter().cloned());
 
     //Magnitude calculation
-    let mag = dft
+    let mag: heapless::Vec<f32, N> = dft
         .iter()
         .map(|complex| (complex.re * complex.re + complex.im * complex.im).sqrt())
-        .collect::<heapless::Vec<f32, N>>();
-    display("mag", mag.iter().cloned());
+        .collect();
+    display("mag", Shape::Line, mag.iter().cloned());
 }
 
 fn dft<I: Iterator<Item = Complex32> + Clone>(input: I) -> impl Iterator<Item = Complex32> {
@@ -82,22 +76,4 @@ impl From<(f32, f32)> for Complex32 {
             im: incoming.1,
         }
     }
-}
-
-// Points isn't a great representation as you can lose the line in the graph,
-// however while Lines occasionally looks good it also can be terrible.
-// Continuous requires to be in a fn pointer closure which cant capture any
-// external data so not useful without lots of code duplication.
-fn display<I>(name: &str, input: I)
-where
-    I: Iterator<Item = f32> + core::clone::Clone + std::fmt::Debug,
-{
-    println!("{:?}: {:.4?}", name, input);
-    let display = input
-        .enumerate()
-        .map(|(idx, y)| (idx as f32, y))
-        .collect::<Vec<(f32, f32)>>();
-    Chart::new(120, 60, 0.0, N as f32)
-        .lineplot(&Shape::Lines(&display))
-        .display();
 }

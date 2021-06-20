@@ -26,9 +26,10 @@ use micromath::F32Ext;
 use rtt_target::{rprintln, rtt_init_print};
 
 use cmsis_dsp_sys::arm_cfft_sR_f32_len16 as arm_cfft_sR_f32;
-const N: usize = 1024;
 const WINDOW: usize = 16;
 const WINDOWCOMPLEX: usize = WINDOW * 2;
+
+const N: usize = 1024;
 
 #[cortex_m_rt::entry]
 fn main() -> ! {
@@ -73,13 +74,12 @@ fn main() -> ! {
     rprintln!("reading accel");
 
     // dont love the idea of delaying in an iterator ...
-    let accel = (0..N)
+    let accel: heapless::Vec<f32, N> = (0..N)
         .map(|_| {
             while !lis3dsh.is_data_ready().unwrap() {}
-            let dat = lis3dsh.accel_raw().unwrap();
-            dat[0] as f32
+            lis3dsh.accel_raw().unwrap().x as f32
         })
-        .collect::<heapless::Vec<f32, N>>();
+        .collect();
 
     rprintln!("computing");
 
@@ -99,12 +99,12 @@ fn main() -> ! {
 
     for chirp_win in overlapping_chirp_windows {
         // 64-0=64 of input to 64-64=0, so input * chirp.rev
-        let mut dtfsecoef = hamming
+        let mut dtfsecoef: heapless::Vec<f32, WINDOWCOMPLEX> = hamming
             .clone()
             .zip(chirp_win.iter().rev())
             .map(|(v, x)| v * x)
             .interleave_shortest(core::iter::repeat(0.0))
-            .collect::<heapless::Vec<f32, WINDOWCOMPLEX>>();
+            .collect();
 
         unsafe {
             //Finding the FFT of window

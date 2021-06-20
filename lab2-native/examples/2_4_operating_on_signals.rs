@@ -7,8 +7,7 @@
 //!
 //! `cargo run --example 2_4_operating_on_signals`
 
-use itertools::Itertools;
-use textplots::{Chart, Plot, Shape};
+use lab2::{display, Shape};
 
 const N: usize = 10;
 const A: f32 = 0.8;
@@ -29,15 +28,15 @@ fn main() {
 
     // shifted unit pulse signal u[n+3]
     let x1 = core::iter::repeat(0.0).take(3).chain(unit_pulse).take(N);
-    display("x1", x1);
+    display("x1", Shape::Points, x1);
 
     // elevated sinusoidal s[n]+1.0
     let x2 = sinusoidal.clone().map(|ess| ess + 1.0);
-    display("x2", x2);
+    display("x2", Shape::Line, x2);
 
     // negated unit step -u[n]
     let x3 = unit_step.clone().map(|us| -us);
-    display("x3", x3);
+    display("x3", Shape::Line, x3);
 
     // applying all operations on the sinusoidal signal
     // I disagree with the book on this, x4[0] and x4[1] would be -2 shifted
@@ -46,7 +45,7 @@ fn main() {
         .chain(sinusoidal.clone())
         .take(N)
         .map(|ess| 3.0 * ess - 2.0);
-    display("x4", x4);
+    display("x4", Shape::Line, x4);
 
     // subtracting two unit step signals
     let x5 = core::iter::repeat(0.0)
@@ -55,35 +54,17 @@ fn main() {
         .take(N)
         .zip(unit_step.clone())
         .map(|(us_delay, us)| us - us_delay);
-    display("x5", x5.clone());
+    display("x5", Shape::Points, x5.clone());
 
     // multiplying the exponential signal with the unit step signal
     let x6 = exponential.clone().zip(unit_step).map(|(ex, us)| ex * us);
-    display("x6", x6);
+    display("x6", Shape::Line, x6);
 
     // multiplying the exponential signal with the sinusoidal signal
     let x7 = exponential.clone().zip(sinusoidal).map(|(ex, ss)| ex * ss);
-    display("x7", x7);
+    display("x7", Shape::Line, x7);
 
     // multiplying the exponential signal with the window signal
     let x8 = exponential.zip(x5).map(|(ex, x5)| ex * x5);
-    display("x8", x8);
-}
-
-// Points isn't a great representation as you can lose the line in the graph,
-// however while Lines occasionally looks good it also can be terrible.
-// Continuous requires to be in a fn pointer closure which cant capture any
-// external data so not useful without lots of code duplication.
-fn display<I>(name: &str, input: I)
-where
-    I: Iterator<Item = f32> + core::clone::Clone + std::fmt::Debug,
-{
-    println!("{:?}: {:.4?}", name, input.clone().format(", "));
-    let display = input
-        .enumerate()
-        .map(|(n, y)| (n as f32, y))
-        .collect::<Vec<(f32, f32)>>();
-    Chart::new(120, 60, 0.0, N as f32)
-        .lineplot(&Shape::Points(&display))
-        .display();
+    display("x8", Shape::Points, x8);
 }

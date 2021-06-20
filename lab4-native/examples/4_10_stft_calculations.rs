@@ -11,29 +11,29 @@
 //! `cargo run --example 4_10_stft_calculations`
 
 use core::f32::consts::PI;
-use itertools::Itertools;
+use lab4::{display, Shape};
 use microfft::Complex32;
 use plotly::HeatMap;
-use textplots::{Chart, Plot, Shape};
+
+use microfft::complex::cfft_16 as cfft;
+const WINDOW: usize = 16;
 
 const N: usize = 1024;
 const NDIV2: usize = N / 2;
-const WINDOW: usize = 16;
-use microfft::complex::cfft_16 as cfft;
 
 const W1: f32 = 0.0;
 const W2: f32 = core::f32::consts::PI;
 
 fn main() {
-    let chirp = (0..N)
+    let chirp: heapless::Vec<f32, N> = (0..N)
         .map(|n| {
             let n = n as f32;
             (W1 * n + (W2 - W1) * n * n / (2.0 * (N as f32 - 1.0))).cos()
         })
-        .collect::<heapless::Vec<f32, N>>();
+        .collect();
 
     let hamming = (0..WINDOW).map(|m| 0.54 - 0.46 * (2.0 * PI * m as f32 / WINDOW as f32).cos());
-    display("hamming", hamming.clone());
+    display("hamming", Shape::Line, hamming.clone());
 
     let overlapping_chirp_windows = Windows {
         v: &chirp,
@@ -41,24 +41,37 @@ fn main() {
         inc: WINDOW / 2,
     };
 
-    let xst = overlapping_chirp_windows
+    let xst: heapless::Vec<_, NDIV2> = overlapping_chirp_windows
         .map(|chirp_win| {
-            let mut dtfsecoef = hamming
+            let mut dtfsecoef: heapless::Vec<Complex32, WINDOW> = hamming
                 .clone()
                 .zip(chirp_win.iter().rev())
                 .map(|(v, x)| Complex32 { re: v * x, im: 0.0 })
-                .collect::<heapless::Vec<Complex32, WINDOW>>();
+                .collect();
 
-            // todo pick the right size based on WINDOW
-            let _ = cfft(&mut dtfsecoef);
+            // SAFETY microfft now only accepts arrays instead of slices to avoid runtime errors
+            // Thats not great for us. However we can cheat since our slice into an array because
+            // "The layout of a slice [T] of length N is the same as that of a [T; N] array."
+            // https://rust-lang.github.io/unsafe-code-guidelines/layout/arrays-and-slices.html
+            // this goes away when something like heapless vec is in standard library
+            // https://github.com/rust-lang/rfcs/pull/2990
+            unsafe {
+                let ptr = &mut *(dtfsecoef.as_mut_ptr() as *mut [Complex32; WINDOW]);
+
+                // Coefficient calculation with CFFT function
+                // well use microfft uses an in place Radix-2 FFT
+                // it re-returns our array in case we were going to chain calls, throw it away
+                let _ = cfft(ptr);
+            }
 
             // Magnitude calculation
-            dtfsecoef
+            let mag: heapless::Vec<_, WINDOW> = dtfsecoef
                 .iter()
                 .map(|complex| (complex.re * complex.re + complex.im * complex.im).sqrt())
-                .collect::<heapless::Vec<f32, WINDOW>>()
+                .collect();
+            mag
         })
-        .collect::<heapless::Vec<heapless::Vec<_, WINDOW>, NDIV2>>();
+        .collect();
 
     // // the answer key data for M=16
     // let z: Vec<Vec<f32>> = Windows {
@@ -135,24 +148,6 @@ fn clean(zzzz: Vec<Vec<f32>>) -> Vec<Vec<f32>> {
     // z.drain(0..1);
 
     z
-}
-
-// Points isn't a great representation as you can lose the line in the graph,
-// however while Lines occasionally looks good it also can be terrible.
-// Continuous requires to be in a fn pointer closure which cant capture any
-// external data so not useful without lots of code duplication.
-fn display<I>(name: &str, input: I)
-where
-    I: Iterator<Item = f32> + core::clone::Clone + std::fmt::Debug,
-{
-    println!("{:?}: {:.4?}", name, input.clone().format(", "));
-    let display = input
-        .enumerate()
-        .map(|(n, y)| (n as f32, y))
-        .collect::<Vec<(f32, f32)>>();
-    Chart::new(120, 60, 0.0, WINDOW as f32)
-        .lineplot(&Shape::Lines(&display))
-        .display();
 }
 
 /// copied from std::slice::Window but expose the increment amount instead of using 1

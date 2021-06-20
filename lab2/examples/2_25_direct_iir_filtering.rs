@@ -48,9 +48,9 @@ fn main() -> ! {
     // Create a delay abstraction based on DWT cycle counter
     let dwt = cp.DWT.constrain(cp.DCB, clocks);
 
-    let x = (0..N)
+    let x: heapless::Vec<f32, N> = (0..N)
         .map(|n| (PI * n as f32 / 128.0).sin() + (FRAC_PI_4 * n as f32).sin())
-        .collect::<heapless::Vec<f32, N>>();
+        .collect();
 
     let time: ClockDuration = dwt.measure(|| {
         //random access of &mut y were iterating over.. so no iterators unless

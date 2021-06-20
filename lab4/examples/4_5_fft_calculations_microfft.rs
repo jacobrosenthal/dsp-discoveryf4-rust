@@ -8,7 +8,7 @@
 //! saved in the Mag array.
 //!
 //! Requires `cargo install probe-run`
-//! `cargo run --release --example 4_5_fft_calculations_rust_microfft`
+//! `cargo run --release --example 4_5_fft_calculations_microfft`
 
 #![no_std]
 #![no_main]
@@ -53,19 +53,30 @@ fn main() -> ! {
     let s = s1.zip(s2).map(|(ess1, ess2)| ess1 + ess2);
 
     // map it to real, leave im blank well fill in with dft
-    let mut dtfsecoef = s
-        .map(|f| Complex32 { re: f, im: 0.0 })
-        .collect::<heapless::Vec<Complex32, N>>();
+    let mut dtfsecoef: heapless::Vec<Complex32, N> =
+        s.map(|f| Complex32 { re: f, im: 0.0 }).collect();
 
     let time: ClockDuration = dwt.measure(|| {
-        //CFFT calculation
-        let _ = cfft(&mut dtfsecoef);
+        // SAFETY microfft now only accepts arrays instead of slices to avoid runtime errors
+        // Thats not great for us. However we can cheat since our slice into an array because
+        // "The layout of a slice [T] of length N is the same as that of a [T; N] array."
+        // https://rust-lang.github.io/unsafe-code-guidelines/layout/arrays-and-slices.html
+        // this goes away when something like heapless vec is in standard library
+        // https://github.com/rust-lang/rfcs/pull/2990
+        unsafe {
+            let ptr = &mut *(dtfsecoef.as_mut_ptr() as *mut [Complex32; N]);
+
+            // Coefficient calculation with CFFT function
+            // well use microfft uses an in place Radix-2 FFT
+            // it re-returns our array in case we were going to chain calls, throw it away
+            let _ = cfft(ptr);
+        }
 
         // Magnitude calculation
-        let _mag = dtfsecoef
+        let _mag: heapless::Vec<f32, N> = dtfsecoef
             .iter()
             .map(|complex| (complex.re * complex.re + complex.im * complex.im).sqrt())
-            .collect::<heapless::Vec<f32, N>>();
+            .collect();
     });
     rprintln!("ticks: {:?}", time.as_ticks());
 

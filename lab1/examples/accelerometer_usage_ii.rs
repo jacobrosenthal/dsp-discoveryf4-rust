@@ -56,10 +56,9 @@ fn main() -> ! {
     let mut lis3dsh = Lis3dsh::new_spi(spi, chip_select);
     lis3dsh.init(&mut delay).unwrap();
 
-    let mut buffer = [0i16; N];
-    buffer.iter_mut().for_each(|buffer_ref| {
+    let buffer = (0..N).map(|_i| {
         while !lis3dsh.is_data_ready().unwrap() {}
-        *buffer_ref = lis3dsh.accel_raw().unwrap()[0];
+        lis3dsh.accel_raw().unwrap().x
     });
 
     rprintln!("{:?}", buffer);

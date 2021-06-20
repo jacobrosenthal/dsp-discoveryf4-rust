@@ -51,21 +51,21 @@ fn main() -> ! {
     let s2 = (0..N).map(|val| (W2 * val as f32).sin());
 
     //we wont use complex this time since, but just interleave the zeros for the imaginary part
-    let mut s_complex = s1
+    let mut s_complex: heapless::Vec<f32, NCOMPLEX> = s1
         .zip(s2)
         .map(|(ess1, ess2)| ess1 + ess2)
         .interleave_shortest(core::iter::repeat(0.0))
-        .collect::<heapless::Vec<f32, NCOMPLEX>>();
+        .collect();
 
     // Complex impulse response of filter
-    let mut df_complex = H
+    let mut df_complex: heapless::Vec<f32, NCOMPLEX> = H
         .iter()
         .cloned()
         .interleave_shortest(core::iter::repeat(0.0))
         .chain(core::iter::repeat(0.0))
         //fill rest with zeros up to N*2
         .take(NCOMPLEX)
-        .collect::<heapless::Vec<f32, NCOMPLEX>>();
+        .collect();
 
     // Finding the FFT of the filter
     unsafe {

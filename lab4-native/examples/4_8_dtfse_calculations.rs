@@ -12,41 +12,49 @@
 //! `cargo run --example 4_8_dtfse_calculations`
 
 use core::f32::consts::PI;
-use itertools::Itertools;
+use lab4::{display, Shape};
 use microfft::Complex32;
-use textplots::{Chart, Plot, Shape};
 
-const N: usize = 16;
 use microfft::complex::cfft_16 as cfft;
+const N: usize = 16;
 
 fn main() {
     //square signal
     let square = (0..N).map(|idx| if idx < N / 2 { 1.0 } else { 0.0 });
-    display("square", square.clone());
+    display("square", Shape::Line, square.clone());
 
     //map it to real, leave im blank well fill in with cfft
-    let mut dtfsecoef = square
-        .map(|f| Complex32 { re: f, im: 0.0 })
-        .collect::<heapless::Vec<Complex32, N>>();
+    let mut dtfsecoef: heapless::Vec<Complex32, N> =
+        square.map(|f| Complex32 { re: f, im: 0.0 }).collect();
 
-    // Coefficient calculation with CFFT function
-    // arm_cfft_f32 uses a forward transform with enables bit reversal of output
-    // well use microfft uses an in place Radix-2 FFT, for some reasons returns itself we dont need
-    let _ = cfft(&mut dtfsecoef);
+    // SAFETY microfft now only accepts arrays instead of slices to avoid runtime errors
+    // Thats not great for us. However we can cheat since our slice into an array because
+    // "The layout of a slice [T] of length N is the same as that of a [T; N] array."
+    // https://rust-lang.github.io/unsafe-code-guidelines/layout/arrays-and-slices.html
+    // this goes away when something like heapless vec is in standard library
+    // https://github.com/rust-lang/rfcs/pull/2990
+    unsafe {
+        let ptr = &mut *(dtfsecoef.as_mut_ptr() as *mut [Complex32; N]);
+
+        // Coefficient calculation with CFFT function
+        // well use microfft uses an in place Radix-2 FFT
+        // it re-returns our array in case we were going to chain calls, throw it away
+        let _ = cfft(ptr);
+    }
 
     println!("dtfsecoef: {:?}", &dtfsecoef);
 
     //dtfse to reclaim our original signal, note this is a bad approximation for our square wave
-    let y_real = dtfse(dtfsecoef.iter().cloned(), 1).collect::<heapless::Vec<f32, N>>();
-    display("y_real 1", y_real.iter().cloned());
+    let y_real: heapless::Vec<f32, N> = dtfse(dtfsecoef.iter().cloned(), 1).collect();
+    display("y_real 1", Shape::Line, y_real.iter().cloned());
 
     //a bit better
-    let y_real = dtfse(dtfsecoef.iter().cloned(), 5).collect::<heapless::Vec<f32, N>>();
-    display("y_real 5", y_real.iter().cloned());
+    let y_real: heapless::Vec<f32, N> = dtfse(dtfsecoef.iter().cloned(), 5).collect();
+    display("y_real 5", Shape::Line, y_real.iter().cloned());
 
     //good
-    let y_real = dtfse(dtfsecoef.iter().cloned(), 15).collect::<heapless::Vec<f32, N>>();
-    display("y_real 15", y_real.iter().cloned());
+    let y_real: heapless::Vec<f32, N> = dtfse(dtfsecoef.iter().cloned(), 15).collect();
+    display("y_real 15", Shape::Line, y_real.iter().cloned());
 }
 
 fn dtfse<I: Iterator<Item = Complex32> + Clone>(
@@ -66,22 +74,4 @@ fn dtfse<I: Iterator<Item = Complex32> + Clone>(
             })
             .sum::<f32>()
     })
-}
-
-// Points isn't a great representation as you can lose the line in the graph,
-// however while Lines occasionally looks good it also can be terrible.
-// Continuous requires to be in a fn pointer closure which cant capture any
-// external data so not useful without lots of code duplication.
-fn display<I>(name: &str, input: I)
-where
-    I: Iterator<Item = f32> + core::clone::Clone + std::fmt::Debug,
-{
-    println!("{:?}: {:.4?}", name, input.clone().format(", "));
-    let display = input
-        .enumerate()
-        .map(|(idx, y)| (idx as f32, y))
-        .collect::<Vec<(f32, f32)>>();
-    Chart::new(120, 60, 0.0, N as f32)
-        .lineplot(&Shape::Points(&display))
-        .display();
 }

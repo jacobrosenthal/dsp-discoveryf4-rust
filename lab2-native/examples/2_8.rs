@@ -8,20 +8,17 @@
 //!
 //! `cargo run --example 2_8`
 
-use itertools::Itertools;
-use textplots::{Chart, Plot, Shape};
+use lab2::{display, Shape};
 
 const N: usize = 100;
-
 const SQUARE_AMPLITUDE: f32 = 2.4;
 const SQUARE_PERIOD: usize = 50;
-
 const TRIANGLE_AMPLITUDE: f32 = 1.5;
 const TRIANGLE_PERIOD: usize = 40;
 
 fn main() {
     // Collecting to turn the Cycle into a clean iterator for our naive display fn
-    let square = (0..SQUARE_PERIOD)
+    let square: heapless::Vec<f32, N> = (0..SQUARE_PERIOD)
         .map(|n| {
             if n < (SQUARE_PERIOD / 2) {
                 SQUARE_AMPLITUDE
@@ -31,11 +28,11 @@ fn main() {
         })
         .cycle()
         .take(N)
-        .collect::<heapless::Vec<f32, N>>();
-    display("square signal", square.iter().cloned());
+        .collect();
+    display("square signal", Shape::Line, square.iter().cloned());
 
     // Collecting to turn the Cycle into a clean iterator for our naive display fn
-    let triangle = (0..TRIANGLE_PERIOD)
+    let triangle: heapless::Vec<f32, N> = (0..TRIANGLE_PERIOD)
         .map(|n| {
             let period = TRIANGLE_PERIOD as f32;
 
@@ -48,24 +45,7 @@ fn main() {
         })
         .cycle()
         .take(N)
-        .collect::<heapless::Vec<f32, N>>();
-    display("triangle signal", triangle.iter().cloned());
-}
+        .collect();
 
-// Points isn't a great representation as you can lose the line in the graph,
-// however while Lines occasionally looks good it also can be terrible.
-// Continuous requires to be in a fn pointer closure which cant capture any
-// external data so not useful without lots of code duplication.
-fn display<I>(name: &str, input: I)
-where
-    I: Iterator<Item = f32> + core::clone::Clone + std::fmt::Debug,
-{
-    println!("{:?}: {:.4?}", name, input.clone().format(", "));
-    let display = input
-        .enumerate()
-        .map(|(n, y)| (n as f32, y))
-        .collect::<Vec<(f32, f32)>>();
-    Chart::new(120, 60, 0.0, N as f32)
-        .lineplot(&Shape::Lines(&display))
-        .display();
+    display("triangle signal", Shape::Line, triangle.iter().cloned());
 }

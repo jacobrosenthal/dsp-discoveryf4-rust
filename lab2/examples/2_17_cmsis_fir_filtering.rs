@@ -47,15 +47,16 @@ fn main() -> ! {
 
     let mut fir_state_f32 = [0f32; N + K - 1];
 
-    let x = unsafe {
+    let x: heapless::Vec<f32, N> = unsafe {
         (0..N)
             .map(|n| arm_sin_f32(PI * n as f32 / 128.0) + arm_sin_f32(FRAC_PI_4 * n as f32))
-            .collect::<heapless::Vec<f32, N>>()
+            .collect()
     };
 
-    let h = H.iter().cloned().rev().collect::<heapless::Vec<f32, N>>();
+    let h: heapless::Vec<f32, N> = H.iter().cloned().rev().collect();
 
     let s = unsafe {
+        // skips zeroing
         let mut s = MaybeUninit::uninit();
 
         arm_fir_init_f32(

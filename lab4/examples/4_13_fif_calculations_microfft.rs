@@ -49,26 +49,40 @@ fn main() -> ! {
     let s2 = (0..N).map(|val| (W2 * val as f32).sin());
     let s = s1.zip(s2).map(|(ess1, ess2)| ess1 + ess2);
 
-    let mut s_complex = s
-        .map(|f| Complex32 { re: f, im: 0.0 })
-        .collect::<heapless::Vec<Complex32, N>>();
+    let mut s_complex: heapless::Vec<Complex32, N> =
+        s.map(|f| Complex32 { re: f, im: 0.0 }).collect();
 
     // Complex impulse response of filter
-    let mut df_complex = H
+    let mut df_complex: heapless::Vec<Complex32, N> = H
         .iter()
         .cloned()
         .map(|f| Complex32 { re: f, im: 0.0 })
         .chain(core::iter::repeat(Complex32 { re: 0.0, im: 0.0 }))
         //fill rest with zeros up to N
         .take(N)
-        .collect::<heapless::Vec<Complex32, N>>();
+        .collect();
 
-    // Finding the FFT of the filter
-    let _ = cfft(&mut df_complex);
+    // SAFETY microfft now only accepts arrays instead of slices to avoid runtime errors
+    // Thats not great for us. However we can cheat since our slice into an array because
+    // "The layout of a slice [T] of length N is the same as that of a [T; N] array."
+    // https://rust-lang.github.io/unsafe-code-guidelines/layout/arrays-and-slices.html
+    // this goes away when something like heapless vec is in standard library
+    // https://github.com/rust-lang/rfcs/pull/2990
+    unsafe {
+        let ptr = &mut *(df_complex.as_mut_ptr() as *mut [Complex32; N]);
+
+        // Finding the FFT of the filter
+        let _ = cfft(ptr);
+    }
 
     let time: ClockDuration = dwt.measure(|| {
-        // Finding the FFT of the input signal
-        let _ = cfft(&mut s_complex);
+        // SAFETY same as above
+        unsafe {
+            let ptr = &mut *(s_complex.as_mut_ptr() as *mut [Complex32; N]);
+
+            // Finding the FFT of the input signal
+            let _ = cfft(ptr);
+        }
 
         // Filtering in the frequency domain
         let y_complex = s_complex
@@ -86,7 +100,7 @@ fn main() -> ! {
         // opposite sign in the exponent and a 1/N factor, any FFT algorithm can
         // easily be adapted for it.
         // just dtfse approx instead for now
-        let _y_freq = dtfse(y_complex.clone(), 15).collect::<heapless::Vec<f32, N>>();
+        let _y_freq: heapless::Vec<f32, N> = dtfse(y_complex.clone(), 15).collect();
     });
     rprintln!("dft ticks: {:?}", time.as_ticks());
 

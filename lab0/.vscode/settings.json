@@ -3,5 +3,10 @@
     "rust-analyzer.checkOnSave.allTargets": false,
     "rust-analyzer.checkOnSave.extraArgs": [
         "--examples"
-    ]
+    ],
+    "files.watcherExclude": {
+        "**/.git/objects/**": true,
+        "**/.git/subtree-cache/**": true,
+        "**/target/**": true
+    }
 }

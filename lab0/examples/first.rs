@@ -15,7 +15,6 @@ use panic_rtt_target as _;
 use stm32f4xx_hal as hal;
 
 use hal::{prelude::*, stm32};
-use heapless::Vec;
 use rtt_target::{rprintln, rtt_init_print};
 
 static A: &[i32] = &[1, 2, 3, 4, 5];
@@ -39,11 +38,7 @@ fn main() -> ! {
         .freeze();
 
     //can't collect into an array, so use a heapless (static) vec
-    let c = A
-        .iter()
-        .zip(B.iter())
-        .map(|(a, b)| a + b)
-        .collect::<Vec<_, LEN>>();
+    let c: heapless::Vec<i32, LEN> = A.iter().zip(B.iter()).map(|(a, b)| a + b).collect();
 
     rprintln!("{:?}", c);
 

@@ -9,54 +9,48 @@
 //!
 //! `cargo run --example 4_15_linear_phase_calculations`
 
-use itertools::Itertools;
+use lab4::{display, Shape};
 use microfft::Complex32;
-use textplots::{Chart, Plot, Shape};
 
 use microfft::complex::cfft_64 as cfft;
 const N: usize = 64;
 
 fn main() {
     // Complex impulse response of filter
-    let mut dtfsecoef = H
+    let mut dtfsecoef: heapless::Vec<Complex32, N> = H
         .iter()
         .cloned()
         .map(|h| Complex32 { re: h, im: 0.0 })
-        .collect::<heapless::Vec<Complex32, N>>();
+        .collect();
 
-    let _ = cfft(&mut dtfsecoef);
+    // SAFETY microfft now only accepts arrays instead of slices to avoid runtime errors
+    // Thats not great for us. However we can cheat since our slice into an array because
+    // "The layout of a slice [T] of length N is the same as that of a [T; N] array."
+    // https://rust-lang.github.io/unsafe-code-guidelines/layout/arrays-and-slices.html
+    // this goes away when something like heapless vec is in standard library
+    // https://github.com/rust-lang/rfcs/pull/2990
+    unsafe {
+        let ptr = &mut *(dtfsecoef.as_mut_ptr() as *mut [Complex32; N]);
+
+        // Coefficient calculation with CFFT function
+        // well use microfft uses an in place Radix-2 FFT
+        // it re-returns our array in case we were going to chain calls, throw it away
+        let _ = cfft(ptr);
+    }
 
     // Magnitude calculation
-    let mag = dtfsecoef
+    let mag: heapless::Vec<f32, N> = dtfsecoef
         .iter()
         .map(|complex| (complex.re * complex.re + complex.im * complex.im).sqrt())
-        .collect::<heapless::Vec<f32, N>>();
-    display("mag", mag.iter().cloned());
+        .collect();
+    display("mag", Shape::Line, mag.iter().cloned());
 
     let phase = dtfsecoef
         .iter()
         .cloned()
         .map(|complex| complex.re.atan2(complex.im));
 
-    display("phase", phase.clone());
-}
-
-// Points isn't a great representation as you can lose the line in the graph,
-// however while Lines occasionally looks good it also can be terrible.
-// Continuous requires to be in a fn pointer closure which cant capture any
-// external data so not useful without lots of code duplication.
-fn display<I>(name: &str, input: I)
-where
-    I: Iterator<Item = f32> + core::clone::Clone + std::fmt::Debug,
-{
-    println!("{:?}: {:.4?}", name, input.clone().format(", "));
-    let display = input
-        .enumerate()
-        .map(|(n, y)| (n as f32, y))
-        .collect::<Vec<(f32, f32)>>();
-    Chart::new(120, 60, 0.0, N as f32)
-        .lineplot(&Shape::Lines(&display))
-        .display();
+    display("phase", Shape::Line, phase.clone());
 }
 
 // FIR_lpf_coefficients for 4_15

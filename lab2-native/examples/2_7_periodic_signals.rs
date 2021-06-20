@@ -8,7 +8,7 @@
 //!
 //! `cargo run --example 2_7_periodic_signals`
 
-use textplots::{Chart, Plot, Shape};
+use lab2::{display, Shape};
 
 const N: usize = 100;
 const W1: f32 = core::f32::consts::PI / 10.0;
@@ -16,26 +16,8 @@ const W2: f32 = 3.0 / 10.0;
 
 fn main() {
     let sinusoidal1 = (0..N).map(|n| (W1 * (n as f32)).cos());
-    display("sinusoidal1", sinusoidal1);
+    display("sinusoidal1", Shape::Line, sinusoidal1);
 
     let sinusoidal2 = (0..N).map(|n| (W2 * (n as f32)).cos());
-    display("sinusoidal2", sinusoidal2);
-}
-
-// Points isn't a great representation as you can lose the line in the graph,
-// however while Lines occasionally looks good it also can be terrible.
-// Continuous requires to be in a fn pointer closure which cant capture any
-// external data so not useful without lots of code duplication.
-fn display<I>(name: &str, input: I)
-where
-    I: Iterator<Item = f32> + core::clone::Clone + std::fmt::Debug,
-{
-    println!("{:?}: ", name);
-    let display = input
-        .enumerate()
-        .map(|(n, y)| (n as f32, y))
-        .collect::<Vec<(f32, f32)>>();
-    Chart::new(120, 60, 0.0, N as f32)
-        .lineplot(&Shape::Points(&display))
-        .display();
+    display("sinusoidal2", Shape::Line, sinusoidal2);
 }

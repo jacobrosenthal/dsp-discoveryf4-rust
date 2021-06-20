@@ -10,8 +10,7 @@
 //!
 //! `cargo run --example 2_5`
 
-use itertools::Itertools;
-use textplots::{Chart, Plot, Shape};
+use lab2::{display, Shape};
 
 const N: usize = 10;
 const A: f32 = 0.8;
@@ -39,30 +38,30 @@ fn main() {
         .take(4)
         .chain(unit_ramp)
         .map(|dr| dr * 0.6);
-    display("x1", x1);
+    display("x1", Shape::Line, x1);
 
     // x2[n] = u[n-3]-u[n-8]
     let d3u = Delay::new(unit_step.clone(), 3);
     let d8u = Delay::new(unit_step.clone(), 8);
     let x2 = d3u.clone().zip(d8u.clone()).map(|(d3u, d8u)| d3u - d8u);
-    display("x2", x2.clone());
+    display("x2", Shape::Line, x2.clone());
 
     // x3[n] = u[n]-u[n-3]+u[n-8]
     let x3 = unit_step
         .zip(d3u)
         .zip(d8u)
         .map(|((u, d3u), d8u)| u - d3u + d8u);
-    display("x3", x3);
+    display("x3", Shape::Line, x3);
 
     // x4[n] = x2[n]s[n]+d[n]
     let x4 = x2
         .zip(sinusoidal.clone().zip(unit_pulse))
         .map(|(x2, (s, d))| x2 * s + d);
-    display("x4", x4);
+    display("x4", Shape::Line, x4);
 
     // x5[n] = -2.4e[n]s[n]
     let x5 = exponential.zip(sinusoidal).map(|(e, s)| -2.4 * e * s);
-    display("x5", x5);
+    display("x5", Shape::Line, x5);
 }
 
 #[derive(Clone, Debug)]
@@ -98,22 +97,4 @@ where
             self.iter.next()
         }
     }
-}
-
-// Points isn't a great representation as you can lose the line in the graph,
-// however while Lines occasionally looks good it also can be terrible.
-// Continuous requires to be in a fn pointer closure which cant capture any
-// external data so not useful without lots of code duplication.
-fn display<I>(name: &str, input: I)
-where
-    I: Iterator<Item = f32> + core::clone::Clone + std::fmt::Debug,
-{
-    println!("{:?}: {:.4?}", name, input.clone().format(", "));
-    let display = input
-        .enumerate()
-        .map(|(n, y)| (n as f32, y))
-        .collect::<Vec<(f32, f32)>>();
-    Chart::new(120, 60, 0.0, N as f32)
-        .lineplot(&Shape::Points(&display))
-        .display();
 }

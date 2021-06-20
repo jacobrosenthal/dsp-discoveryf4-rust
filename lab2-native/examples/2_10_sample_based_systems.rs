@@ -15,7 +15,7 @@
 //!
 //! `cargo run --example 2_10_sample_based_systems`
 
-use textplots::{Chart, Plot, Shape};
+use lab2::{display, Shape};
 
 const N: usize = 10;
 const W0: f32 = core::f32::consts::PI / 5.0;
@@ -79,7 +79,7 @@ fn main() {
     for n in 0..N {
         y1[n] = digital_system1(2.2, unit_step[n]);
     }
-    display("digital_system1", &y1);
+    display("digital_system1", Shape::Line, y1);
 
     // adder accumulator
     // y[n] = x1[n] + x2[n]
@@ -87,7 +87,7 @@ fn main() {
     for n in 0..N {
         y2[n] = digital_system2(unit_step[n], sinusoidal[n]);
     }
-    display("digital_system2", &y2);
+    display("digital_system2", Shape::Line, y2);
 
     // squaring device
     // y[n] = x^2[n]
@@ -95,7 +95,7 @@ fn main() {
     for n in 0..N {
         y3[n] = digital_system3(sinusoidal[n]);
     }
-    display("digital_system3", &y3);
+    display("digital_system3", Shape::Line, y3);
 
     // multiplier and accumulator
     // y[n] = b0*x[n] + b1*x[n-1]
@@ -107,7 +107,7 @@ fn main() {
             y4[n] = digital_system4(&[2.2, -1.1], sinusoidal[n], sinusoidal[n - 1]);
         }
     }
-    display("digital_system4", &y4);
+    display("digital_system4", Shape::Line, y4);
 
     // multiplier and accumulator with feedback
     // y[n] = b0*x[n] + b1*x[n-1] + a*y[n-1]
@@ -125,7 +125,7 @@ fn main() {
             );
         }
     }
-    display("digital_system5", &y5);
+    display("digital_system5", Shape::Line, y5);
 
     // multiplier and accumulator with future input
     // y[n] = b0*x[n+1] + b1*x[n]
@@ -137,7 +137,7 @@ fn main() {
             y6[n] = digital_system6(&[2.2, -1.1], unit_step[n + 1], unit_step[n]);
         }
     }
-    display("digital_system6", &y6);
+    display("digital_system6", Shape::Line, y6);
 
     // multiplier and accumulator with unbounded output
     // y[n] = b0*x[n] + b1*y[n-1]
@@ -149,7 +149,7 @@ fn main() {
             y7[n] = digital_system7(1.0, 2.0, unit_pulse[n], y7[n - 1]);
         }
     }
-    display("digital_system7", &y7);
+    display("digital_system7", Shape::Line, y7);
 
     // multiplier with a time based coefficient
     // y[n]=n*x[n]
@@ -157,21 +157,5 @@ fn main() {
     for n in 0..N {
         y8[n] = digital_system8(n as f32, sinusoidal[n]);
     }
-    display("digital_system8", &y8);
-}
-
-// Points isn't a great representation as you can lose the line in the graph,
-// however while Lines occasionally looks good it also can be terrible.
-// Continuous requires to be in a fn pointer closure which cant capture any
-// external data so not useful without lots of code duplication.
-fn display(name: &str, input: &[f32]) {
-    println!("{:?}: {:.4?}", name, &input);
-    let display = input
-        .iter()
-        .enumerate()
-        .map(|(n, y)| (n as f32, *y))
-        .collect::<Vec<(f32, f32)>>();
-    Chart::new(120, 60, 0.0, input.len() as f32)
-        .lineplot(&Shape::Points(&display))
-        .display();
+    display("digital_system8", Shape::Line, y8);
 }

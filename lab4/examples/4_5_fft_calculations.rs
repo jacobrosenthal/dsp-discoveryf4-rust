@@ -55,11 +55,11 @@ fn main() -> ! {
     let s2 = (0..N).map(|val| (W2 * val as f32).sin());
 
     //we wont use complex this time since, but just interleave the zeros for the imaginary part
-    let mut s = s1
+    let mut s: heapless::Vec<f32, NCOMPLEX> = s1
         .zip(s2)
         .map(|(ess1, ess2)| ess1 + ess2)
         .interleave_shortest(core::iter::repeat(0.0))
-        .collect::<heapless::Vec<f32, NCOMPLEX>>();
+        .collect();
 
     let mut mag = [0f32; N];
 

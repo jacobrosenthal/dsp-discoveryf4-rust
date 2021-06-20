@@ -44,7 +44,7 @@ fn main() -> ! {
 
     let time: ClockDuration = dwt.measure(|| {
         //dificult to smuggle result out of the closure so dont bother.
-        for _blah in convolution_sum(x.clone()).collect::<heapless::Vec<f32, N>>() {
+        for _ in convolution_sum(x.clone()).collect::<heapless::Vec<f32, N>>() {
             //hopefully this isnt optimized out since were not doing anything
         }
     });

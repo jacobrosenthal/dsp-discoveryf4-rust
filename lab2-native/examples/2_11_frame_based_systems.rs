@@ -15,7 +15,7 @@
 //!
 //! `cargo run --example 2_11_frame_based_systems`
 
-use textplots::{Chart, Plot, Shape};
+use lab2::{display, Shape};
 
 const N: usize = 10;
 const W0: f32 = core::f32::consts::PI / 5.0;
@@ -108,64 +108,48 @@ fn main() {
     // y[n] = b*x[n]
     let mut y1 = [0f32; N];
     digital_system1(2.2, &unit_step, &mut y1);
-    display("digital_system1", &y1);
+    display("digital_system1", Shape::Line, y1);
 
     // adder accumulator
     // y[n] = x1[n] + x2[n]
     let mut y2 = [0f32; N];
     digital_system2(&unit_step, &sinusoidal, &mut y2);
-    display("digital_system2", &y2);
+    display("digital_system2", Shape::Line, y2);
 
     // squaring device
     // y[n] = x^2[n]
     let mut y3 = [0f32; N];
     digital_system3(&sinusoidal, &mut y3);
-    display("digital_system3", &y3);
+    display("digital_system3", Shape::Line, y3);
 
     // multiplier and accumulator
     // y[n] = b0*x[n] + b1*x[n-1]
     let mut y4 = [0f32; N];
     digital_system4(&[2.2, -1.1], &sinusoidal, &mut y4);
-    display("digital_system4", &y4);
+    display("digital_system4", Shape::Line, y4);
 
     // multiplier and accumulator with feedback
     // y[n] = b0*x[n] + b1*x[n-1] + a*y[n-1]
     let mut y5 = [0f32; N];
     digital_system5(&[2.2, -1.1], 0.7, &sinusoidal, &mut y5);
-    display("digital_system5", &y5);
+    display("digital_system5", Shape::Line, y5);
 
     // multiplier and accumulator with future input
     // y[n] = b0*x[n+1] + b1*x[n]
     // digital_system6 in c version has oob array access, so y6[9] 0
     let mut y6 = [0f32; N];
     digital_system6(&[2.2, -1.1], &unit_step, &mut y6);
-    display("digital_system6", &y6);
+    display("digital_system6", Shape::Line, y6);
 
     // multiplier and accumulator with unbounded output
     // y[n] = b0*x[n] + b1*y[n-1]
     let mut y7 = [0f32; N];
     digital_system7(1.0, 2.0, &unit_pulse, &mut y7);
-    display("digital_system7", &y7);
+    display("digital_system7", Shape::Line, y7);
 
     // multiplier with a time based coefficient
     // y[n]=n*x[n]
     let mut y8 = [0f32; N];
     digital_system8(&sinusoidal, &mut y8);
-    display("digital_system8", &y8);
-}
-
-// Points isn't a great representation as you can lose the line in the graph,
-// however while Lines occasionally looks good it also can be terrible.
-// Continuous requires to be in a fn pointer closure which cant capture any
-// external data so not useful without lots of code duplication.
-fn display(name: &str, input: &[f32]) {
-    println!("{:?}: {:.4?}", name, &input);
-    let display = input
-        .iter()
-        .enumerate()
-        .map(|(n, y)| (n as f32, *y))
-        .collect::<Vec<(f32, f32)>>();
-    Chart::new(120, 60, 0.0, input.len() as f32)
-        .lineplot(&Shape::Points(&display))
-        .display();
+    display("digital_system8", Shape::Line, y8);
 }

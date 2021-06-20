@@ -16,10 +16,9 @@
 //! `cargo run --example 2_11_iterator_based_systems`
 
 use itertools::Itertools;
-use textplots::{Chart, Plot, Shape};
+use lab2::{display, Shape};
 
 const N: usize = 10;
-
 const W0: f32 = core::f32::consts::PI / 5.0;
 
 fn main() {
@@ -35,7 +34,7 @@ fn main() {
     // multiplier
     // y[n] = b*x[n]
     let y1 = unit_step.clone().map(|u| 2.2 * u);
-    display("digital_system1", y1);
+    display("digital_system1", Shape::Line, y1);
 
     // adder accumulator
     // y[n] = x1[n] + x2[n]
@@ -43,12 +42,12 @@ fn main() {
         .clone()
         .zip(unit_step.clone())
         .map(|(inny1, inny2)| inny1 + inny2);
-    display("digital_system2", y2);
+    display("digital_system2", Shape::Line, y2);
 
     // squaring device
     // y[n] = x^2[n]
     let y3 = sinusoidal.clone().map(|inny| inny * inny);
-    display("digital_system3", y3);
+    display("digital_system3", Shape::Line, y3);
 
     // multiplier and accumulator
     // y[n] = b0*x[n] + b1*x[n-1]
@@ -58,12 +57,12 @@ fn main() {
         .map(|s| 2.2 * s)
         .zip(delay_sin.map(|ds| ds * -1.1))
         .map(|(a, b)| a + b);
-    display("digital_system4", y4);
+    display("digital_system4", Shape::Line, y4);
 
     // multiplier and accumulator with feedback
     // y[n] = b0*x[n] + b1*x[n-1] + a*y[n-1]
     let y5 = DigitalSystem5::new(sinusoidal.clone());
-    display("digital_system5", y5);
+    display("digital_system5", Shape::Line, y5);
 
     // multiplier and accumulator with future input
     // y[n] = b0*x[n+1] + b1*x[n]
@@ -71,17 +70,17 @@ fn main() {
     let y6 = unit_step
         .tuple_windows()
         .map(|(u0, u1)| 2.2 * u1 + -1.1 * u0);
-    display("digital_system6", y6);
+    display("digital_system6", Shape::Line, y6);
 
     // multiplier and accumulator with unbounded output
     // y[n] = b0*x[n] + b1*y[n-1]
     let y7 = DigitalSystem7::new(unit_pulse);
-    display("digital_system7", y7);
+    display("digital_system7", Shape::Line, y7);
 
     // multiplier with a time based coefficient
     // y[n]=n*x[n]
     let y8 = sinusoidal.enumerate().map(|(n, inny)| n as f32 * inny);
-    display("digital_system8", y8);
+    display("digital_system8", Shape::Line, y8);
 }
 
 #[derive(Clone, Debug)]
@@ -211,22 +210,4 @@ where
             None
         }
     }
-}
-
-// Points isn't a great representation as you can lose the line in the graph,
-// however while Lines occasionally looks good it also can be terrible.
-// Continuous requires to be in a fn pointer closure which cant capture any
-// external data so not useful without lots of code duplication.
-fn display<I>(name: &str, input: I)
-where
-    I: Iterator<Item = f32> + core::clone::Clone + std::fmt::Debug,
-{
-    println!("{:?}: {:.4?}", name, input.clone().format(", "));
-    let display = input
-        .enumerate()
-        .map(|(n, y)| (n as f32, y))
-        .collect::<Vec<(f32, f32)>>();
-    Chart::new(120, 60, 0.0, N as f32)
-        .lineplot(&Shape::Points(&display))
-        .display();
 }

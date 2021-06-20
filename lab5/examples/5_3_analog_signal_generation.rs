@@ -69,17 +69,16 @@ fn main() -> ! {
 
     dac.enable();
 
-    let sq_lookup = (0..N)
-        .map(|n| if n < N / 2 { 4095 } else { 0 })
-        .collect::<heapless::Vec<u16, N>>();
+    let sq_lookup: heapless::Vec<u16, N> =
+        (0..N).map(|n| if n < N / 2 { 4095 } else { 0 }).collect();
 
     // period 160
-    let sin_lookup = (0..N)
+    let sin_lookup: heapless::Vec<u16, N> = (0..N)
         .map(|n| {
             let sindummy = (2.0 * PI * n as f32 / N as f32).sin();
             ((sindummy * 2047.0) + 2048.0) as u16
         })
-        .collect::<heapless::Vec<u16, N>>();
+        .collect();
 
     // frequency dac 16khz, freq/period = 16000/160 = 100hz
     let mut timer = Timer::tim1(dp.TIM1, 16.khz(), clocks);

@@ -56,9 +56,9 @@ fn main() -> ! {
         let dft = dft(dtfsecoef.clone());
 
         //Magnitude calculation
-        let _mag = dft
+        let _mag: heapless::Vec<f32, N> = dft
             .map(|complex| (complex.re * complex.re + complex.im * complex.im).sqrt())
-            .collect::<heapless::Vec<f32, N>>();
+            .collect();
     });
     rprintln!("ticks: {:?}", time.as_ticks());
 

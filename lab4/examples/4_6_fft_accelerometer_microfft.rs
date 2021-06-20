@@ -65,7 +65,7 @@ fn main() -> ! {
     lis3dsh.init(&mut delay).unwrap();
 
     // dont love the idea of delaying in an iterator ...
-    let mut dtfsecoef = (0..N)
+    let mut dtfsecoef: heapless::Vec<Complex32, N> = (0..N)
         .map(|_| {
             while !lis3dsh.is_data_ready().unwrap() {}
             let dat = lis3dsh.accel_raw().unwrap();
@@ -75,15 +75,28 @@ fn main() -> ! {
                 im: 0.0,
             }
         })
-        .collect::<heapless::Vec<Complex32, N>>();
+        .collect();
 
-    let _ = cfft(&mut dtfsecoef);
+    // SAFETY microfft now only accepts arrays instead of slices to avoid runtime errors
+    // Thats not great for us. However we can cheat since our slice into an array because
+    // "The layout of a slice [T] of length N is the same as that of a [T; N] array."
+    // https://rust-lang.github.io/unsafe-code-guidelines/layout/arrays-and-slices.html
+    // this goes away when something like heapless vec is in standard library
+    // https://github.com/rust-lang/rfcs/pull/2990
+    unsafe {
+        let ptr = &mut *(dtfsecoef.as_mut_ptr() as *mut [Complex32; N]);
+
+        // Coefficient calculation with CFFT function
+        // well use microfft uses an in place Radix-2 FFT
+        // it re-returns our array in case we were going to chain calls, throw it away
+        let _ = cfft(ptr);
+    }
 
     // Magnitude calculation
-    let mag = dtfsecoef
+    let mag: heapless::Vec<f32, N> = dtfsecoef
         .iter()
         .map(|complex| (complex.re * complex.re + complex.im * complex.im).sqrt())
-        .collect::<heapless::Vec<f32, N>>();
+        .collect();
 
     rprintln!("mag: {:?}", mag);
 
