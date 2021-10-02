@@ -9,6 +9,7 @@
 
 #![no_std]
 #![no_main]
+#![feature(array_from_fn)]
 
 use panic_probe as _;
 use stm32f4xx_hal as hal;
@@ -69,16 +70,13 @@ fn main() -> ! {
 
     dac.enable();
 
-    let sq_lookup: heapless::Vec<u16, N> =
-        (0..N).map(|n| if n < N / 2 { 4095 } else { 0 }).collect();
+    let sq_lookup: [u16; N] = core::array::from_fn(|n| if n < N / 2 { 4095 } else { 0 });
 
     // period 160
-    let sin_lookup: heapless::Vec<u16, N> = (0..N)
-        .map(|n| {
-            let sindummy = (2.0 * PI * n as f32 / N as f32).sin();
-            ((sindummy * 2047.0) + 2048.0) as u16
-        })
-        .collect();
+    let sin_lookup: [u16; N] = core::array::from_fn(|n| {
+        let sindummy = (2.0 * PI * n as f32 / N as f32).sin();
+        ((sindummy * 2047.0) + 2048.0) as u16
+    });
 
     // frequency dac 16khz, freq/period = 16000/160 = 100hz
     let mut timer = Timer::tim1(dp.TIM1, 16.khz(), clocks);

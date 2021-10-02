@@ -12,6 +12,7 @@
 
 #![no_std]
 #![no_main]
+#![feature(array_from_fn)]
 
 use panic_probe as _;
 use stm32f4xx_hal as hal;
@@ -73,13 +74,11 @@ fn main() -> ! {
 
     rprintln!("reading accel");
 
-    // dont love the idea of delaying in an iterator ...
-    let accel: heapless::Vec<f32, N> = (0..N)
-        .map(|_| {
-            while !lis3dsh.is_data_ready().unwrap() {}
-            lis3dsh.accel_raw().unwrap().x as f32
-        })
-        .collect();
+    // map imaginary while we collect to save a step
+    let accel: [f32; N] = core::array::from_fn(|_| {
+        while !lis3dsh.is_data_ready().unwrap() {}
+        lis3dsh.accel_raw().unwrap().x as f32
+    });
 
     rprintln!("computing");
 

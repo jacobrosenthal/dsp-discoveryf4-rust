@@ -50,7 +50,8 @@ fn main() -> ! {
     let mut dtfsecoef: heapless::Vec<Complex32, N> =
         square.map(|f| Complex32 { re: f, im: 0.0 }).collect();
 
-    //Coefficient calculation with CFFT function
+    // Coefficient calculation with CFFT function
+    // Complex32 is repr(C) and f32 is float so should be able to cast to float array
     unsafe {
         arm_cfft_f32(
             &arm_cfft_sR_f32,
@@ -90,7 +91,8 @@ fn dtfse<I: Iterator<Item = Complex32> + Clone>(
     })
 }
 
-#[derive(Clone)]
+#[repr(C)]
+#[derive(Clone, Debug)]
 struct Complex32 {
     re: f32,
     im: f32,

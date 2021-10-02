@@ -13,48 +13,27 @@ use lab4::{display, Shape};
 use microfft::Complex32;
 
 use microfft::complex::cfft_64 as cfft;
-const N: usize = 64;
 
 fn main() {
     // Complex impulse response of filter
-    let mut dtfsecoef: heapless::Vec<Complex32, N> = H
-        .iter()
-        .cloned()
-        .map(|h| Complex32 { re: h, im: 0.0 })
-        .collect();
+    let mut dtfsecoef = H.map(|h| Complex32 { re: h, im: 0.0 });
 
-    // SAFETY microfft now only accepts arrays instead of slices to avoid runtime errors
-    // Thats not great for us. However we can cheat since our slice into an array because
-    // "The layout of a slice [T] of length N is the same as that of a [T; N] array."
-    // https://rust-lang.github.io/unsafe-code-guidelines/layout/arrays-and-slices.html
-    // this goes away when something like heapless vec is in standard library
-    // https://github.com/rust-lang/rfcs/pull/2990
-    unsafe {
-        let ptr = &mut *(dtfsecoef.as_mut_ptr() as *mut [Complex32; N]);
-
-        // Coefficient calculation with CFFT function
-        // well use microfft uses an in place Radix-2 FFT
-        // it re-returns our array in case we were going to chain calls, throw it away
-        let _ = cfft(ptr);
-    }
+    // Coefficient calculation with CFFT function
+    // well use microfft uses an in place Radix-2 FFT
+    let _ = cfft(&mut dtfsecoef);
 
     // Magnitude calculation
-    let mag: heapless::Vec<f32, N> = dtfsecoef
-        .iter()
-        .map(|complex| (complex.re * complex.re + complex.im * complex.im).sqrt())
-        .collect();
+    let mag = dtfsecoef.map(|complex| (complex.re * complex.re + complex.im * complex.im).sqrt());
+
     display("mag", Shape::Line, mag.iter().cloned());
 
-    let phase = dtfsecoef
-        .iter()
-        .cloned()
-        .map(|complex| complex.re.atan2(complex.im));
+    let phase = dtfsecoef.iter().map(|complex| complex.re.atan2(complex.im));
 
     display("phase", Shape::Line, phase.clone());
 }
 
 // FIR_lpf_coefficients for 4_15
-static H: &[f32] = &[
+static H: [f32; 64] = [
     0.002044, 0.007806, 0.014554, 0.020018, 0.024374, 0.027780, 0.030370, 0.032264, 0.033568,
     0.034372, 0.034757, 0.034791, 0.034534, 0.034040, 0.033353, 0.032511, 0.031549, 0.030496,
     0.029375, 0.028207, 0.027010, 0.025800, 0.024587, 0.023383, 0.022195, 0.021031, 0.019896,

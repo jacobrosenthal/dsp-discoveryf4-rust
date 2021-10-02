@@ -10,6 +10,7 @@
 
 #![no_std]
 #![no_main]
+#![feature(array_from_fn)]
 
 use panic_probe as _;
 use stm32f4xx_hal as hal;
@@ -17,8 +18,8 @@ use stm32f4xx_hal as hal;
 use hal::{prelude::*, stm32};
 use rtt_target::{rprintln, rtt_init_print};
 
-static A: &[i32] = &[1, 2, 3, 4, 5];
-static B: &[i32] = &[1, 2, 3, 4, 5];
+static A: [i32; 5] = [1, 2, 3, 4, 5];
+static B: [i32; 5] = [1, 2, 3, 4, 5];
 const LEN: usize = 5;
 
 #[cortex_m_rt::entry]
@@ -37,10 +38,23 @@ fn main() -> ! {
         .sysclk(168.mhz())
         .freeze();
 
-    //can't collect into an array, so use a heapless (static) vec
-    let c: heapless::Vec<i32, LEN> = A.iter().zip(B.iter()).map(|(a, b)| a + b).collect();
+    // We cant use vec in no_std so we prefer arrays, which on nightly are really full featured!
 
+    // we can create an array from a function
+    let c: [i32; LEN] = core::array::from_fn(|n| n as i32 + 1);
     rprintln!("{:?}", c);
 
-    loop {}
+    // And arrays support a few iterator like functions like map
+    let d: [i32; LEN] = A.map(|v| v + 1);
+    rprintln!("{:?}", d);
+
+    // but can't yet collect iterators into an array yet https://github.com/rust-lang/rfcs/pull/2990
+    // so well use a crate with similar functionality called heapless
+    let e: heapless::Vec<i32, LEN> = A.iter().zip(B.iter()).map(|(a, b)| a + b).collect();
+
+    rprintln!("{:?}", e);
+
+    loop {
+        cortex_m::asm::nop();
+    }
 }

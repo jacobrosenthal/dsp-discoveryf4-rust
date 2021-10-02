@@ -6,6 +6,7 @@
 
 #![no_std]
 #![no_main]
+#![feature(array_from_fn)]
 
 use panic_probe as _;
 use stm32f4xx_hal as hal;
@@ -18,12 +19,12 @@ use rtt_target::{rprintln, rtt_init_print};
 const N: usize = 512;
 
 // high pass filter coefficients
-static B: &[f32] = &[0.002044, 0.004088, 0.002044];
-static A: &[f32] = &[1.0, -1.819168, 0.827343];
+static B: [f32; 3] = [0.002044, 0.004088, 0.002044];
+static A: [f32; 3] = [1.0, -1.819168, 0.827343];
 
 // low pass filter coefficients for 2_24
-// static B: &[f32] = &[0.705514, -1.411028, 0.705514];
-// static A: &[f32] = &[1.0, -1.359795, 0.462261];
+// static B: [f32;3] = [0.705514, -1.411028, 0.705514];
+// static A: [f32;3] = [1.0, -1.359795, 0.462261];
 
 #[cortex_m_rt::entry]
 fn main() -> ! {
@@ -41,9 +42,9 @@ fn main() -> ! {
         .sysclk(168.mhz())
         .freeze();
 
-    let x: heapless::Vec<f32, N> = (0..N)
-        .map(|n| (PI * n as f32 / 128.0).sin() + (FRAC_PI_4 * n as f32).sin())
-        .collect();
+    // some sensor data source collected to an array so often
+    let x: [f32; N] =
+        core::array::from_fn(|n| (PI * n as f32 / 128.0).sin() + (FRAC_PI_4 * n as f32).sin());
 
     //random access of &mut y were iterating over.. so no iterators unless
     let mut y = [0.0; N];

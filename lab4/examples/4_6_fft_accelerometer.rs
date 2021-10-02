@@ -11,21 +11,20 @@
 
 #![no_std]
 #![no_main]
+#![feature(array_from_fn)]
 
 use panic_probe as _;
 use stm32f4xx_hal as hal;
 
 use cmsis_dsp_sys::{arm_cfft_f32, arm_cmplx_mag_f32};
-use cty::uint32_t;
+use cty::{c_float, uint32_t};
 use hal::{prelude::*, spi, stm32};
-use itertools::Itertools;
 use lis3dsh::{accelerometer::RawAccelerometer, Lis3dsh};
 use micromath::F32Ext;
 use rtt_target::{rprintln, rtt_init_print};
 
 use cmsis_dsp_sys::arm_cfft_sR_f32_len512 as arm_cfft_sR_f32;
 const N: usize = 512;
-const NCOMPLEX: usize = N * 2;
 
 #[cortex_m_rt::entry]
 fn main() -> ! {
@@ -67,25 +66,35 @@ fn main() -> ! {
     let mut lis3dsh = Lis3dsh::new_spi(spi, chip_select);
     lis3dsh.init(&mut delay).unwrap();
 
-    // dont love the idea of delaying in an iterator ...
-    let dtfsecoef = (0..N).map(|_| {
+    // map imaginary while we collect to save a step
+    let mut dtfsecoef: [Complex32; N] = core::array::from_fn(|_| {
         while !lis3dsh.is_data_ready().unwrap() {}
-        let dat = lis3dsh.accel_raw().unwrap();
-        dat[0] as f32
+        let x = lis3dsh.accel_raw().unwrap().x;
+        Complex32 {
+            re: x as f32,
+            im: 0.0,
+        }
     });
-
-    let mut dtfsecoef: heapless::Vec<f32, NCOMPLEX> = dtfsecoef
-        .interleave_shortest(core::iter::repeat(0.0))
-        .collect();
 
     let mut mag = [0f32; N];
 
     unsafe {
         //CFFT calculation
-        arm_cfft_f32(&arm_cfft_sR_f32, dtfsecoef.as_mut_ptr(), 0, 1);
+        // Complex32 is repr(C) and f32 is float so should be able to cast to float array
+        arm_cfft_f32(
+            &arm_cfft_sR_f32,
+            dtfsecoef.as_mut_ptr() as *mut c_float,
+            0,
+            1,
+        );
 
         // Magnitude calculation
-        arm_cmplx_mag_f32(dtfsecoef.as_ptr(), mag.as_mut_ptr(), N as uint32_t);
+        // Complex32 is repr(C) and f32 is float so should be able to cast to float array
+        arm_cmplx_mag_f32(
+            dtfsecoef.as_ptr() as *mut c_float,
+            mag.as_mut_ptr(),
+            N as uint32_t,
+        );
     }
 
     rprintln!("mag: {:?}", mag);
@@ -100,4 +109,11 @@ fn main() -> ! {
 #[no_mangle]
 pub extern "C" fn sqrtf(x: f32) -> f32 {
     x.sqrt()
+}
+
+#[repr(C)]
+#[derive(Clone, Debug)]
+struct Complex32 {
+    re: f32,
+    im: f32,
 }

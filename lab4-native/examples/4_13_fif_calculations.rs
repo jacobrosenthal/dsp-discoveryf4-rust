@@ -10,6 +10,8 @@
 //!
 //! `cargo run --example 4_10_stft_calculations`
 
+#![feature(array_from_fn)]
+
 use core::f32::consts::PI;
 use lab4::{display, Shape};
 use microfft::Complex32;
@@ -21,15 +23,17 @@ const W1: f32 = core::f32::consts::PI / 128.0;
 const W2: f32 = core::f32::consts::PI / 4.0;
 
 fn main() {
+    // some sensor data source collected to an array so often
     // Complex sum of sinusoidal signals
-    let s1 = (0..N).map(|val| (W1 * val as f32).sin());
-    let s2 = (0..N).map(|val| (W2 * val as f32).sin());
-    let s = s1.zip(s2).map(|(ess1, ess2)| ess1 + ess2);
+    let s: [f32; N] = core::array::from_fn(|n| (W1 * n as f32).sin() + (W2 * n as f32).sin());
 
-    let mut s_complex: heapless::Vec<Complex32, N> =
-        s.clone().map(|f| Complex32 { re: f, im: 0.0 }).collect();
+    // Use Complex32 to interleave 0.0 for imaginary
+    let mut s_complex = s.map(|v| Complex32 { re: v, im: 0.0 });
+
+    let _ = cfft(&mut s_complex);
 
     // Complex impulse response of filter
+
     let mut df_complex: heapless::Vec<Complex32, N> = H
         .iter()
         .cloned()
@@ -39,8 +43,10 @@ fn main() {
         .take(N)
         .collect();
 
-    // SAFETY microfft now only accepts arrays instead of slices to avoid runtime errors
-    // Thats not great for us. However we can cheat since our slice into an array because
+    // SAFETY:
+    // microfft now only accepts arrays instead of slices to avoid runtime errors
+    // heapless offers .into_array() but its another copy which wed rather avoid
+    // We can cheat since our slice into an array because
     // "The layout of a slice [T] of length N is the same as that of a [T; N] array."
     // https://rust-lang.github.io/unsafe-code-guidelines/layout/arrays-and-slices.html
     // this goes away when something like heapless vec is in standard library
@@ -48,15 +54,16 @@ fn main() {
     unsafe {
         let ptr = &mut *(df_complex.as_mut_ptr() as *mut [Complex32; N]);
 
-        // Finding the FFT of the filter
+        // Coefficient calculation with CFFT function
+        // well use microfft uses an in place Radix-2 FFT
         let _ = cfft(ptr);
     }
 
-    // SAFETY same as above
     unsafe {
         let ptr = &mut *(s_complex.as_mut_ptr() as *mut [Complex32; N]);
 
-        // Finding the FFT of the input signal
+        // Coefficient calculation with CFFT function
+        // well use microfft uses an in place Radix-2 FFT
         let _ = cfft(ptr);
     }
 
@@ -76,15 +83,15 @@ fn main() {
     // opposite sign in the exponent and a 1/N factor, any FFT algorithm can
     // easily be adapted for it.
     // just dtfse approx instead for now
-    let y_freq: heapless::Vec<f32, N> = dtfse(y_complex.clone(), 15).collect();
+    let y_freq: heapless::Vec<f32, N> = dtfse(y_complex, 15).collect();
     display("freq", Shape::Line, y_freq.iter().cloned());
 
     //y_time via convolution_sum developed in 2.14 to compare
-    let y_time: heapless::Vec<f32, N> = convolution_sum(s).collect();
+    let y_time: heapless::Vec<f32, N> = convolution_sum(s.iter().cloned()).collect();
     display("time", Shape::Line, y_time.iter().cloned());
 }
 
-static H: &[f32] = &[
+static H: [f32; 64] = [
     0.002044, 0.007806, 0.014554, 0.020018, 0.024374, 0.027780, 0.030370, 0.032264, 0.033568,
     0.034372, 0.034757, 0.034791, 0.034534, 0.034040, 0.033353, 0.032511, 0.031549, 0.030496,
     0.029375, 0.028207, 0.027010, 0.025800, 0.024587, 0.023383, 0.022195, 0.021031, 0.019896,

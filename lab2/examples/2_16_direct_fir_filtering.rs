@@ -44,9 +44,7 @@ fn main() -> ! {
 
     let time: ClockDuration = dwt.measure(|| {
         //dificult to smuggle result out of the closure so dont bother.
-        for _ in convolution_sum(x.clone()).collect::<heapless::Vec<f32, N>>() {
-            //hopefully this isnt optimized out since were not doing anything
-        }
+        let _ = convolution_sum(x.clone()).collect::<heapless::Vec<f32, N>>();
     });
 
     rprintln!("dft ticks: {:?}", time.as_ticks());
@@ -75,7 +73,7 @@ where
 }
 
 // low pass filter coefficients
-static H: &[f32] = &[
+static H: [f32; 64] = [
     0.002044, 0.007806, 0.014554, 0.020018, 0.024374, 0.027780, 0.030370, 0.032264, 0.033568,
     0.034372, 0.034757, 0.034791, 0.034534, 0.034040, 0.033353, 0.032511, 0.031549, 0.030496,
     0.029375, 0.028207, 0.027010, 0.025800, 0.024587, 0.023383, 0.022195, 0.021031, 0.019896,
@@ -87,7 +85,7 @@ static H: &[f32] = &[
 ];
 
 // high pass filter coefficients for 2_18
-// static H: &[f32] = &[
+// static H: [f32; 64] = [
 //     0.705514, -0.451674, -0.234801, -0.110490, -0.041705, -0.005635, 0.011617, 0.018401, 0.019652,
 //     0.018216, 0.015686, 0.012909, 0.010303, 0.008042, 0.006173, 0.004677, 0.003506, 0.002605,
 //     0.001922, 0.001409, 0.001028, 0.000746, 0.000540, 0.000389, 0.000279, 0.000200, 0.000143,

@@ -6,6 +6,7 @@
 
 #![no_std]
 #![no_main]
+#![feature(array_from_fn)]
 
 use panic_probe as _;
 use stm32f4xx_hal as hal;
@@ -56,7 +57,7 @@ fn main() -> ! {
     let mut lis3dsh = Lis3dsh::new_spi(spi, chip_select);
     lis3dsh.init(&mut delay).unwrap();
 
-    let buffer = (0..N).map(|_i| {
+    let buffer: [i16; N] = core::array::from_fn(|_| {
         while !lis3dsh.is_data_ready().unwrap() {}
         lis3dsh.accel_raw().unwrap().x
     });

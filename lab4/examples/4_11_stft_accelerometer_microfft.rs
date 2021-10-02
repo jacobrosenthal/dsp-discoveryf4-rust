@@ -12,6 +12,7 @@
 
 #![no_std]
 #![no_main]
+#![feature(array_from_fn)]
 
 use panic_probe as _;
 use stm32f4xx_hal as hal;
@@ -71,14 +72,11 @@ fn main() -> ! {
 
     rprintln!("reading accel");
 
-    // dont love the idea of delaying in an iterator ...
-    let accel: heapless::Vec<f32, N> = (0..N)
-        .map(|_| {
-            while !lis3dsh.is_data_ready().unwrap() {}
-            let dat = lis3dsh.accel_raw().unwrap();
-            dat[0] as f32
-        })
-        .collect();
+    // map imaginary while we collect to save a step
+    let accel: [f32; N] = core::array::from_fn(|_| {
+        while !lis3dsh.is_data_ready().unwrap() {}
+        lis3dsh.accel_raw().unwrap().x as f32
+    });
 
     rprintln!("computing");
 
@@ -100,8 +98,10 @@ fn main() -> ! {
                 .map(|(v, x)| Complex32 { re: v * x, im: 0.0 })
                 .collect();
 
-            // SAFETY microfft now only accepts arrays instead of slices to avoid runtime errors
-            // Thats not great for us. However we can cheat since our slice into an array because
+            // SAFETY:
+            // microfft now only accepts arrays instead of slices to avoid runtime errors
+            // heapless offers .into_array() but its another copy which wed rather avoid
+            // We can cheat since our slice into an array because
             // "The layout of a slice [T] of length N is the same as that of a [T; N] array."
             // https://rust-lang.github.io/unsafe-code-guidelines/layout/arrays-and-slices.html
             // this goes away when something like heapless vec is in standard library
@@ -111,16 +111,11 @@ fn main() -> ! {
 
                 // Coefficient calculation with CFFT function
                 // well use microfft uses an in place Radix-2 FFT
-                // it re-returns our array in case we were going to chain calls, throw it away
                 let _ = cfft(ptr);
-            }
 
-            // Magnitude calculation
-            let mag: heapless::Vec<_, WINDOW> = dtfsecoef
-                .iter()
-                .map(|complex| (complex.re * complex.re + complex.im * complex.im).sqrt())
-                .collect();
-            mag
+                // Magnitude calculation
+                ptr.map(|complex| (complex.re * complex.re + complex.im * complex.im).sqrt())
+            }
         })
         .collect();
 

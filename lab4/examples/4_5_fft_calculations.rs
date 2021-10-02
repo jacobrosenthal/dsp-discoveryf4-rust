@@ -12,20 +12,19 @@
 
 #![no_std]
 #![no_main]
+#![feature(array_from_fn)]
 
 use panic_probe as _;
 use stm32f4xx_hal as hal;
 
 use cmsis_dsp_sys::{arm_cfft_f32, arm_cmplx_mag_f32};
-use cty::uint32_t;
+use cty::{c_float, uint32_t};
 use hal::{dwt::ClockDuration, dwt::DwtExt, prelude::*, stm32};
-use itertools::Itertools;
 use micromath::F32Ext;
 use rtt_target::{rprintln, rtt_init_print};
 
 use cmsis_dsp_sys::arm_cfft_sR_f32_len256 as arm_cfft_sR_f32;
 const N: usize = 256;
-const NCOMPLEX: usize = N * 2;
 
 const W1: f32 = core::f32::consts::PI / 128.0;
 const W2: f32 = core::f32::consts::PI / 4.0;
@@ -50,22 +49,18 @@ fn main() -> ! {
     // Create a delay abstraction based on DWT cycle counter
     let dwt = cp.DWT.constrain(cp.DCB, clocks);
 
+    // some sensor data source collected to an array so often
     // Complex sum of sinusoidal signals
-    let s1 = (0..N).map(|val| (W1 * val as f32).sin());
-    let s2 = (0..N).map(|val| (W2 * val as f32).sin());
+    let s: [f32; N] = core::array::from_fn(|n| (W1 * n as f32).sin() + (W2 * n as f32).sin());
 
-    //we wont use complex this time since, but just interleave the zeros for the imaginary part
-    let mut s: heapless::Vec<f32, NCOMPLEX> = s1
-        .zip(s2)
-        .map(|(ess1, ess2)| ess1 + ess2)
-        .interleave_shortest(core::iter::repeat(0.0))
-        .collect();
+    let mut dtfse: [Complex32; N] = s.map(|v| Complex32 { re: v, im: 0.0 });
 
     let mut mag = [0f32; N];
 
     let time: ClockDuration = dwt.measure(|| unsafe {
-        //CFFT calculation
-        arm_cfft_f32(&arm_cfft_sR_f32, s.as_mut_ptr(), 0, 1);
+        // CFFT calculation
+        // Complex32 is repr(C) and f32 is float so should be able to cast to float array
+        arm_cfft_f32(&arm_cfft_sR_f32, dtfse.as_mut_ptr() as *mut c_float, 0, 1);
 
         // Magnitude calculation
         arm_cmplx_mag_f32(s.as_ptr(), mag.as_mut_ptr(), N as uint32_t);
@@ -82,4 +77,11 @@ fn main() -> ! {
 #[no_mangle]
 pub extern "C" fn sqrtf(x: f32) -> f32 {
     x.sqrt()
+}
+
+#[repr(C)]
+#[derive(Clone, Debug)]
+struct Complex32 {
+    re: f32,
+    im: f32,
 }

@@ -10,6 +10,7 @@
 
 #![no_std]
 #![no_main]
+#![feature(array_from_fn)]
 
 use panic_probe as _;
 use stm32f4xx_hal as hal;
@@ -44,21 +45,18 @@ fn main() -> ! {
     // Create a delay abstraction based on DWT cycle counter
     let dwt = cp.DWT.constrain(cp.DCB, clocks);
 
+    // some sensor data source collected to an array so often
     // Complex sum of sinusoidal signals
-    let s1 = (0..N).map(|val| (W1 * val as f32).sin());
-    let s2 = (0..N).map(|val| (W2 * val as f32).sin());
-    let s = s1.zip(s2).map(|(ess1, ess2)| ess1 + ess2);
+    let s: [f32; N] = core::array::from_fn(|n| (W1 * n as f32).sin() + (W2 * n as f32).sin());
 
-    // map it to real, leave im blank well fill in with dft
-    let dtfsecoef = s.map(|f| Complex32 { re: f, im: 0.0 });
+    // Use Complex32 to interleave 0.0 for imaginary
+    let dtfsecoef = s.iter().cloned().map(|n| Complex32 { re: n, im: 0.0 });
 
     let time: ClockDuration = dwt.measure(|| {
-        let dft = dft(dtfsecoef.clone());
+        let dft = dft(dtfsecoef);
 
         //Magnitude calculation
-        let _mag: heapless::Vec<f32, N> = dft
-            .map(|complex| (complex.re * complex.re + complex.im * complex.im).sqrt())
-            .collect();
+        let _mag = dft.map(|complex| (complex.re * complex.re + complex.im * complex.im).sqrt());
     });
     rprintln!("ticks: {:?}", time.as_ticks());
 
@@ -87,6 +85,8 @@ fn dft<I: Iterator<Item = Complex32> + Clone>(input: I) -> impl Iterator<Item = 
     })
 }
 
+#[repr(C)]
+#[derive(Clone, Debug)]
 struct Complex32 {
     re: f32,
     im: f32,

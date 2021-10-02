@@ -9,6 +9,7 @@
 //! on any std tools that can't otherwise port over to no_std without alloc.
 //!
 //! `cargo run --example 4_10_stft_calculations`
+#![feature(array_from_fn)]
 
 use core::f32::consts::PI;
 use lab4::{display, Shape};
@@ -25,12 +26,10 @@ const W1: f32 = 0.0;
 const W2: f32 = core::f32::consts::PI;
 
 fn main() {
-    let chirp: heapless::Vec<f32, N> = (0..N)
-        .map(|n| {
-            let n = n as f32;
-            (W1 * n + (W2 - W1) * n * n / (2.0 * (N as f32 - 1.0))).cos()
-        })
-        .collect();
+    let chirp: [f32; N] = core::array::from_fn(|n| {
+        let n = n as f32;
+        (W1 * n + (W2 - W1) * n * n / (2.0 * (N as f32 - 1.0))).cos()
+    });
 
     let hamming = (0..WINDOW).map(|m| 0.54 - 0.46 * (2.0 * PI * m as f32 / WINDOW as f32).cos());
     display("hamming", Shape::Line, hamming.clone());
@@ -49,8 +48,10 @@ fn main() {
                 .map(|(v, x)| Complex32 { re: v * x, im: 0.0 })
                 .collect();
 
-            // SAFETY microfft now only accepts arrays instead of slices to avoid runtime errors
-            // Thats not great for us. However we can cheat since our slice into an array because
+            // SAFETY:
+            // microfft now only accepts arrays instead of slices to avoid runtime errors
+            // heapless offers .into_array() but its another copy which wed rather avoid
+            // We can cheat since our slice into an array because
             // "The layout of a slice [T] of length N is the same as that of a [T; N] array."
             // https://rust-lang.github.io/unsafe-code-guidelines/layout/arrays-and-slices.html
             // this goes away when something like heapless vec is in standard library
@@ -60,16 +61,11 @@ fn main() {
 
                 // Coefficient calculation with CFFT function
                 // well use microfft uses an in place Radix-2 FFT
-                // it re-returns our array in case we were going to chain calls, throw it away
                 let _ = cfft(ptr);
-            }
 
-            // Magnitude calculation
-            let mag: heapless::Vec<_, WINDOW> = dtfsecoef
-                .iter()
-                .map(|complex| (complex.re * complex.re + complex.im * complex.im).sqrt())
-                .collect();
-            mag
+                // Magnitude calculation
+                ptr.map(|complex| (complex.re * complex.re + complex.im * complex.im).sqrt())
+            }
         })
         .collect();
 

@@ -12,6 +12,7 @@
 
 #![no_std]
 #![no_main]
+#![feature(array_from_fn)]
 
 use panic_probe as _;
 use stm32f4xx_hal as hal;
@@ -47,36 +48,21 @@ fn main() -> ! {
     // Create a delay abstraction based on DWT cycle counter
     let dwt = cp.DWT.constrain(cp.DCB, clocks);
 
+    // some sensor data source collected to an array so often
     // Complex sum of sinusoidal signals
-    let s1 = (0..N).map(|val| (W1 * val as f32).sin());
-    let s2 = (0..N).map(|val| (W2 * val as f32).sin());
-    let s = s1.zip(s2).map(|(ess1, ess2)| ess1 + ess2);
+    let s: [f32; N] = core::array::from_fn(|n| (W1 * n as f32).sin() + (W2 * n as f32).sin());
 
-    // map it to real, leave im blank well fill in with dft
-    let mut dtfsecoef: heapless::Vec<Complex32, N> =
-        s.map(|f| Complex32 { re: f, im: 0.0 }).collect();
+    // Use Complex32 to interleave 0.0 for imaginary
+    let mut dtfsecoef: [Complex32; N] = s.map(|v| Complex32 { re: v, im: 0.0 });
 
     let time: ClockDuration = dwt.measure(|| {
-        // SAFETY microfft now only accepts arrays instead of slices to avoid runtime errors
-        // Thats not great for us. However we can cheat since our slice into an array because
-        // "The layout of a slice [T] of length N is the same as that of a [T; N] array."
-        // https://rust-lang.github.io/unsafe-code-guidelines/layout/arrays-and-slices.html
-        // this goes away when something like heapless vec is in standard library
-        // https://github.com/rust-lang/rfcs/pull/2990
-        unsafe {
-            let ptr = &mut *(dtfsecoef.as_mut_ptr() as *mut [Complex32; N]);
-
-            // Coefficient calculation with CFFT function
-            // well use microfft uses an in place Radix-2 FFT
-            // it re-returns our array in case we were going to chain calls, throw it away
-            let _ = cfft(ptr);
-        }
+        // Coefficient calculation with CFFT function
+        // well use microfft uses an in place Radix-2 FFT
+        let _ = cfft(&mut dtfsecoef);
 
         // Magnitude calculation
-        let _mag: heapless::Vec<f32, N> = dtfsecoef
-            .iter()
-            .map(|complex| (complex.re * complex.re + complex.im * complex.im).sqrt())
-            .collect();
+        let _mag =
+            dtfsecoef.map(|complex| (complex.re * complex.re + complex.im * complex.im).sqrt());
     });
     rprintln!("ticks: {:?}", time.as_ticks());
 

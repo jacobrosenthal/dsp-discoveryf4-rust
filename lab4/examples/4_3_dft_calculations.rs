@@ -14,6 +14,7 @@
 
 #![no_std]
 #![no_main]
+#![feature(array_from_fn)]
 
 use panic_probe as _;
 use stm32f4xx_hal as hal;
@@ -50,23 +51,20 @@ fn main() -> ! {
     // Create a delay abstraction based on DWT cycle counter
     let dwt = cp.DWT.constrain(cp.DCB, clocks);
 
+    // some sensor data source collected to an array so often
     // Complex sum of sinusoidal signals
-    let s1 = (0..N).map(|val| (W1 * val as f32).sin());
-    let s2 = (0..N).map(|val| (W2 * val as f32).sin());
-    let s = s1.zip(s2).map(|(ess1, ess2)| ess1 + ess2);
+    let s: [f32; N] = core::array::from_fn(|n| (W1 * n as f32).sin() + (W2 * n as f32).sin());
 
-    // map it to real, leave im blank well fill in with dft
-    let dtfsecoef: heapless::Vec<Complex32, N> = s.map(|f| Complex32 { re: f, im: 0.0 }).collect();
+    // Use Complex32 to interleave 0.0 for imaginary
+    let dtfsecoef = s.iter().cloned().map(|n| Complex32 { re: n, im: 0.0 });
 
     let mut mag = [0f32; N];
 
     let time: ClockDuration = dwt.measure(|| unsafe {
-        let dft: heapless::Vec<Complex32, N> = dft(dtfsecoef.into_iter()).collect();
+        let dft: heapless::Vec<Complex32, N> = dft(dtfsecoef).collect();
 
         // Magnitude calculation
-        // a union of two f32 are just two f32 side by side in memory? so this
-        // cast seems to be safe here and lets us keep using Complexf32 which is
-        // far more ergonomic
+        // Complex32 is repr(C) and f32 is float so should be able to cast to float array
         arm_cmplx_mag_f32(
             dft.as_ptr() as *const c_float,
             mag.as_mut_ptr(),
@@ -100,7 +98,8 @@ fn dft<I: Iterator<Item = Complex32> + Clone>(input: I) -> impl Iterator<Item = 
     })
 }
 
-#[derive(Clone)]
+#[repr(C)]
+#[derive(Clone, Debug)]
 struct Complex32 {
     re: f32,
     im: f32,

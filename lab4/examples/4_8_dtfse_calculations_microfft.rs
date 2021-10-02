@@ -10,6 +10,7 @@
 
 #![no_std]
 #![no_main]
+#![feature(array_from_fn)]
 
 use panic_probe as _;
 use stm32f4xx_hal as hal;
@@ -43,26 +44,14 @@ fn main() -> ! {
     let dwt = cp.DWT.constrain(cp.DCB, clocks);
 
     // square signal
-    let square = (0..N).map(|n| if n < N / 2 { 1.0 } else { 0.0 });
+    let square: [f32; N] = core::array::from_fn(|n| if n < N / 2 { 1.0 } else { 0.0 });
 
     // map it to real, leave im blank well fill in with cfft
-    let mut dtfsecoef: heapless::Vec<Complex32, N> =
-        square.map(|f| Complex32 { re: f, im: 0.0 }).collect();
+    let mut dtfsecoef = square.map(|f| Complex32 { re: f, im: 0.0 });
 
-    // SAFETY microfft now only accepts arrays instead of slices to avoid runtime errors
-    // Thats not great for us. However we can cheat since our slice into an array because
-    // "The layout of a slice [T] of length N is the same as that of a [T; N] array."
-    // https://rust-lang.github.io/unsafe-code-guidelines/layout/arrays-and-slices.html
-    // this goes away when something like heapless vec is in standard library
-    // https://github.com/rust-lang/rfcs/pull/2990
-    unsafe {
-        let ptr = &mut *(dtfsecoef.as_mut_ptr() as *mut [Complex32; N]);
-
-        // Coefficient calculation with CFFT function
-        // well use microfft uses an in place Radix-2 FFT
-        // it re-returns our array in case we were going to chain calls, throw it away
-        let _ = cfft(ptr);
-    }
+    // Coefficient calculation with CFFT function
+    // well use microfft uses an in place Radix-2 FFT
+    let _ = cfft(&mut dtfsecoef);
 
     let time: ClockDuration = dwt.measure(|| {
         let _y_real: heapless::Vec<_, N> = dtfse(dtfsecoef.iter().cloned(), 15).collect();
