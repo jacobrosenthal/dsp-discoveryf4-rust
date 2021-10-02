@@ -3,7 +3,7 @@
 //! Requires `cargo install cargo-embed`
 //!
 //! cargo-embed builds and uploads your code and maintains a two way connection
-//! which in combination with panic-rtt-target and rtt-target lets you send and
+//! which in combination with panic-probe and rtt-target lets you send and
 //! receive debug data over long lasting sessions.
 //!
 //! `cargo embed --example first --release`
@@ -11,7 +11,7 @@
 #![no_std]
 #![no_main]
 
-use panic_rtt_target as _;
+use panic_probe as _;
 use stm32f4xx_hal as hal;
 
 use hal::{prelude::*, stm32};

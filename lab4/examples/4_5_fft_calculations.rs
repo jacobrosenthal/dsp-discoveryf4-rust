@@ -13,7 +13,7 @@
 #![no_std]
 #![no_main]
 
-use panic_break as _;
+use panic_probe as _;
 use stm32f4xx_hal as hal;
 
 use cmsis_dsp_sys::{arm_cfft_f32, arm_cmplx_mag_f32};

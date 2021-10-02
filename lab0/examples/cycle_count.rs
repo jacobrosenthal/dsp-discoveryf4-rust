@@ -3,7 +3,7 @@
 //! Requires `cargo install probe-run`
 //!
 //! probe-run builds, uploads, and runs your code on device and in combination
-//! with rtt-target and panic-break prints debug and panic information to your
+//! with rtt-target and panic-probe prints debug and panic information to your
 //! console. Its used for short running sessions like seeing the results of a
 //! calculation or a measurement, a panic message or backtrace of an error right
 //! on your command line. It exits when it detects a breakpoint.
@@ -13,7 +13,7 @@
 #![no_std]
 #![no_main]
 
-use panic_break as _;
+use panic_probe as _;
 use stm32f4xx_hal as hal;
 
 use hal::{dwt::ClockDuration, dwt::DwtExt, prelude::*, stm32};

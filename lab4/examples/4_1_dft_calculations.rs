@@ -11,7 +11,7 @@
 #![no_std]
 #![no_main]
 
-use panic_break as _;
+use panic_probe as _;
 use stm32f4xx_hal as hal;
 
 use core::f32::consts::PI;

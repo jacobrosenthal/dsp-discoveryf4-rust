@@ -9,8 +9,7 @@ resolver = "2"
 [dependencies]
 cortex-m = "0.7.2"
 cortex-m-rt = "0.6.12"
-panic_break = { path = "../panic_break" }
-panic-rtt-target = { version = "0.1.1", features = ["cortex-m"] }
+panic-probe = { version = "0.2.1", features = ["print-rtt"] }
 rtt-target = { version = "0.3.1", features = ["cortex-m"] }
 micromath = "1.0.1"
 heapless = { version = "0.7.0" }
