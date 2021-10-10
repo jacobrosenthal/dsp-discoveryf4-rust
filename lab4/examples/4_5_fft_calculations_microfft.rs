@@ -55,15 +55,20 @@ fn main() -> ! {
     // Use Complex32 to interleave 0.0 for imaginary
     let mut dtfsecoef: [Complex32; N] = s.map(|v| Complex32 { re: v, im: 0.0 });
 
+    let mut mag = [0f32; N];
+
     let time: ClockDuration = dwt.measure(|| {
         // Coefficient calculation with CFFT function
         // well use microfft uses an in place Radix-2 FFT
         let _ = cfft(&mut dtfsecoef);
 
         // Magnitude calculation
-        let _mag =
-            dtfsecoef.map(|complex| (complex.re * complex.re + complex.im * complex.im).sqrt());
+        for (v, complex) in mag.iter_mut().zip(dtfsecoef) {
+            *v = (complex.re * complex.re + complex.im * complex.im).sqrt()
+        }
     });
+
+    rprintln!("mag: {:?}", mag);
     rprintln!("ticks: {:?}", time.as_ticks());
 
     // signal to probe-run to exit

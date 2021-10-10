@@ -52,9 +52,10 @@ fn main() -> ! {
     let x: [f32; N] =
         core::array::from_fn(|n| (PI * n as f32 / 128.0).sin() + (FRAC_PI_4 * n as f32).sin());
 
+    let mut y = [0.0; N];
+
     let time: ClockDuration = dwt.measure(|| {
         //random access of &mut y were iterating over.. so no iterators unless
-        let mut y = [0.0; N];
         for y_n in 0..N {
             y[y_n] = B
                 .iter()
@@ -80,6 +81,7 @@ fn main() -> ! {
         }
     });
 
+    rprintln!("y: {:?}", y);
     rprintln!("dft ticks: {:?}", time.as_ticks());
 
     // signal to probe-run to exit

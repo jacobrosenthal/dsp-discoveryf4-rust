@@ -42,11 +42,13 @@ fn main() -> ! {
 
     let x = (0..N).map(|n| (PI * n as f32 / 128.0).sin() + (FRAC_PI_4 * n as f32).sin());
 
+    let mut y = heapless::Vec::<f32, N>::new();
+
     let time: ClockDuration = dwt.measure(|| {
-        //dificult to smuggle result out of the closure so dont bother.
-        let _ = convolution_sum(x.clone()).collect::<heapless::Vec<f32, N>>();
+        y = convolution_sum(x.clone()).collect::<heapless::Vec<f32, N>>();
     });
 
+    rprintln!("y: {:?}", y);
     rprintln!("dft ticks: {:?}", time.as_ticks());
 
     // signal to probe-run to exit

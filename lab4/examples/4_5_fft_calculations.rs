@@ -65,6 +65,8 @@ fn main() -> ! {
         // Magnitude calculation
         arm_cmplx_mag_f32(s.as_ptr(), mag.as_mut_ptr(), N as uint32_t);
     });
+
+    rprintln!("mag: {:?}", mag);
     rprintln!("ticks: {:?}", time.as_ticks());
 
     // signal to probe-run to exit

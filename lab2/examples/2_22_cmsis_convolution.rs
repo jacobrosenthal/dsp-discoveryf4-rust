@@ -66,7 +66,8 @@ fn main() -> ! {
             y.as_mut_ptr(),
         );
     });
-
+    
+    rprintln!("y: {:?}", y);
     rprintln!("dft ticks: {:?}", time.as_ticks());
 
     // signal to probe-run to exit

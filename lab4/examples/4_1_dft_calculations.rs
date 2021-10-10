@@ -52,12 +52,19 @@ fn main() -> ! {
     // Use Complex32 to interleave 0.0 for imaginary
     let dtfsecoef = s.iter().cloned().map(|n| Complex32 { re: n, im: 0.0 });
 
+    let mut mag = [0f32; N];
+
     let time: ClockDuration = dwt.measure(|| {
         let dft = dft(dtfsecoef);
 
-        //Magnitude calculation
-        let _mag = dft.map(|complex| (complex.re * complex.re + complex.im * complex.im).sqrt());
+        // Magnitude calculation
+        // need to collect this so its not optimized out, but also kinda stuck in the closure
+        for (v, complex) in mag.iter_mut().zip(dft) {
+            *v = (complex.re * complex.re + complex.im * complex.im).sqrt()
+        }
     });
+    
+    rprintln!("mag: {:?}", mag);
     rprintln!("ticks: {:?}", time.as_ticks());
 
     // signal to probe-run to exit

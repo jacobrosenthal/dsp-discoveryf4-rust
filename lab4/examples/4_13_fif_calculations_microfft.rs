@@ -78,6 +78,8 @@ fn main() -> ! {
         let _ = cfft(ptr);
     }
 
+    let mut y_freq = heapless::Vec::<f32, N>::new();
+
     let time: ClockDuration = dwt.measure(|| {
         let _ = cfft(&mut s_complex);
 
@@ -97,8 +99,10 @@ fn main() -> ! {
         // opposite sign in the exponent and a 1/N factor, any FFT algorithm can
         // easily be adapted for it.
         // just dtfse approx instead for now
-        let _y_freq: heapless::Vec<f32, N> = dtfse(y_complex, 15).collect();
+        y_freq = dtfse(y_complex, 15).collect();
     });
+
+    rprintln!("y_freq: {:?}", y_freq);
     rprintln!("dft ticks: {:?}", time.as_ticks());
 
     // signal to probe-run to exit

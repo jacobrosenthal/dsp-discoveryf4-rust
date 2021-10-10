@@ -71,6 +71,8 @@ fn main() -> ! {
             N as uint32_t,
         );
     });
+
+    rprintln!("mag: {:?}", mag);
     rprintln!("ticks: {:?}", time.as_ticks());
 
     // signal to probe-run to exit

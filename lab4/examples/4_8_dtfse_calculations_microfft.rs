@@ -53,9 +53,13 @@ fn main() -> ! {
     // well use microfft uses an in place Radix-2 FFT
     let _ = cfft(&mut dtfsecoef);
 
+    let mut y_real = heapless::Vec::<f32, N>::new();
+
     let time: ClockDuration = dwt.measure(|| {
-        let _y_real: heapless::Vec<_, N> = dtfse(dtfsecoef.iter().cloned(), 15).collect();
+        y_real = dtfse(dtfsecoef.iter().cloned(), 15).collect();
     });
+
+    rprintln!("y_real: {:?}", y_real);
     rprintln!("ticks: {:?}", time.as_ticks());
 
     // signal to probe-run to exit

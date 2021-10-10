@@ -81,6 +81,7 @@ fn main() -> ! {
         arm_fir_f32(&s, x.as_ptr(), y.as_mut_ptr(), N as uint32_t);
     });
 
+    rprintln!("y: {:?}", y);
     rprintln!("dft ticks: {:?}", time.as_ticks());
 
     // signal to probe-run to exit

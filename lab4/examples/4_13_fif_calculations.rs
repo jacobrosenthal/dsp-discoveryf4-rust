@@ -99,6 +99,8 @@ fn main() -> ! {
             arm_cfft_f32(&arm_cfft_sR_f32, y_complex.as_mut_ptr(), 1, 1);
         }
     });
+
+    rprintln!("y_complex: {:?}", y_complex);
     rprintln!("dft ticks: {:?}", time.as_ticks());
 
     // signal to probe-run to exit
