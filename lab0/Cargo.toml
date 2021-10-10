@@ -13,7 +13,7 @@ stm32f4xx-hal = { version = "0.9.0", features = ["stm32f407", "rt"] }
 panic-halt = "0.2.0"
 panic-probe = { version = "0.2.1", features = ["print-rtt"] }
 rtt-target = { version = "0.3.1", features = ["cortex-m"] }
-heapless = { version = "0.7.0" }
+heapless = { version = "0.7.7" }
 
 [dependencies.embedded-hal]
 features = ["unproven"]
