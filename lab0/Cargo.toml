@@ -8,7 +8,7 @@ resolver = "2"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [dependencies]
 cortex-m = "0.7.2"
-cortex-m-rt = "0.6.12"
+cortex-m-rt = "=0.6.15"
 stm32f4xx-hal = { version = "0.9.0", features = ["stm32f407", "rt"] }
 panic-halt = "0.2.0"
 panic-probe = { version = "0.2.1", features = ["print-rtt"] }
