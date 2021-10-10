@@ -11,7 +11,7 @@ cortex-m = "0.7.2"
 cortex-m-rt = "=0.6.15"
 panic-probe = { version = "0.2.1", features = ["print-rtt"] }
 rtt-target = { version = "0.3.1", features = ["cortex-m"] }
-micromath = "1.0.1"
+micromath = "2.0.0"
 heapless = { version = "0.7.7" }
 nb = "1.0.0"
 
