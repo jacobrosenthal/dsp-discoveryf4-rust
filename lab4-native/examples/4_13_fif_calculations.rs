@@ -115,6 +115,7 @@ fn dtfse<I: Iterator<Item = Complex32> + Clone>(
             .map(|(k, complex)| {
                 let a = (complex.re * complex.re + complex.im * complex.im).sqrt();
                 let p = complex.im.atan2(complex.re);
+                // unsafe { a * arm_cos_f32((2.0 * PI * k as f32 * n as f32 / size) + p) / size }
                 a * ((2.0 * PI * k as f32 * n as f32 / size) + p).cos() / size
             })
             .sum::<f32>()
