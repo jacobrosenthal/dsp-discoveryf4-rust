@@ -64,7 +64,7 @@ fn main() -> ! {
     let mut y_real = heapless::Vec::<f32, N>::new();
 
     let time: ClockDuration = dwt.measure(|| {
-        y_real = dtfse(dtfsecoef.iter().cloned(), 15).collect();
+        y_real = dtfse(dtfsecoef.iter().cloned(), 1).collect();
     });
 
     rprintln!("y_real: {:?}", y_real);

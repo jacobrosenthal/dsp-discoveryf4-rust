@@ -99,7 +99,7 @@ fn main() -> ! {
         // opposite sign in the exponent and a 1/N factor, any FFT algorithm can
         // easily be adapted for it.
         // just dtfse approx instead for now
-        y_freq = dtfse(y_complex, 15).collect();
+        y_freq = dtfse(y_complex, 1).collect();
     });
 
     rprintln!("y_freq: {:?}", y_freq);
